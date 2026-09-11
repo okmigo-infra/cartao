@@ -194,6 +194,49 @@ class VocabularioTest(unittest.TestCase):
         self.assertEqual((livre["corpo"][0]["tipo"], livre["corpo"][0]["valor"]), ("escolha_livre", "fora"))
         self.assertEqual((busca["corpo"][0]["tipo"], busca["corpo"][0]["forma"]), ("escolha", "busca"))
 
+    def test_quem_opera_e_buraco_que_o_produto_preenche(self):
+        """`okmigoQuemOpera`: as opções são de quem HOSPEDA, não do autor.
+
+        ⛔ O caso que a pediu: uma agenda precisa saber quem atende, e a
+        alternativa obrigaria o serviço a conhecer o quadro de pessoal do
+        cliente dele. Com a dica ele declara o buraco e recebe, no Submit,
+        apenas o nome escolhido.
+        """
+        base = {"type": "Input.ChoiceSet", "id": "prof", "campo": "nome",
+                "label": "Quem atende", "style": "expanded"}
+
+        # POSITIVO: marcado, e a lista vazia NÃO derruba o campo
+        tela, _ = validar(cartao({**base, "okmigoQuemOpera": True}))
+        self.assertEqual(tela["corpo"][0]["tipo"], "escolha")
+        self.assertIs(tela["corpo"][0]["quem_opera"], True)
+        self.assertEqual(tela["corpo"][0]["opcoes"], [])
+
+        # POSITIVO: as `choices` do autor são IGNORADAS — senão a tela
+        # ofereceria gente que não opera ao lado de gente que opera.
+        tela, _ = validar(cartao({**base, "okmigoQuemOpera": True,
+                                  "choices": [{"title": "Estranho", "value": "x"}]}))
+        self.assertEqual(tela["corpo"][0]["opcoes"], [])
+
+        # POSITIVO: força o ESTRITO. Livre seria um campo de texto com sugestão.
+        tela, _ = validar(cartao({**base, "style": "filtered",
+                                  "okmigoQuemOpera": True}))
+        self.assertEqual((tela["corpo"][0]["tipo"], tela["corpo"][0]["forma"]),
+                         ("escolha", "busca"))
+
+        # ⛔ NEGATIVO 1: sem a dica, lista vazia continua derrubando o campo.
+        tela, _ = validar(cartao(base))
+        self.assertIsNone(tela)
+
+        # ⛔ NEGATIVO 2: valor que não é `True` não liga nada — a dica é
+        # booleana, e "sim" viria de quem escreveu o manifesto de memória.
+        tela, _ = validar(cartao({**base, "okmigoQuemOpera": "sim"}))
+        self.assertIsNone(tela)
+
+        # ⛔ NEGATIVO 3: sem a dica e COM opções, nada de `quem_opera` na saída
+        # — quem hospeda não pode confundir escolha comum com buraco a encher.
+        tela, _ = validar(cartao({**base, "choices": [{"title": "A", "value": "a"}]}))
+        self.assertNotIn("quem_opera", tela["corpo"][0])
+
     def test_tabela_sem_linha_de_dado_some(self):
         so_cabecalho = {"type": "Table", "columns": [{"width": 1}], "rows": [
             {"type": "TableRow", "cells": [{"type": "TableCell", "items": [{"type": "TextBlock", "text": "Nome"}]}]}]}

@@ -706,8 +706,24 @@ def _um(no: Any, contador: list[int]) -> dict | None:
         if not campo_id:
             return None
 
+        # ⭐ **`okmigoQuemOpera`: as opções são QUEM OPERA aquele negócio, e
+        # quem as preenche é o PRODUTO.** Existe porque a alternativa obriga o
+        # serviço a conhecer o quadro de pessoal do cliente dele — e o produto
+        # não entrega isso. Aqui ele declara o buraco; o nome escolhido volta
+        # no Submit como qualquer outro valor, e é só isso que ele recebe.
+        #
+        # ⛔ **As `choices` declaradas são IGNORADAS quando a dica está
+        # presente.** Não é rigor: aceitar as duas coisas faria a lista do
+        # autor conviver com a do produto, e a tela ofereceria gente que não
+        # opera ao lado de gente que opera — sem nada na tela distinguindo.
+        #
+        # ⚠️ E ela força o ESTRITO. Um typeahead livre com nomes de pessoal
+        # seria um campo de texto com sugestão: quem digitasse um nome de fora
+        # passaria. A dica existe justamente para isso não acontecer.
+        quem_opera = no.get("okmigoQuemOpera") is True
+
         opcoes = []
-        for escolha in (no.get("choices") or [])[:_MAX_OPCOES]:
+        for escolha in ([] if quem_opera else (no.get("choices") or []))[:_MAX_OPCOES]:
             if not isinstance(escolha, dict):
                 continue
             # `value` é o que VIAJA; `title` é o que a pessoa lê. Os dois são
@@ -732,6 +748,8 @@ def _um(no: Any, contador: list[int]) -> dict | None:
         # diferentes na saída.
         if no.get("style") == "filtered" and no.get("okmigoEstrito") is True:
             pass  # cai no caminho ESTRITO abaixo, com forma "busca"
+        elif quem_opera:
+            pass  # ⛔ idem: `okmigoQuemOpera` nunca é livre, com ou sem estilo
         elif no.get("style") == "filtered":
             return {
                 "tipo": "escolha_livre", **comum,
@@ -747,7 +765,13 @@ def _um(no: Any, contador: list[int]) -> dict | None:
         # Lista vazia derruba o CAMPO (e a caixa em volta perde os botões — ver
         # `_perdeu_campo_obrigatorio`), não a tela: lista vazia é o caso normal
         # de «nada esperando», e a aba ao lado segue tendo o que dizer.
-        if not opcoes:
+        #
+        # ⚠️ **Com `okmigoQuemOpera` a lista vazia é o ESTADO ESPERADO aqui** —
+        # quem a preenche é o produto, depois deste crivo. Derrubar o campo
+        # apagaria justamente o que a dica pede. ⛔ Quem hospeda o crivo e NÃO
+        # sabe preencher deve tratar a lista vazia como sempre: campo sem opção
+        # não se desenha.
+        if not opcoes and not quem_opera:
             return None
 
         return {
@@ -771,6 +795,9 @@ def _um(no: Any, contador: list[int]) -> dict | None:
             "dica": _txt(no.get("placeholder"), "titulo"),
             "opcoes": opcoes,
             "obrigatorio": bool(no.get("isRequired")),
+            # ⭐ O buraco a preencher, marcado na saída: quem hospeda o crivo
+            # põe aqui quem opera aquele negócio. Ausente = escolha comum.
+            **({"quem_opera": True} if quem_opera else {}),
         }
 
     # ── okmigoArquivo: a ENTRADA de um arquivo (o schema não tem Input.File) ──
