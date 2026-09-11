@@ -111,4 +111,5 @@ Duas regras que não se negociam, e estão escritas no próprio crivo:
 
 ## Licença
 
-A definir pelo dono do repositório antes da publicação.
+[Apache-2.0](LICENSE). Contribuições entram sob a mesma licença (§5 dela) — é o que
+permite aceitar um PR de fora sem acordo à parte.
