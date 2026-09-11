@@ -154,8 +154,9 @@ _DESCARTADAS_DE_PROPOSITO = {
 _ACOES_RECUSADAS = {"Action.OpenUrl": "ação nomeia capacidade, nunca endereço",
                     "Action.ShowCard": "não existe neste subconjunto",
                     "Action.Execute": "não existe neste subconjunto"}
-#: Filhos estruturais da tabela: não são nós, e sumir com a tabela é o esperado.
-_ESTRUTURAIS = {"TableRow", "TableCell"}
+#: Filhos estruturais de tabela e de colunas: não são nós por si — vivem e
+#: morrem com o pai.
+_ESTRUTURAIS = {"TableRow", "TableCell", "Column"}
 #: Por que um tipo conhecido costuma sumir — a frase que o autor precisa ler.
 _POR_QUE_SOME = {
     "TextBlock": "texto vazio — ou o pai (tabela, caixa) foi descartado",
@@ -252,7 +253,9 @@ def relatorio(bruto: Any, tela: dict | None, erro: str | None) -> list[str]:
     saida: dict[str, int] = {}
     if tela:
         _contar_saida(tela.get("corpo"), saida)
-    for tipo, n in sorted(entrada.items()):
+    # Tela recusada não tem «o que sumiu»: sumiu tudo, pelo motivo já dito.
+    # Sobram só os avisos de entrada (tipo desconhecido, chave descartada).
+    for tipo, n in (sorted(entrada.items()) if not erro else []):
         alvos = _ENTRA_SAI.get(tipo)
         if not alvos:
             continue  # desconhecido já foi avisado

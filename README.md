@@ -32,6 +32,27 @@ A linha de comando responde as três perguntas que importam:
    em HTML **sem uma linha de CSS**. Se o documento pelado não faz sentido,
    nenhum renderizador conserta. O feio é intencional.
 
+### Testando o SEU manifesto
+
+Passe o manifesto inteiro e diga a superfície:
+
+```bash
+python -m okmigo_cartao okmigo/manifesto.json --superficie extrato \
+    --dados dados-do-extrato.json --escrituras marcar_pago,estornar --dominio seudominio.com
+```
+
+- `--dados` é `{"resumo": {...}, "linhas": [...]}` — o mesmo par que a `fonte`
+  da superfície declara (o objeto de resumo e a lista). Use dados que pareçam
+  os do seu serviço: nomes de campo iguais, uma linha com valor zero, uma com
+  texto longo.
+- `--escrituras`/`--leituras` são as operações que o **seu servidor MCP**
+  expõe (as de escrita e as de leitura). É contra elas que o produto confere
+  cada botão: um `Action.Submit` que nomeie operação fora da lista **recusa a
+  tela inteira** — e é melhor descobrir isso aqui do que depois de registrar.
+  Se o seu manifesto declarar `operacoes[{nome, efeitos}]`, a ferramenta as lê
+  sozinha; sem isso, sem as bandeiras, os botões **não são conferidos**, e ela
+  avisa.
+
 ⛔ **Validar o molde cru não prova nada.** Um molde com `_repetir_lista` só vira
 tabela, grade ou fichas depois de expandido com dados — e o crivo descarta a
 tabela que ficou só com cabeçalho, a lista que ficou sem opção. `--dados`
