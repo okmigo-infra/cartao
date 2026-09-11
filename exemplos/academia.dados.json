@@ -1,0 +1,10 @@
+{
+  "resumo": {"plano": "Corpo inteiro", "nivel": "Iniciante", "nivel_valor": "iniciante",
+             "feitos": 2, "total": 6, "dias": 3, "descanso_s": 90},
+  "linhas": [
+    {"id": "peito", "nome": "Peito", "icone": "🫁", "exercicios": 12},
+    {"id": "costas", "nome": "Costas", "icone": "🦴", "exercicios": 14},
+    {"id": "pernas", "nome": "Pernas", "icone": "🦵", "exercicios": 18},
+    {"id": "bracos", "nome": "Braços", "icone": "💪", "exercicios": 9}
+  ]
+}
