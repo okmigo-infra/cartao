@@ -12,9 +12,21 @@ dois é bug de um deles.
 ## 1 · As três regras que fecham o desenho
 
 1. **O que não é construído não existe.** O crivo nunca repassa a árvore que
-   recebeu — monta outra, nó a nó. Um nó desconhecido some (ou cai no
-   `fallback` do próprio schema). Só o **estrutural** recusa a tela inteira:
+   recebeu — monta outra, nó a nó. Um nó que não sobrevive some — ou cai no
+   `fallback` do próprio schema. Só o **estrutural** recusa a tela inteira:
    cartão sem corpo, mais de 2000 nós, operação que o serviço não declarou.
+
+   ⭐ **E o `fallback` vale para QUALQUER queda, não só para tipo desconhecido**
+   (11/09). A queda mais comum aqui não é «não conheço esse tipo» — é **«o
+   elemento veio vazio»**: a tabela que ficou só com o cabeçalho porque a lista
+   não repetiu nada, a escolha sem opção válida, o `ActionSet` que perdeu todos
+   os botões. Antes disso, um negócio sem movimento no dia abria a tela sem a
+   tabela **e sem a frase que o autor tinha escrito para o vazio**.
+
+   ⚠️ O `fallback` **não é atalho para dentro**: ele volta pelo mesmo crivo, e
+   um proibido cai igual (com o `fallback` dele, se tiver). ⚠️ E ele não
+   aparece quando o elemento sobrevive — senão a tela teria a tabela e o aviso
+   de «nada aqui» ao mesmo tempo.
 2. **Quem desenha é o produto.** Tamanho é palavra (`large`), não número;
    estilo é hierarquia (`emphasis`, `accent`) ou estado (`good`, `attention`,
    `warning`); altura é faixa; cor de gráfico é significado (`positivo`,

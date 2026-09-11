@@ -399,6 +399,41 @@ def _alvos_de_toggle(acao: Any) -> list[dict]:
 
 
 def _um(no: Any, contador: list[int]) -> dict | None:
+    """Reconstrói UM elemento — e, se ele CAIR, entrega o `fallback` do autor.
+
+    ⭐ **O `fallback` vale para QUALQUER queda, não só para tipo desconhecido**
+    (11/09). Antes ele era consultado em dois lugares: no tipo que não
+    conhecemos e na imagem de fora. Mas a queda mais comum desta plataforma não
+    é «não conheço esse tipo» — é **«o elemento veio vazio»**: a tabela com só o
+    cabeçalho porque a lista não repetiu nada, a escolha sem opção válida.
+    Nesses casos o elemento sumia **mesmo com o autor tendo dito o que pôr no
+    lugar**.
+
+    ⛔ E a promessa já estava escrita para quem integra: *«elemento fora dessa
+    lista some — a menos que você diga o que aparece no lugar, com o `fallback`
+    do próprio schema. Use-o»*. Ela só era verdade para metade dos casos, e a
+    metade em que falhava é a que acontece todo dia: um negócio sem agendamento
+    hoje abria a tela sem a tabela e **sem nenhuma frase explicando o vazio**.
+
+    ⚠️ **O `fallback` não é um atalho para dentro:** ele volta por aqui, então
+    passa pelo mesmo crivo. Um fallback proibido cai igual — e cai com o
+    `fallback` DELE, se tiver. O `contador` é quem impede a corrente infinita.
+
+    ⚠️ A imagem de fora segue tratando o `fallback` por conta própria, e não é
+    redundância: ela não CAI — vira `sem_imagem`, um marcador que preserva a
+    altura da linha. Sem aquele ramo, quem declarou alternativa receberia o
+    marcador em vez dela.
+    """
+    saida = _reconstruir(no, contador)
+    if saida is not None or not isinstance(no, dict):
+        return saida
+    alternativa = no.get("fallback")
+    if isinstance(alternativa, dict):
+        return _um(alternativa, contador)
+    return None
+
+
+def _reconstruir(no: Any, contador: list[int]) -> dict | None:
     """Reconstrói UM elemento. Devolve `None` para o que não conhece.
 
     Devolver `None` (some) em vez de levantar é a degradação que o schema
@@ -1147,11 +1182,8 @@ def _um(no: Any, contador: list[int]) -> dict | None:
             saida["rodape"] = True
         return saida
 
-    # Desconhecido: o `fallback` do próprio schema antes de desistir. É a
-    # diferença entre «some calado» e «o autor decidiu o que aparece no lugar».
-    alternativa = no.get("fallback")
-    if isinstance(alternativa, dict):
-        return _um(alternativa, contador)
+    # Desconhecido: cai. ⭐ O `fallback` é tentado por QUEM CHAMA (`_um`), e
+    # não mais aqui — assim ele vale para toda queda, e não só para esta.
     return None
 
 

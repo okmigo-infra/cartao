@@ -1,5 +1,6 @@
 """O crivo, com o caso negativo ao lado de cada positivo — teste que passa no
 cenário quebrado não é teste."""
+import json
 import unittest
 
 from okmigo_cartao import Config, MAX_NOS, validar
@@ -193,6 +194,53 @@ class VocabularioTest(unittest.TestCase):
         self.assertEqual(fichas["corpo"][0]["opcoes"][0]["nota"], "cedo")
         self.assertEqual((livre["corpo"][0]["tipo"], livre["corpo"][0]["valor"]), ("escolha_livre", "fora"))
         self.assertEqual((busca["corpo"][0]["tipo"], busca["corpo"][0]["forma"]), ("escolha", "busca"))
+
+    def test_fallback_vale_para_toda_queda_nao_so_para_tipo_desconhecido(self):
+        """⛔ O caso real: a tabela do dia sem agendamento nenhum.
+
+        A queda mais comum desta plataforma não é «não conheço esse tipo» — é
+        «o elemento veio vazio». Até 11/09 o `fallback` só era consultado no
+        tipo desconhecido, então um negócio sem movimento abria a tela sem a
+        tabela E sem a frase que o autor tinha escrito para o vazio.
+        """
+        ancora = {"type": "TextBlock", "text": "ancora"}
+        aviso = {"type": "TextBlock", "text": "NADA MARCADO"}
+        so_cabecalho = {
+            "type": "Table", "columns": [{"width": 1}], "firstRowAsHeader": True,
+            "rows": [{"type": "TableRow", "cells": [
+                {"type": "TableCell", "items": [{"type": "TextBlock", "text": "Quem"}]}]}]}
+
+        def tem_aviso(bloco):
+            tela, _ = validar(cartao(ancora, bloco))
+            return "NADA MARCADO" in json.dumps(tela or {}, ensure_ascii=False)
+
+        # POSITIVOS — as quedas que antes sumiam caladas
+        self.assertTrue(tem_aviso({**so_cabecalho, "fallback": aviso}))
+        self.assertTrue(tem_aviso(
+            {"type": "Input.ChoiceSet", "id": "x", "choices": [], "fallback": aviso}))
+        self.assertTrue(tem_aviso(
+            {"type": "ActionSet", "fallback": aviso,
+             "actions": [{"type": "Action.OpenUrl", "title": "x", "url": "https://a.b"}]}))
+        # e o que já valia antes continua valendo
+        self.assertTrue(tem_aviso({"type": "Carousel", "fallback": aviso}))
+
+        # ⛔ NEGATIVO 1: com dado, o fallback NÃO aparece — senão a tela teria
+        # a tabela e o aviso de vazio ao mesmo tempo.
+        self.assertFalse(tem_aviso(
+            {**so_cabecalho, "fallback": aviso, "rows": so_cabecalho["rows"] * 2}))
+
+        # ⛔ NEGATIVO 2: sem `fallback`, continua sumindo. A dica é do autor;
+        # não inventamos texto para o vazio de ninguém.
+        self.assertFalse(tem_aviso(dict(so_cabecalho)))
+
+        # ⛔ NEGATIVO 3: o fallback NÃO é atalho para dentro — ele volta pelo
+        # mesmo crivo, e um proibido cai igual.
+        tela, _ = validar(cartao(ancora, {
+            "type": "Carousel",
+            "fallback": {"type": "ActionSet", "actions": [
+                {"type": "Action.OpenUrl", "title": "sair", "url": "https://fora.test"}]}}))
+        self.assertNotIn("OpenUrl", json.dumps(tela or {}))
+        self.assertNotIn("fora.test", json.dumps(tela or {}))
 
     def test_quem_opera_e_buraco_que_o_produto_preenche(self):
         """`okmigoQuemOpera`: as opções são de quem HOSPEDA, não do autor.
