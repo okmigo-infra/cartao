@@ -62,6 +62,13 @@ dois é bug de um deles.
 Chaves de TOPO: `type: "AdaptiveCard"`, `version`, `body`, `okmigoTema`,
 `okmigoNavegacao`. Qualquer outra é ignorada.
 
+`okmigoTema` declara a **natureza da experiência**, nunca uma paleta ou CSS.
+A lista fechada é `financeiro-violeta` (finanças pessoais), `jornada-ativa`
+(processos guiados em etapas), `mercado-editorial` (leitura e comparação de
+dados) e `operacao-direta` (fila e ação rápida). O cliente escolhe cores,
+tipografia, densidade, raios e espaçamento; um tema desconhecido é ignorado e
+o cartão continua legível com a identidade padrão do produto.
+
 ## 3 · Escrita: o que um toque pode e não pode
 
 - **Formulário não é lista.** Quem preencheu e apertou Salvar já confirmou: o

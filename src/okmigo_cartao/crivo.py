@@ -134,7 +134,16 @@ _FORMAS_DE_GRAFICO = {"barras", "linha"}
 #: Cores SEMÂNTICAS, nunca hexadecimal: o serviço declara o que o número
 #: significa; quem pinta é o cliente, com a paleta do tema dele.
 _CORES_DO_GRAFICO = {"positivo", "negativo", "neutro", "atencao", "principal", "suave"}
-_TEMAS_DO_CARTAO = {"financeiro-violeta"}
+#: Temas são MODOS de apresentação escolhidos pelo produto, não paletas que o
+#: serviço controla. O manifesto só declara a natureza da experiência; web e
+#: app traduzem a palavra para seus próprios tokens. Manter a lista fechada
+#: impede que um serviço transforme `okmigoTema` em CSS disfarçado.
+_TEMAS_DO_CARTAO = {
+    "financeiro-violeta",
+    "jornada-ativa",
+    "mercado-editorial",
+    "operacao-direta",
+}
 _NAVEGACOES_DO_CARTAO = {"inferior"}
 _TONS_FINANCEIROS = {
     "principal", "suave", "violeta", "verde", "laranja", "vermelho", "azul",

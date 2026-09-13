@@ -36,8 +36,10 @@ class EstruturaTest(unittest.TestCase):
         self.assertIsNone(erro)
 
     def test_tema_e_navegacao_so_da_lista(self):
-        tela, _ = validar(cartao({"type": "TextBlock", "text": "a"}, okmigoTema="financeiro-violeta", okmigoNavegacao="inferior"))
-        self.assertEqual((tela["tema"], tela["navegacao"]), ("financeiro-violeta", "inferior"))
+        for tema in ("financeiro-violeta", "jornada-ativa", "mercado-editorial", "operacao-direta"):
+            with self.subTest(tema=tema):
+                tela, _ = validar(cartao({"type": "TextBlock", "text": "a"}, okmigoTema=tema, okmigoNavegacao="inferior"))
+                self.assertEqual((tela["tema"], tela["navegacao"]), (tema, "inferior"))
         tela, _ = validar(cartao({"type": "TextBlock", "text": "a"}, okmigoTema="verde-limao", okmigoNavegacao="lateral"))
         self.assertNotIn("tema", tela); self.assertNotIn("navegacao", tela)
 
