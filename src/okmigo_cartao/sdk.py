@@ -8,7 +8,9 @@ nenhum componente permite HTML, JavaScript ou uma URL executavel.
 from __future__ import annotations
 
 import re
+from copy import deepcopy
 from collections.abc import Iterable
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any, Protocol, Self
@@ -627,6 +629,7 @@ class Aplicativo:
     conversa: tuple[str, ...]
     superficies: tuple[Superficie, ...]
     forma: str = "do_operador"
+    extras: Mapping[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         _nome(self.slug, "slug")
@@ -638,9 +641,21 @@ class Aplicativo:
             raise ContratoDoSdkInvalido("aplicativo precisa de superficies")
         for operacao in self.conversa:
             _nome(operacao, "operacao de conversa")
+        reservadas = {
+            "slug", "endpoint", "forma", "para_tipo", "descricao",
+            "descricao_humana", "nome_visivel", "versao", "conversa",
+            "superficies",
+        }
+        conflito = reservadas.intersection(self.extras)
+        if conflito:
+            raise ContratoDoSdkInvalido(
+                "extras do aplicativo repetem campos reservados: "
+                + ", ".join(sorted(conflito))
+            )
 
     def compilar(self) -> Json:
         return {
+            **deepcopy(dict(self.extras)),
             "slug": self.slug,
             "endpoint": self.endpoint,
             "forma": self.forma,
@@ -652,3 +667,58 @@ class Aplicativo:
             "conversa": list(self.conversa),
             "superficies": _compilar(self.superficies),
         }
+
+
+@dataclass(frozen=True, slots=True)
+class AplicativoDoContrato:
+    """Ponte segura para trazer um manifesto existente ao ciclo do SDK.
+
+    Serve para migrações grandes: mantém o contrato já testado pelo serviço,
+    mas o transforma num objeto compilável pelo preview Python e aplica as
+    intenções visuais compartilhadas sem editar dezenas de cartões à mão.
+    Telas novas devem preferir os componentes tipados acima.
+    """
+
+    manifesto: Mapping[str, Any]
+    tema_padrao: Tema | None = None
+    navegacao: Navegacao | None = Navegacao.INFERIOR
+
+    def __post_init__(self) -> None:
+        slug = self.manifesto.get("slug")
+        superficies = self.manifesto.get("superficies")
+        if not isinstance(slug, str) or not slug.strip():
+            raise ContratoDoSdkInvalido("manifesto precisa de slug")
+        _nome(slug, "slug")
+        if not isinstance(superficies, list) or not superficies:
+            raise ContratoDoSdkInvalido("manifesto precisa de superficies")
+
+        nomes: set[str] = set()
+        for superficie in superficies:
+            if not isinstance(superficie, dict):
+                raise ContratoDoSdkInvalido("cada superficie precisa ser um objeto")
+            nome = superficie.get("nome")
+            if not isinstance(nome, str):
+                raise ContratoDoSdkInvalido("superficie precisa de nome")
+            _nome(nome, "nome da superficie")
+            if nome in nomes:
+                raise ContratoDoSdkInvalido(f"superficie repetida: {nome}")
+            nomes.add(nome)
+            cartao = superficie.get("cartao")
+            if not isinstance(cartao, dict) or cartao.get("type") != "AdaptiveCard":
+                raise ContratoDoSdkInvalido(
+                    f"superficie {nome!r} precisa de um AdaptiveCard"
+                )
+            if not isinstance(cartao.get("body"), list) or not cartao["body"]:
+                raise ContratoDoSdkInvalido(
+                    f"superficie {nome!r} precisa de corpo"
+                )
+
+    def compilar(self) -> Json:
+        manifesto = deepcopy(dict(self.manifesto))
+        for superficie in manifesto["superficies"]:
+            cartao = superficie["cartao"]
+            if self.tema_padrao is not None:
+                cartao.setdefault("okmigoTema", self.tema_padrao.value)
+            if self.navegacao is not None:
+                cartao.setdefault("okmigoNavegacao", self.navegacao.value)
+        return manifesto

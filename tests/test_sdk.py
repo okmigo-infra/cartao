@@ -7,6 +7,7 @@ from okmigo_cartao.sdk import (
     Acao,
     Acoes,
     Aplicativo,
+    AplicativoDoContrato,
     Autorizar,
     Busca,
     CampoOculto,
@@ -32,6 +33,45 @@ from okmigo_cartao.sdk import (
 
 
 class SdkTest(unittest.TestCase):
+    def test_adaptador_leva_app_existente_ao_preview_e_aplica_intencoes(self):
+        bruto = {
+            "slug": "produto-legado",
+            "endpoint": "http://produto/mcp",
+            "versao": "1.0.0",
+            "superficies": [{
+                "nome": "inicio",
+                "titulo": "Início",
+                "rotulo": "Início",
+                "icone": "inicio",
+                "hint": "resumo",
+                "fonte": {"resumo": {"operacao": "resumo"}},
+                "cartao": {
+                    "type": "AdaptiveCard",
+                    "version": "1.5",
+                    "body": [{"type": "TextBlock", "text": "Olá"}],
+                },
+            }],
+        }
+
+        app = AplicativoDoContrato(bruto, tema_padrao=Tema.OPERACAO)
+        compilado = app.compilar()
+
+        cartao = compilado["superficies"][0]["cartao"]
+        self.assertEqual(cartao["okmigoTema"], "operacao-direta")
+        self.assertEqual(cartao["okmigoNavegacao"], "inferior")
+        self.assertNotIn("okmigoTema", bruto["superficies"][0]["cartao"])
+
+    def test_adaptador_recusa_superficies_repetidas(self):
+        manifesto = {
+            "slug": "produto",
+            "superficies": [
+                {"nome": "inicio", "cartao": {"type": "AdaptiveCard", "body": [{}]}},
+                {"nome": "inicio", "cartao": {"type": "AdaptiveCard", "body": [{}]}},
+            ],
+        }
+        with self.assertRaises(ContratoDoSdkInvalido):
+            AplicativoDoContrato(manifesto)
+
     def test_tela_tipado_compila_para_o_contrato_atual(self):
         tela = Tela(
             "Ativos",

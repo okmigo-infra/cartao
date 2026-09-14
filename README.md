@@ -82,6 +82,29 @@ Flutter reais.
 Este módulo ainda é deliberadamente um piloto: cobre uma tela representativa,
 não todo o vocabulário de `CONTRATO.md`.
 
+### Trazendo um aplicativo existente
+
+Uma migração grande não precisa reescrever centenas de componentes no mesmo
+commit. `AplicativoDoContrato` transforma o manifesto que o produto já testa
+num objeto do SDK, acrescenta a navegação/tema compartilhados e permite abrir
+o aplicativo inteiro no preview Python:
+
+```python
+from okmigo_cartao import AplicativoDoContrato, Tema
+
+APLICATIVO = AplicativoDoContrato(
+    manifesto_existente(),
+    tema_padrao=Tema.OPERACAO,
+)
+MANIFESTO = APLICATIVO.compilar()
+```
+
+O adaptador valida a forma do aplicativo, nomes únicos e a presença de um
+cartão por superfície. Ele é a ponte de migração; telas novas devem usar os
+componentes tipados (`Tela`, `Texto`, `Painel`, `Tabela` etc.). Nos dois casos,
+o JSON que cruza a fronteira continua passando pelo mesmo crivo fechado do
+OkMigo.
+
 ## Comece por aqui
 
 ```bash
