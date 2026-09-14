@@ -797,6 +797,8 @@ def _icone_da_navegacao(nome: str) -> str:
         "fiis": '<path d="M4 20V9l8-5 8 5v11"></path><path d="M8 20v-6h8v6M8 10h.01M12 10h.01M16 10h.01"></path>',
         "carteira": '<path d="M3 7h15a2 2 0 012 2v9H5a2 2 0 01-2-2V7z"></path><path d="M5 7V5h11v2M15 12h5"></path>',
         "comunicados": '<path d="M6 3h9l3 3v15H6z"></path><path d="M15 3v4h4M9 12h6M9 16h6"></path>',
+        "treino": '<path d="M6 9v6M3.5 10.5v3M18 9v6M20.5 10.5v3M6 12h12"></path>',
+        "perfil": '<circle cx="12" cy="8" r="3.5"></circle><path d="M5.5 20c.7-4 2.9-6 6.5-6s5.8 2 6.5 6"></path>',
         "mais": '<circle cx="5" cy="12" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle>',
     }
     corpo = desenhos.get(nome, '<circle cx="12" cy="12" r="7"></circle>')
@@ -839,7 +841,8 @@ def _navegacao_inferior(aplicativo: Json) -> str:
             f'<div class="menu-mais" role="menu" hidden>{menu}</div></div>'
         )
     return (
-        f'<nav class="menu-inferior" aria-label="Telas de {_e(aplicativo.get("nome") or "serviço")}">'
+        f'<nav class="menu-inferior" style="--destinos:{min(len(superficies), 5)}" '
+        f'aria-label="Telas de {_e(aplicativo.get("nome") or "serviço")}">'
         + "".join(botoes)
         + "</nav>"
     )
@@ -990,15 +993,15 @@ button { cursor: pointer; }
 .voltar { display:inline-flex; align-items:center; gap:8px; min-width:44px; min-height:44px; padding:8px 12px; border:1px solid var(--trilha); border-radius:10px; background:transparent; color:var(--texto); font-weight:700; white-space:nowrap; }
 .voltar:hover { background:var(--acento-fraco); }
 .voltar svg { width:18px; height:18px; }
-.nota-preview { margin: 24px 0 0; padding: 11px 13px; border-radius: 10px; background: var(--acento-fraco); color: var(--muted); font-size: 11px; }
-.menu-inferior { position: sticky; z-index: 10; bottom: 0; display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 2px; margin: 22px calc(-1 * var(--respiro)) calc(-1 * var(--respiro)); padding: 6px 8px 9px; border-top: 1px solid var(--linha); background: color-mix(in srgb, var(--fundo) 94%, transparent); backdrop-filter: blur(14px); }
-.menu-inferior { margin-top: auto; }
-.dispositivo-mobile .menu-inferior { margin-bottom: 0; }
-.destino { min-width: 0; min-height: 54px; padding: 5px 2px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); font-size: 10px; }
-.destino svg { display: block; width: 22px; height: 22px; margin: 0 auto 3px; }
-.destino span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.destino:hover { background: var(--acento-fraco); color: var(--texto); }
-.destino.atual { color: var(--acento); font-weight: 800; }
+.menu-inferior { position:sticky; z-index:10; bottom:14px; display:grid; grid-template-columns:repeat(var(--destinos),minmax(104px,128px)); gap:6px; width:max-content; max-width:100%; margin:auto auto 2px; padding:7px; border:1px solid var(--linha); border-radius:17px; background:color-mix(in srgb,var(--fundo) 92%,transparent); box-shadow:0 12px 32px color-mix(in srgb,var(--texto) 13%,transparent); backdrop-filter:blur(16px); }
+.destino { position:relative; min-width:0; min-height:52px; padding:6px 10px; border:0; border-radius:11px; background:transparent; color:var(--muted); font-size:11px; font-weight:650; transition:background .14s,color .14s,transform .1s; }
+.destino::after { content:""; position:absolute; left:50%; bottom:4px; width:18px; height:3px; border-radius:999px; background:transparent; transform:translateX(-50%); }
+.destino svg { display:block; width:23px; height:23px; margin:0 auto 2px; stroke-width:1.9; }
+.destino span { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.destino:hover { background:var(--painel2); color:var(--texto); }
+.destino:active { transform:scale(.97); }
+.destino.atual { background:var(--acento-fraco); color:var(--acento); font-weight:800; }
+.destino.atual::after { background:currentColor; }
 .destino-mais { position: relative; min-width: 0; }
 .destino-mais > .destino { width: 100%; }
 .menu-mais { position: absolute; right: 0; bottom: 62px; z-index: 14; display: grid; min-width: 210px; max-height: 320px; overflow-y: auto; padding: 6px; border: 1px solid var(--linha); border-radius: 12px; background: var(--painel); box-shadow: 0 18px 45px rgba(0,0,0,.28); }
@@ -1021,6 +1024,8 @@ button { cursor: pointer; }
   .celula-acoes { position: absolute; z-index: 3; right: 7px; top: 7px; padding: 0; }
   .celula-acoes::before { display: none; }
   .linha-dado:hover { background: var(--acento-fraco); }
+  .menu-inferior { bottom:0; grid-template-columns:repeat(var(--destinos),minmax(0,1fr)); width:auto; margin:auto calc(-1 * var(--respiro)); padding:7px 12px 9px; border-width:1px 0 0; border-radius:0; box-shadow:0 -8px 24px color-mix(in srgb,var(--texto) 8%,transparent); }
+  .destino { min-height:58px; }
 }
 @media (max-width: 760px) {
   .barra { position: static; }
@@ -1260,7 +1265,6 @@ def pagina_aplicativo(
             blocos.append(
                 f'<section class="tela-app" tabindex="-1" data-tela="{_e(superficie.get("nome"))}"{oculto}>'
                 + _conteudo_da_tela(tela, prefixo)
-                + f'<p class="nota-preview">Tema {_e(tela.get("tema") or "padrão")} · superfície {_e(superficie.get("nome"))}</p>'
                 + "</section>"
             )
         detalhes = []
@@ -1287,7 +1291,6 @@ def pagina_aplicativo(
     conteudo_desktop = montar_conteudo("desktop-")
     conteudo_mobile = montar_conteudo("mobile-")
     navegacao = _navegacao_inferior(aplicativo)
-    operacoes = ", ".join(sorted((*lei, *esc))) or "nenhuma"
     return f"""<!doctype html>
 <html lang="pt-BR">
 <head>
@@ -1313,7 +1316,7 @@ def pagina_aplicativo(
   <main id="preview" class="galeria">
     <section class="dispositivo dispositivo-desktop" aria-labelledby="rotulo-desktop">
       <div class="rotulo-dispositivo"><strong id="rotulo-desktop">Desktop</strong><span>fluido · até 1040 px</span></div>
-      <div class="moldura"><div class="surface" data-theme="light">{conteudo_desktop}<p class="nota-preview">Operações conferidas: {_e(operacoes)}</p>{navegacao}</div></div>
+      <div class="moldura"><div class="surface" data-theme="light">{conteudo_desktop}{navegacao}</div></div>
     </section>
     <section class="dispositivo dispositivo-mobile" aria-labelledby="rotulo-mobile">
       <div class="rotulo-dispositivo"><strong id="rotulo-mobile">Celular</strong><span>390 px</span></div>
