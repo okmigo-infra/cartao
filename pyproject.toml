@@ -1,6 +1,6 @@
 [project]
 name = "okmigo-cartao"
-version = "0.3.3"
+version = "0.4.0"
 description = "O crivo do cartão declarado do okmigo: valida e normaliza um Adaptive Card (subconjunto) do jeito que o produto faz — para quem escreve um app testar antes de registrar."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -20,6 +20,9 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+okmigo_cartao = ["assets/*.js", "assets/*.css", "assets/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

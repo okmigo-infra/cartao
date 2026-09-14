@@ -1,3 +1,4 @@
+import hashlib
 import json
 import tempfile
 import unittest
@@ -18,6 +19,14 @@ DADOS = RAIZ / "exemplos" / "radaria.dados.json"
 
 
 class PreviewTest(unittest.TestCase):
+    def test_bundle_empacotado_corresponde_aos_hashes_exportados(self):
+        ativos = RAIZ / "src" / "okmigo_cartao" / "assets"
+        metadados = json.loads((ativos / "renderer.json").read_text(encoding="utf-8"))
+
+        for nome in ("renderer.js", "renderer.css"):
+            digest = hashlib.sha256((ativos / nome).read_bytes()).hexdigest()
+            self.assertEqual(metadados[f"{nome.replace('.', '_')}_sha256"], digest)
+
     def test_app_mantem_tela_dirigida_por_dados_navegavel_sem_fixture(self):
         with tempfile.TemporaryDirectory() as pasta:
             modulo = Path(pasta) / "app.py"
@@ -50,9 +59,10 @@ class PreviewTest(unittest.TestCase):
             frozenset(),
         )
 
-        self.assertIn("data-abrir-mais", html)
+        self.assertIn("aria-haspopup", html)
         for indice in range(7):
-            self.assertEqual(html.count(f'data-destino="tela-{indice}"'), 2)
+            self.assertEqual(html.count(f'"nome":"tela-{indice}"'), 1)
+        self.assertIn("Mais", html)
 
     def test_compila_expande_e_confere_o_sdk(self):
         tela, escrituras, leituras = construir_tela(ALVO, DADOS)
@@ -68,10 +78,11 @@ class PreviewTest(unittest.TestCase):
             "SANB11",
             "Desktop",
             "Celular",
-            'data-tema="dark"',
+            "Renderer Web oficial",
         ):
             self.assertIn(esperado, documento)
         self.assertNotIn("<script src=", documento)
+        self.assertNotIn("não é o renderer de produção", documento)
 
     def test_comando_pode_gerar_html_sem_iniciar_servidor(self):
         with tempfile.TemporaryDirectory() as temporario:
@@ -122,10 +133,10 @@ class PreviewTest(unittest.TestCase):
         self.assertEqual(
             ["ativos", "fiis"], [s["nome"] for s in aplicativo["superficies"]]
         )
-        self.assertIn("Telas de RadarIA", documento)
-        self.assertIn('data-destino="fiis"', documento)
-        self.assertIn('data-tela="fiis" hidden', documento)
-        self.assertIn("Tela aberta ·", documento)
+        self.assertIn('"nome":"RadarIA"', documento)
+        self.assertIn('"nome":"fiis"', documento)
+        self.assertIn("superficie-bottom-nav", documento)
+        self.assertIn("Renderer Web oficial", documento)
 
     def test_aplicativo_python_vira_preview_navegavel_sem_json_de_layout(self):
         codigo = """\
@@ -160,7 +171,7 @@ APLICATIVO = Aplicativo(
             ["inicio", "dados"], [s["nome"] for s in aplicativo["superficies"]]
         )
         self.assertIn("Tudo em Python", documento)
-        self.assertIn('data-destino="dados"', documento)
+        self.assertIn('"nome":"dados"', documento)
 
     def test_preview_desenha_fatos_grafico_e_grade(self):
         aplicativo = {
@@ -203,10 +214,11 @@ APLICATIVO = Aplicativo(
             aplicativo, "sdk.py:APLICATIVO", frozenset(), frozenset()
         )
 
-        self.assertIn('class="fatos"', documento)
-        self.assertIn('class="grafico"', documento)
-        self.assertIn('class="linha-grafico tom-positivo"', documento)
-        self.assertIn("caixa-grade-compacta", documento)
+        self.assertIn('"tipo":"fatos"', documento)
+        self.assertIn('"tipo":"grafico"', documento)
+        self.assertIn('"cor":"positivo"', documento)
+        self.assertIn('"grade":"compacta"', documento)
+        self.assertIn("Renderer Web oficial", documento)
 
     def test_preview_desenha_escolhas_progresso_e_etapas_ocultas(self):
         aplicativo = {
@@ -272,17 +284,14 @@ APLICATIVO = Aplicativo(
             aplicativo, "estoufit.py:ALUNO", frozenset(), frozenset()
         )
 
-        self.assertIn(
-            '<fieldset class="escolha escolha-cartoes" id="mobile-nivel"',
-            documento,
-        )
-        self.assertIn('value="iniciante" checked required', documento)
+        self.assertIn('"tipo":"escolha"', documento)
+        self.assertIn('"forma":"cartoes"', documento)
+        self.assertIn('"valor":"iniciante"', documento)
         self.assertIn("Começando agora", documento)
-        self.assertIn('<progress value="2" max="5"', documento)
-        self.assertIn('id="mobile-detalhes" hidden', documento)
-        self.assertIn(
-            'data-alvos="[{&quot;id&quot;: &quot;mobile-detalhes&quot;', documento
-        )
+        self.assertIn('"tipo":"progresso"', documento)
+        self.assertIn('"feito":2,"de":5', documento)
+        self.assertIn('"id":"detalhes","visivel":false', documento)
+        self.assertIn('"alvos":[{"id":"detalhes","mostrar":true}]', documento)
         self.assertNotIn("Componente escolha validado", documento)
         self.assertNotIn("Componente progresso validado", documento)
 
@@ -338,10 +347,10 @@ APLICATIVO = Aplicativo(
             )
 
         self.assertEqual("SANB11", aplicativo["respostas"][0]["valor"])
-        self.assertIn('data-valor="SANB11"', documento)
+        self.assertIn('"valor":"SANB11"', documento)
         self.assertIn("Ficha completa", documento)
-        self.assertIn("abrirResposta(botao.dataset.operacao, valores)", documento)
-        self.assertIn("Voltar para Ativos", documento)
+        self.assertIn("Sem resposta de demonstração", documento)
+        self.assertIn("Voltar para", documento)
 
 
 if __name__ == "__main__":

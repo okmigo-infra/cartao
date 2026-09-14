@@ -1,0 +1,145 @@
+{
+  "superficies": {
+    "visao": {
+      "resumo": {
+        "patrimonio_total_texto": "R$ 87.420,68",
+        "entradas_mes_texto": "R$ 12.850,00",
+        "saidas_mes_texto": "R$ 7.436,24",
+        "saldo_liquido_texto": "R$ 5.413,76",
+        "evolucao_patrimonio": [
+          {"rotulo": "Abr", "valor": 68420.0},
+          {"rotulo": "Mai", "valor": 72180.0},
+          {"rotulo": "Jun", "valor": 75890.0},
+          {"rotulo": "Jul", "valor": 79340.0},
+          {"rotulo": "Ago", "valor": 82006.92},
+          {"rotulo": "Set", "valor": 87420.68}
+        ],
+        "fluxo_caixa": [
+          {"rotulo": "Abr", "entradas": 11600.0, "saidas": 8420.0},
+          {"rotulo": "Mai", "entradas": 12200.0, "saidas": 9010.0},
+          {"rotulo": "Jun", "entradas": 11850.0, "saidas": 7730.0},
+          {"rotulo": "Jul", "entradas": 12900.0, "saidas": 8840.0},
+          {"rotulo": "Ago", "entradas": 12100.0, "saidas": 8154.0},
+          {"rotulo": "Set", "entradas": 12850.0, "saidas": 7436.24}
+        ]
+      },
+      "linhas": [
+        {"id": "tx-01", "grupo_data": "14 SET, 2026", "tipo_tela": "saidas", "icone": "🛒", "descricao": "Mercado Vila Nova", "categoria": "Alimentação", "de_onde": "Nubank · Conta principal", "valor_texto": "−R$ 286,40", "valor_semantica": "negativo"},
+        {"id": "tx-02", "grupo_data": "14 SET, 2026", "tipo_tela": "entradas", "icone": "↗", "descricao": "Transferência recebida", "categoria": "Receita", "de_onde": "Itaú · Conta corrente", "valor_texto": "+R$ 1.250,00", "valor_semantica": "positivo"},
+        {"id": "tx-03", "grupo_data": "13 SET, 2026", "tipo_tela": "saidas", "icone": "🚕", "descricao": "Uber", "categoria": "Transporte", "de_onde": "Nubank · Ultravioleta", "valor_texto": "−R$ 34,90", "valor_semantica": "negativo"},
+        {"id": "tx-04", "grupo_data": "12 SET, 2026", "tipo_tela": "saidas", "icone": "🎬", "descricao": "Netflix", "categoria": "Assinaturas", "de_onde": "Nubank · Ultravioleta", "valor_texto": "−R$ 44,90", "valor_semantica": "negativo"},
+        {"id": "tx-05", "grupo_data": "10 SET, 2026", "tipo_tela": "entradas", "icone": "💼", "descricao": "Salário", "categoria": "Receita", "de_onde": "Itaú · Conta corrente", "valor_texto": "+R$ 11.600,00", "valor_semantica": "positivo"}
+      ]
+    },
+    "cartoes": {
+      "resumo": {},
+      "linhas": [
+        {
+          "id": "card-nu",
+          "aba_titulo": "Nubank",
+          "nome": "Ultravioleta",
+          "bandeira_visual": "MASTERCARD",
+          "numero_visual": "•••• 4821",
+          "titular_visual": "VICTOR",
+          "validade_visual": "08/31",
+          "tom": "principal",
+          "fatura_atual_texto": "R$ 3.284,52",
+          "limite_total_texto": "R$ 18.000,00",
+          "limite_disponivel_texto": "R$ 14.715,48 disponível",
+          "limite_utilizado_feito": 18,
+          "limite_utilizado_de": 100,
+          "transacoes": [
+            {"id": "nu-1", "tipo_tela": "saidas", "icone": "🛒", "descricao": "Mercado Vila Nova", "detalhe": "Hoje · Alimentação", "valor_texto": "−R$ 286,40", "valor_semantica": "negativo"},
+            {"id": "nu-2", "tipo_tela": "saidas", "icone": "🚕", "descricao": "Uber", "detalhe": "Ontem · Transporte", "valor_texto": "−R$ 34,90", "valor_semantica": "negativo"}
+          ],
+          "parcelas_titulo": "Parcelas futuras · Nubank",
+          "parcelas_frase": "5 parcelas somando R$ 1.247,50",
+          "parcelas_total_texto": "R$ 1.247,50",
+          "parcelas": [
+            {"descricao": "MacBook Pro", "detalhe": "Loja Apple", "parcela_texto": "4/10", "valor_texto": "R$ 799,00"},
+            {"descricao": "Passagem aérea", "detalhe": "LATAM", "parcela_texto": "2/6", "valor_texto": "R$ 448,50"}
+          ]
+        },
+        {
+          "id": "card-itau",
+          "aba_titulo": "Itaú",
+          "nome": "Personnalité Black",
+          "bandeira_visual": "VISA",
+          "numero_visual": "•••• 1038",
+          "titular_visual": "VICTOR",
+          "validade_visual": "03/30",
+          "tom": "escuro",
+          "fatura_atual_texto": "R$ 1.140,80",
+          "limite_total_texto": "R$ 25.000,00",
+          "limite_disponivel_texto": "R$ 23.859,20 disponível",
+          "limite_utilizado_feito": 5,
+          "limite_utilizado_de": 100,
+          "transacoes": [
+            {"id": "itau-1", "tipo_tela": "saidas", "icone": "🍽️", "descricao": "Restaurante Mestiço", "detalhe": "12 set · Alimentação", "valor_texto": "−R$ 184,00", "valor_semantica": "negativo"},
+            {"id": "itau-2", "tipo_tela": "saidas", "icone": "⛽", "descricao": "Posto Ipiranga", "detalhe": "10 set · Transporte", "valor_texto": "−R$ 296,80", "valor_semantica": "negativo"}
+          ],
+          "parcelas_titulo": "Parcelas futuras · Itaú",
+          "parcelas_frase": "2 parcelas somando R$ 476,00",
+          "parcelas_total_texto": "R$ 476,00",
+          "parcelas": [
+            {"descricao": "Academia", "detalhe": "Plano anual", "parcela_texto": "8/12", "valor_texto": "R$ 238,00"}
+          ]
+        }
+      ]
+    },
+    "contas": {
+      "resumo": {
+        "total_em_contas_texto": "R$ 87.420,68",
+        "contas_ativas_texto": "3 contas ativas",
+        "conectar_em": "https://connect.dinfinance.dev/widget/demo",
+        "distribuicao_contas": [
+          {"rotulo": "Conta corrente", "valor": 24880.32, "texto": "28%", "tom": "principal"},
+          {"rotulo": "Investimentos", "valor": 57540.36, "texto": "66%", "tom": "verde"},
+          {"rotulo": "Reserva", "valor": 5000.0, "texto": "6%", "tom": "suave"}
+        ]
+      },
+      "linhas": [
+        {"id": "acc-1", "tipo": "BANK", "icone": "🏦", "nome": "Conta principal", "banco": "Itaú", "tipo_frase": "Conta corrente", "saldo_texto": "R$ 24.880,32", "percentual_total_texto": "28% do total"},
+        {"id": "acc-2", "tipo": "BANK", "icone": "📈", "nome": "Investimentos", "banco": "XP", "tipo_frase": "Conta de investimentos", "saldo_texto": "R$ 57.540,36", "percentual_total_texto": "66% do total"},
+        {"id": "acc-3", "tipo": "BANK", "icone": "🛡️", "nome": "Reserva", "banco": "Nubank", "tipo_frase": "Caixinha", "saldo_texto": "R$ 5.000,00", "percentual_total_texto": "6% do total"}
+      ]
+    },
+    "extrato": {
+      "resumo": {
+        "entradas_mes_texto": "R$ 12.850,00",
+        "saidas_mes_texto": "R$ 7.436,24"
+      },
+      "linhas": [
+        {"id": "tx-01", "grupo_data": "14 SET, 2026", "tipo_tela": "saidas", "icone": "🛒", "descricao": "Mercado Vila Nova", "categoria": "Alimentação", "de_onde": "Nubank · Conta principal", "valor_texto": "−R$ 286,40", "valor_semantica": "negativo"},
+        {"id": "tx-02", "grupo_data": "14 SET, 2026", "tipo_tela": "entradas", "icone": "↗", "descricao": "Transferência recebida", "categoria": "Receita", "de_onde": "Itaú · Conta corrente", "valor_texto": "+R$ 1.250,00", "valor_semantica": "positivo"},
+        {"id": "tx-03", "grupo_data": "13 SET, 2026", "tipo_tela": "saidas", "icone": "🚕", "descricao": "Uber", "categoria": "Transporte", "de_onde": "Nubank · Ultravioleta", "valor_texto": "−R$ 34,90", "valor_semantica": "negativo"},
+        {"id": "tx-04", "grupo_data": "12 SET, 2026", "tipo_tela": "saidas", "icone": "🎬", "descricao": "Netflix", "categoria": "Assinaturas", "de_onde": "Nubank · Ultravioleta", "valor_texto": "−R$ 44,90", "valor_semantica": "negativo"},
+        {"id": "tx-05", "grupo_data": "10 SET, 2026", "tipo_tela": "entradas", "icone": "💼", "descricao": "Salário", "categoria": "Receita", "de_onde": "Itaú · Conta corrente", "valor_texto": "+R$ 11.600,00", "valor_semantica": "positivo"},
+        {"id": "tx-06", "grupo_data": "09 SET, 2026", "tipo_tela": "saidas", "icone": "💡", "descricao": "Conta de energia", "categoria": "Moradia", "de_onde": "Itaú · Conta principal", "valor_texto": "−R$ 218,34", "valor_semantica": "negativo"}
+      ]
+    },
+    "categorias": {
+      "resumo": {
+        "gasto_mes_texto": "R$ 7.436,24",
+        "orcamento_mensal_texto": "R$ 10.500,00",
+        "orcamento_feito": 71,
+        "orcamento_de": 100,
+        "orcamento_utilizado_texto": "71% do orçamento utilizado",
+        "distribuicao_categorias": [
+          {"rotulo": "Moradia", "valor": 2850.0, "texto": "38%", "tom": "principal"},
+          {"rotulo": "Alimentação", "valor": 1726.4, "texto": "23%", "tom": "verde"},
+          {"rotulo": "Transporte", "valor": 1164.7, "texto": "16%", "tom": "atencao"},
+          {"rotulo": "Lazer", "valor": 895.14, "texto": "12%", "tom": "suave"},
+          {"rotulo": "Outros", "valor": 800.0, "texto": "11%", "tom": "escuro"}
+        ]
+      },
+      "linhas": [
+        {"categoria_limpa": "Moradia", "icone": "🏠", "orcamento_texto": "R$ 3.500,00", "saiu_texto": "R$ 2.850,00", "restante_texto": "R$ 650,00", "progresso_feito": 81, "progresso_de": 100, "tom": "principal", "percentual_orcamento_texto": "81% utilizado"},
+        {"categoria_limpa": "Alimentação", "icone": "🛒", "orcamento_texto": "R$ 2.200,00", "saiu_texto": "R$ 1.726,40", "restante_texto": "R$ 473,60", "progresso_feito": 78, "progresso_de": 100, "tom": "verde", "percentual_orcamento_texto": "78% utilizado"},
+        {"categoria_limpa": "Transporte", "icone": "🚕", "orcamento_texto": "R$ 1.500,00", "saiu_texto": "R$ 1.164,70", "restante_texto": "R$ 335,30", "progresso_feito": 78, "progresso_de": 100, "tom": "atencao", "percentual_orcamento_texto": "78% utilizado"},
+        {"categoria_limpa": "Lazer", "icone": "🎬", "orcamento_texto": "R$ 1.200,00", "saiu_texto": "R$ 895,14", "restante_texto": "R$ 304,86", "progresso_feito": 75, "progresso_de": 100, "tom": "suave", "percentual_orcamento_texto": "75% utilizado"},
+        {"categoria_limpa": "Outros", "icone": "•••", "orcamento_texto": "R$ 2.100,00", "saiu_texto": "R$ 800,00", "restante_texto": "R$ 1.300,00", "progresso_feito": 38, "progresso_de": 100, "tom": "escuro", "percentual_orcamento_texto": "38% utilizado"}
+      ]
+    }
+  }
+}

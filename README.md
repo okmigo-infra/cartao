@@ -10,9 +10,11 @@ chaves próprias prefixadas `okmigo`), e o produto **reconstrói** esse cartão 
 vocabulário dele, descartando em silêncio o que não conhece. Esse reconstrutor
 é o **crivo**, e é ele que está aqui — o mesmo código que roda no produto.
 
-⚠️ **O que não está aqui, de propósito:** os renderizadores do produto (web e
-app), a ponte que busca os dados, o registro, o produto em si. O que se entrega
-é o **contrato** e o **crivo**; a aparência é do produto.
+⚠️ **O que não está aqui, de propósito:** o código-fonte do produto, o cliente
+nativo, a ponte que busca os dados e o registro. O pacote inclui somente um
+**bundle compilado do renderer Web oficial** para o preview local. O serviço
+continua recebendo apenas o contrato e o crivo; aparência e componentes não
+podem ser fornecidos pelo app.
 
 ## Piloto: escrever a tela com o SDK Python
 
@@ -71,6 +73,14 @@ python -m okmigo_cartao preview ../estoufit/okmigo/gerar_manifestos.py:ALUNO \
   --host 0.0.0.0 --port 44174
 ```
 
+O DinFinance exercita os componentes financeiros e suas cinco telas:
+
+```bash
+python -m okmigo_cartao preview ../dinfinance/okmigo/gerar_manifesto.py:APLICATIVO \
+  --dados exemplos/dinfinance.aplicativo.dados.json \
+  --host 0.0.0.0 --port 44178
+```
+
 Também é possível passar o `manifesto.json` compilado; ele é útil para o
 registro e para conferir que a saída do SDK não mudou, mas não é necessário
 para desenvolver ou visualizar o app.
@@ -81,16 +91,17 @@ reconstruída a cada recarga, então basta salvar o manifesto/dados e atualizar 
 navegador. Em container, publique ou encaminhe a porta `4173`. Para gerar um
 arquivo sem subir servidor, acrescente `--saida preview.html`.
 
-⚠️ A galeria é uma aproximação visual autocontida para autoria — não é o
-renderer de produção do Tyego. Navegação, responsividade, tema e respostas de
-leitura declaradas em `_preview.respostas` funcionam localmente, inclusive ida
-ao detalhe e volta à lista. Escritas e leituras sem exemplo continuam simuladas
-e não fazem chamadas externas. O próximo estágio do piloto é executar essas
-operações contra um backend de desenvolvimento e usar os renderizadores web e
-Flutter reais.
+O preview usa o mesmo componente React e os mesmos estilos do OkMigo Web. O
+bundle compilado viaja dentro do wheel Python: quem desenvolve um app não
+precisa clonar nem executar o produto. Navegação, responsividade, claro/escuro e
+respostas declaradas em `_preview.respostas` funcionam localmente, inclusive
+ida ao detalhe e volta à lista. Escritas são simuladas e nenhuma ação faz
+requisição externa. O quadro de 390 px reproduz o Web responsivo; a conferência
+final do cliente nativo continua sendo feita no emulador Flutter.
 
-Este módulo ainda é deliberadamente um piloto: cobre uma tela representativa,
-não todo o vocabulário de `CONTRATO.md`.
+O SDK tipado ainda é deliberadamente um piloto e não possui classes de autoria
+para todo o vocabulário de `CONTRATO.md`. O preview, porém, usa o renderer Web
+oficial e exibe todo componente que o produto Web já reconhece.
 
 ### Trazendo um aplicativo existente
 
