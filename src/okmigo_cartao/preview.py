@@ -34,7 +34,7 @@ def _separar_alvo(alvo: str) -> tuple[Path, str]:
     if not separador or not arquivo or not fabrica:
         raise ErroDePreview(
             "o alvo precisa ter a forma arquivo.py:objeto, por exemplo "
-            "exemplos/sdk_radaria.py:tela_de_ativos"
+            "exemplos/sdk_catalogo.py:APLICATIVO"
         )
     caminho = Path(arquivo).expanduser().resolve()
     if caminho.suffix != ".py":
@@ -198,6 +198,13 @@ def inferir_operacoes(cartao: Any) -> tuple[frozenset[str], frozenset[str]]:
         consultar = valor.get("consultar")
         if isinstance(consultar, str) and consultar:
             leituras.add(consultar)
+        if tipo == "okmigoDocumento":
+            ler = valor.get("ler")
+            operacao_de_leitura = (
+                ler.get("operacao") if isinstance(ler, dict) else None
+            )
+            if isinstance(operacao_de_leitura, str) and operacao_de_leitura:
+                leituras.add(operacao_de_leitura)
         for filho in valor.values():
             visitar(filho)
 
