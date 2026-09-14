@@ -633,6 +633,7 @@ def _icone_da_navegacao(nome: str) -> str:
         "fiis": '<path d="M4 20V9l8-5 8 5v11"></path><path d="M8 20v-6h8v6M8 10h.01M12 10h.01M16 10h.01"></path>',
         "carteira": '<path d="M3 7h15a2 2 0 012 2v9H5a2 2 0 01-2-2V7z"></path><path d="M5 7V5h11v2M15 12h5"></path>',
         "comunicados": '<path d="M6 3h9l3 3v15H6z"></path><path d="M15 3v4h4M9 12h6M9 16h6"></path>',
+        "mais": '<circle cx="5" cy="12" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle>',
     }
     corpo = desenhos.get(nome, '<circle cx="12" cy="12" r="7"></circle>')
     return (
@@ -647,14 +648,31 @@ def _navegacao_inferior(aplicativo: Json) -> str:
         return ""
     botoes = []
     atual = aplicativo.get("atual")
-    for item in superficies[:5]:
+
+    def destino(item: Json, *, extra: bool = False) -> str:
         selecionado = item.get("nome") == atual
         corrente = ' aria-current="page"' if selecionado else ""
         classe = " atual" if selecionado else ""
-        botoes.append(
-            f'<button type="button" class="destino{classe}" data-destino="{_e(item.get("nome"))}"{corrente}>'
+        classe_extra = " destino-extra" if extra else ""
+        return (
+            f'<button type="button" class="destino{classe}{classe_extra}" data-destino="{_e(item.get("nome"))}"{corrente}>'
             f"{_icone_da_navegacao(str(item.get('icone') or ''))}"
             f"<span>{_e(item.get('rotulo'))}</span></button>"
+        )
+
+    tem_mais = len(superficies) > 5
+    principais = superficies[:4] if tem_mais else superficies
+    extras = superficies[4:] if tem_mais else []
+    botoes.extend(destino(item) for item in principais)
+    if tem_mais:
+        nomes_extras = ",".join(str(item.get("nome") or "") for item in extras)
+        classe = " atual" if any(item.get("nome") == atual for item in extras) else ""
+        menu = "".join(destino(item, extra=True) for item in extras)
+        botoes.append(
+            '<div class="destino-mais">'
+            f'<button type="button" class="destino{classe}" data-abrir-mais data-extras="{_e(nomes_extras)}" aria-expanded="false">'
+            f'{_icone_da_navegacao("mais")}<span>Mais</span></button>'
+            f'<div class="menu-mais" role="menu" hidden>{menu}</div></div>'
         )
     return (
         f'<nav class="menu-inferior" aria-label="Telas de {_e(aplicativo.get("nome") or "serviço")}">'
@@ -771,6 +789,12 @@ button { cursor: pointer; }
 .destino span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .destino:hover { background: var(--acento-fraco); color: var(--texto); }
 .destino.atual { color: var(--acento); font-weight: 800; }
+.destino-mais { position: relative; min-width: 0; }
+.destino-mais > .destino { width: 100%; }
+.menu-mais { position: absolute; right: 0; bottom: 62px; z-index: 14; display: grid; min-width: 210px; max-height: 320px; overflow-y: auto; padding: 6px; border: 1px solid var(--linha); border-radius: 12px; background: var(--painel); box-shadow: 0 18px 45px rgba(0,0,0,.28); }
+.menu-mais[hidden] { display: none; }
+.menu-mais .destino { display: grid; grid-template-columns: 28px 1fr; align-items: center; gap: 10px; min-height: 48px; padding: 8px 10px; text-align: left; font-size: 12px; }
+.menu-mais .destino svg { width: 20px; height: 20px; margin: 0; }
 .resultado { position: fixed; z-index: 50; left: 50%; bottom: 24px; width: min(560px, calc(100% - 32px)); padding: 13px 16px; border: 1px solid #5c606a; border-radius: 12px; background: #202228; color: white; box-shadow: 0 18px 50px rgba(0,0,0,.35); transform: translate(-50%, 140px); transition: transform .2s; }
 .resultado.visivel { transform: translate(-50%, 0); }
 @container (max-width: 600px) {
@@ -812,6 +836,11 @@ function anunciar(texto) {
 function marcarDestino(destino) {
   document.querySelectorAll('[data-destino]').forEach((item) => {
     const atual = item.dataset.destino === destino;
+    item.classList.toggle('atual', atual);
+    if (atual) item.setAttribute('aria-current', 'page'); else item.removeAttribute('aria-current');
+  });
+  document.querySelectorAll('[data-abrir-mais]').forEach((item) => {
+    const atual = (item.dataset.extras || '').split(',').includes(destino);
     item.classList.toggle('atual', atual);
     if (atual) item.setAttribute('aria-current', 'page'); else item.removeAttribute('aria-current');
   });
@@ -893,8 +922,25 @@ document.querySelectorAll('[data-destino]').forEach((botao) => {
   botao.addEventListener('click', () => {
     const destino = botao.dataset.destino;
     abrirTela(destino);
+    document.querySelectorAll('.menu-mais').forEach((menu) => menu.hidden = true);
+    document.querySelectorAll('[data-abrir-mais]').forEach((item) => item.setAttribute('aria-expanded', 'false'));
     anunciar('Tela aberta · ' + botao.textContent.trim());
   });
+});
+
+document.querySelectorAll('[data-abrir-mais]').forEach((botao) => {
+  botao.addEventListener('click', () => {
+    const menu = botao.parentElement.querySelector('.menu-mais');
+    const abrir = menu.hidden;
+    menu.hidden = !abrir;
+    botao.setAttribute('aria-expanded', String(abrir));
+  });
+});
+
+document.addEventListener('keydown', (evento) => {
+  if (evento.key !== 'Escape') return;
+  document.querySelectorAll('.menu-mais').forEach((menu) => menu.hidden = true);
+  document.querySelectorAll('[data-abrir-mais]').forEach((item) => item.setAttribute('aria-expanded', 'false'));
 });
 
 document.querySelectorAll('[data-voltar-detalhe]').forEach((botao) => {

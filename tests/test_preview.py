@@ -33,6 +33,27 @@ class PreviewTest(unittest.TestCase):
             str(app["superficies"][0]["tela"]["corpo"]),
         )
 
+    def test_menu_mais_preserva_todos_os_destinos(self):
+        superficies = [
+            {
+                "nome": f"tela-{indice}",
+                "rotulo": f"Tela {indice}",
+                "icone": "inicio",
+                "tela": {"corpo": []},
+            }
+            for indice in range(7)
+        ]
+        html = pagina_aplicativo(
+            {"nome": "Grande", "atual": "tela-0", "superficies": superficies},
+            "grande.py:APLICATIVO",
+            frozenset(),
+            frozenset(),
+        )
+
+        self.assertIn("data-abrir-mais", html)
+        for indice in range(7):
+            self.assertEqual(html.count(f'data-destino="tela-{indice}"'), 2)
+
     def test_compila_expande_e_confere_o_sdk(self):
         tela, escrituras, leituras = construir_tela(ALVO, DADOS)
 

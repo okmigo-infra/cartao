@@ -1,6 +1,6 @@
 [project]
 name = "okmigo-cartao"
-version = "0.3.2"
+version = "0.3.3"
 description = "O crivo do cartão declarado do okmigo: valida e normaliza um Adaptive Card (subconjunto) do jeito que o produto faz — para quem escreve um app testar antes de registrar."
 readme = "README.md"
 requires-python = ">=3.11"
