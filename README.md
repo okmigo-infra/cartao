@@ -61,6 +61,16 @@ python -m okmigo_cartao preview ../radaria/app/okmigo/manifesto.py:APLICATIVO \
   --dados exemplos/radaria.aplicativo.dados.json
 ```
 
+O EstouFit usa o mesmo fluxo. A fixture abaixo abre as telas de treino e
+perfil com escolhas editáveis, progresso, detalhes dos exercícios e
+cronômetro de descanso:
+
+```bash
+python -m okmigo_cartao preview ../estoufit/okmigo/gerar_manifestos.py:ALUNO \
+  --dados exemplos/estoufit-aluno.aplicativo.dados.json \
+  --host 0.0.0.0 --port 44174
+```
+
 Também é possível passar o `manifesto.json` compilado; ele é útil para o
 registro e para conferir que a saída do SDK não mudou, mas não é necessário
 para desenvolver ou visualizar o app.

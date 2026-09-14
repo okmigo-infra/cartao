@@ -381,15 +381,35 @@ def _e(valor: Any) -> str:
     return html.escape(str(valor or ""), quote=True)
 
 
-def _atributos_acao(acao: Json) -> str:
+def _com_prefixo(alvos: list[Json], prefixo: str) -> list[Json]:
+    return [{**alvo, "id": prefixo + str(alvo.get("id") or "")} for alvo in alvos]
+
+
+def _atributos_acao(acao: Json, prefixo: str = "") -> str:
     operacao = acao.get("consultar") or acao.get("enviar") or "alternar"
-    campos = json.dumps(acao.get("campos") or [], ensure_ascii=False)
+    campos = json.dumps(
+        [prefixo + str(campo) for campo in (acao.get("campos") or [])],
+        ensure_ascii=False,
+    )
+    alvos = json.dumps(
+        _com_prefixo(acao.get("alvos") or [], prefixo), ensure_ascii=False
+    )
+    apos_enviar = json.dumps(
+        _com_prefixo(acao.get("apos_enviar") or [], prefixo), ensure_ascii=False
+    )
     destrutiva = "true" if acao.get("enfase") == "destrutiva" else "false"
     return (
         f'data-operacao="{_e(operacao)}" '
         f'data-campos="{_e(campos)}" '
+        f'data-alvos="{_e(alvos)}" '
+        f'data-apos-enviar="{_e(apos_enviar)}" '
         f'data-destrutiva="{destrutiva}"'
     )
+
+
+def _atributos_toggle(alvos: list[Json], prefixo: str = "") -> str:
+    valor = json.dumps(_com_prefixo(alvos, prefixo), ensure_ascii=False)
+    return f'data-toggle-alvos="{_e(valor)}"'
 
 
 def _texto_visivel(itens: list[Json]) -> str:
@@ -418,7 +438,7 @@ def _render_texto(no: Json) -> str:
     return f'<{tag} class="{" ".join(classe)}">{conteudo}</{tag}>'
 
 
-def _render_acao(acao: Json, *, extra: str = "") -> str:
+def _render_acao(acao: Json, *, extra: str = "", prefixo: str = "") -> str:
     enfase = _e(acao.get("enfase") or "padrao")
     titulo = _e(acao.get("titulo") or "Executar")
     icone = ""
@@ -426,11 +446,92 @@ def _render_acao(acao: Json, *, extra: str = "") -> str:
         icone = '<span aria-hidden="true" class="icone-lixeira"></span>'
     return (
         f'<button type="button" class="acao acao-{enfase} {extra}" '
-        f"{_atributos_acao(acao)}>{icone}<span>{titulo}</span></button>"
+        f"{_atributos_acao(acao, prefixo)}>{icone}<span>{titulo}</span></button>"
     )
 
 
-def _render_tabela(no: Json) -> str:
+def _render_escolha(no: Json, prefixo: str = "") -> str:
+    campo_original = str(no.get("id") or "escolha")
+    campo_id = prefixo + campo_original
+    campo = str(no.get("campo") or campo_original)
+    rotulo = _e(no.get("rotulo") or "Escolha uma opção")
+    obrigatorio = " required" if no.get("obrigatorio") else ""
+    opcoes = no.get("opcoes") or []
+    valor_atual = str(no.get("valor") or "")
+
+    if no.get("forma") == "cartoes":
+        fichas = []
+        for indice, opcao in enumerate(opcoes):
+            valor = str(opcao.get("valor") or "")
+            marcado = " checked" if valor == valor_atual else ""
+            opcao_id = f"{campo_id}-{indice}"
+            icone = (
+                f'<span class="opcao-icone" aria-hidden="true">{_e(opcao.get("icone"))}</span>'
+                if opcao.get("icone")
+                else ""
+            )
+            nota = (
+                f'<small>{_e(opcao.get("nota"))}</small>'
+                if opcao.get("nota")
+                else ""
+            )
+            fichas.append(
+                '<label class="opcao-cartao" for="'
+                + _e(opcao_id)
+                + '">'
+                f'<input type="radio" id="{_e(opcao_id)}" '
+                f'name="{_e(prefixo + campo)}" data-campo="{_e(campo)}" '
+                f'value="{_e(valor)}"{marcado}{obrigatorio}>'
+                '<span class="opcao-conteudo">'
+                + icone
+                + '<span class="opcao-textos"><strong>'
+                + _e(opcao.get("rotulo"))
+                + "</strong>"
+                + nota
+                + '</span><span class="opcao-marca" aria-hidden="true">✓</span></span></label>'
+            )
+        return (
+            f'<fieldset class="escolha escolha-cartoes" id="{_e(campo_id)}"'
+            f'{" data-required=\"true\"" if no.get("obrigatorio") else ""}>'
+            f"<legend>{rotulo}</legend>"
+            f'<div class="grade-opcoes">{"".join(fichas)}</div></fieldset>'
+        )
+
+    opcoes_html = []
+    if not no.get("obrigatorio"):
+        opcoes_html.append(
+            f'<option value="">{_e(no.get("dica") or "Selecione")}</option>'
+        )
+    for opcao in opcoes:
+        valor = str(opcao.get("valor") or "")
+        selecionado = " selected" if valor == valor_atual else ""
+        opcoes_html.append(
+            f'<option value="{_e(valor)}"{selecionado}>{_e(opcao.get("rotulo"))}</option>'
+        )
+    return (
+        '<div class="escolha escolha-lista">'
+        f'<label for="{_e(campo_id)}">{rotulo}</label>'
+        f'<select id="{_e(campo_id)}" name="{_e(campo)}"{obrigatorio}>'
+        + "".join(opcoes_html)
+        + "</select></div>"
+    )
+
+
+def _render_progresso(no: Json) -> str:
+    feito = int(no.get("feito") or 0)
+    de = max(1, int(no.get("de") or 1))
+    percentual = round(feito * 100 / de)
+    rotulo = _e(no.get("rotulo") or "Progresso do treino")
+    return (
+        '<div class="progresso">'
+        f'<div class="progresso-cabecalho"><strong>{rotulo}</strong>'
+        f'<span>{feito} de {de} · {percentual}%</span></div>'
+        f'<progress value="{feito}" max="{de}" aria-label="{rotulo}: {feito} de {de}">{percentual}%</progress>'
+        "</div>"
+    )
+
+
+def _render_tabela(no: Json, prefixo: str = "") -> str:
     linhas = no.get("linhas") or []
     if not linhas:
         return ""
@@ -454,7 +555,9 @@ def _render_tabela(no: Json) -> str:
         partes.append('<div class="linha-tabela cabecalho-tabela" role="row">')
         for celula in cabecalho.get("celulas") or []:
             partes.append('<div role="columnheader">')
-            partes.extend(_render_no(item) for item in celula.get("itens") or [])
+            partes.extend(
+                _render_no(item, prefixo) for item in celula.get("itens") or []
+            )
             partes.append("</div>")
         partes.append("</div>")
     for indice, linha in enumerate(dados):
@@ -467,7 +570,7 @@ def _render_tabela(no: Json) -> str:
             partes.append(
                 f'<button type="button" class="abrir-linha" '
                 f'aria-label="{titulo}: {_e(nome or f"linha {indice + 1}")}" '
-                f"{_atributos_acao(acao_linha)}></button>"
+                f"{_atributos_acao(acao_linha, prefixo)}></button>"
             )
         for coluna, celula in enumerate(celulas):
             rotulo = rotulos[coluna] if coluna < len(rotulos) else ""
@@ -475,7 +578,9 @@ def _render_tabela(no: Json) -> str:
             partes.append(
                 f'<div class="celula{classe}" role="cell" data-rotulo="{_e(rotulo)}">'
             )
-            partes.extend(_render_no(item) for item in celula.get("itens") or [])
+            partes.extend(
+                _render_no(item, prefixo) for item in celula.get("itens") or []
+            )
             partes.append("</div>")
         partes.append("</div>")
     partes.append("</div>")
@@ -550,30 +655,47 @@ def _render_grafico(no: Json) -> str:
     )
 
 
-def _render_no(no: Json) -> str:
-    if not no.get("visivel", True) and no.get("tipo") != "campo":
-        return ""
+def _render_no(no: Json, prefixo: str = "") -> str:
     tipo = no.get("tipo")
     if tipo == "texto":
         return _render_texto(no)
     if tipo == "caixa":
-        itens = "".join(_render_no(item) for item in no.get("itens") or [])
+        itens = "".join(_render_no(item, prefixo) for item in no.get("itens") or [])
         grade = no.get("grade")
         classe_grade = f" caixa-grade-{_e(grade)}" if grade else ""
-        return f'<section class="caixa caixa-{_e(no.get("estilo") or "default")}{classe_grade}">{itens}</section>'
+        caixa_id = (
+            f' id="{_e(prefixo + str(no.get("id")))}"' if no.get("id") else ""
+        )
+        oculto = " hidden" if not no.get("visivel", True) else ""
+        ao_tocar = no.get("ao_tocar") or {}
+        toque = ""
+        classe_toque = " caixa-tocavel" if ao_tocar.get("alvos") else ""
+        if ao_tocar.get("alvos"):
+            rotulo = _texto_visivel(no.get("itens") or []) or "Abrir esta opção"
+            toque = (
+                f'<button type="button" class="caixa-toque" aria-label="{_e(rotulo)}" '
+                f'{_atributos_toggle(ao_tocar["alvos"], prefixo)}></button>'
+            )
+        return (
+            f'<section class="caixa caixa-{_e(no.get("estilo") or "default")}'
+            f'{classe_grade}{classe_toque}"{caixa_id}{oculto}>{toque}{itens}</section>'
+        )
     if tipo == "colunas":
         colunas = "".join(
-            '<div class="coluna">'
-            + "".join(_render_no(item) for item in coluna.get("itens") or [])
+            f'<div class="coluna coluna-{_e(coluna.get("largura") or "stretch")}">'
+            + "".join(_render_no(item, prefixo) for item in coluna.get("itens") or [])
             + "</div>"
             for coluna in no.get("colunas") or []
         )
         return f'<div class="colunas">{colunas}</div>'
     if tipo == "acoes":
-        botoes = "".join(_render_acao(botao) for botao in no.get("botoes") or [])
+        botoes = "".join(
+            _render_acao(botao, prefixo=prefixo) for botao in no.get("botoes") or []
+        )
         return f'<div class="acoes">{botoes}</div>'
     if tipo == "escolha_livre":
-        campo_id = _e(no.get("id") or "busca")
+        campo_original = str(no.get("id") or "busca")
+        campo_id = _e(prefixo + campo_original)
         lista_id = f"{campo_id}-opcoes"
         obrigatorio = " required" if no.get("obrigatorio") else ""
         opcoes = "".join(
@@ -584,32 +706,74 @@ def _render_no(no: Json) -> str:
             '<div class="campo-busca">'
             f'<label for="{campo_id}">{_e(no.get("rotulo") or "Buscar")}</label>'
             '<div class="entrada-com-icone"><span aria-hidden="true" class="lupa"></span>'
-            f'<input id="{campo_id}" name="{_e(no.get("campo") or campo_id)}" '
+            f'<input id="{campo_id}" name="{_e(no.get("campo") or campo_original)}" '
             f'value="{_e(no.get("valor"))}" placeholder="{_e(no.get("dica"))}" '
             f'list="{lista_id}" autocomplete="off"{obrigatorio}></div>'
             f'<datalist id="{lista_id}">{opcoes}</datalist>'
             f'<p class="ajuda">Autocompletar por {_e(no.get("buscar") or "opções locais")}</p>'
             "</div>"
         )
+    if tipo == "escolha":
+        return _render_escolha(no, prefixo)
     if tipo == "campo":
-        campo_id = _e(no.get("id") or "campo")
+        campo_original = str(no.get("id") or "campo")
+        campo_id = _e(prefixo + campo_original)
+        nome = _e(no.get("campo") or campo_original)
         if not no.get("visivel", True):
             return (
                 f'<input type="hidden" id="{campo_id}" '
-                f'name="{_e(no.get("campo") or campo_id)}" value="{_e(no.get("valor"))}">'
+                f'name="{nome}" value="{_e(no.get("valor"))}">'
+            )
+        obrigatorio = " required" if no.get("obrigatorio") else ""
+        somente_leitura = " readonly" if no.get("somente_leitura") else ""
+        if int(no.get("linhas") or 1) > 1:
+            entrada = (
+                f'<textarea id="{campo_id}" name="{nome}" '
+                f'placeholder="{_e(no.get("dica"))}"{obrigatorio}{somente_leitura}>'
+                f'{_e(no.get("valor"))}</textarea>'
+            )
+        else:
+            formato = "number" if no.get("formato") == "numero" else "text"
+            entrada = (
+                f'<input type="{formato}" id="{campo_id}" name="{nome}" '
+                f'value="{_e(no.get("valor"))}" placeholder="{_e(no.get("dica"))}"'
+                f'{obrigatorio}{somente_leitura}>'
             )
         return (
             '<div class="campo-comum">'
             f'<label for="{campo_id}">{_e(no.get("rotulo") or no.get("campo"))}</label>'
-            f'<input id="{campo_id}" value="{_e(no.get("valor"))}" '
-            f'placeholder="{_e(no.get("dica"))}"></div>'
+            f"{entrada}</div>"
+        )
+    if tipo == "imagem":
+        altura = _e(no.get("altura") or "auto")
+        return (
+            f'<figure class="midia midia-{altura}"><img src="{_e(no.get("url"))}" '
+            f'alt="{_e(no.get("alt"))}" loading="lazy"></figure>'
+        )
+    if tipo == "sem_imagem":
+        return (
+            f'<figure class="midia sem-imagem midia-{_e(no.get("altura") or "auto")}" '
+            f'role="img" aria-label="Demonstração indisponível para {_e(no.get("alt"))}">'
+            '<span aria-hidden="true">▶</span><figcaption>Demonstração ainda indisponível</figcaption></figure>'
         )
     if tipo == "tabela":
-        return _render_tabela(no)
+        return _render_tabela(no, prefixo)
     if tipo == "fatos":
         return _render_fatos(no)
     if tipo == "grafico":
         return _render_grafico(no)
+    if tipo == "progresso":
+        return _render_progresso(no)
+    if tipo == "cronometro":
+        segundos = int(no.get("segundos") or 0)
+        minutos, resto = divmod(segundos, 60)
+        return (
+            '<div class="cronometro">'
+            f'<div><strong>{_e(no.get("rotulo") or "Cronômetro")}</strong>'
+            '<small>inicia somente quando você tocar</small></div>'
+            f'<time aria-live="polite">{minutos:02d}:{resto:02d}</time>'
+            f'<button type="button" data-cronometro="{segundos}">Iniciar</button></div>'
+        )
     if tipo == "autorizar":
         return (
             '<section class="autorizar">'
@@ -621,8 +785,8 @@ def _render_no(no: Json) -> str:
     return f'<aside class="nao-renderizado">Componente {_e(tipo)} validado, ainda sem desenho nesta galeria.</aside>'
 
 
-def _conteudo_da_tela(tela: Json) -> str:
-    return "".join(_render_no(no) for no in tela.get("corpo") or [])
+def _conteudo_da_tela(tela: Json, prefixo: str = "") -> str:
+    return "".join(_render_no(no, prefixo) for no in tela.get("corpo") or [])
 
 
 def _icone_da_navegacao(nome: str) -> str:
@@ -685,7 +849,7 @@ _CSS = r"""
 :root { color-scheme: light dark; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
 * { box-sizing: border-box; }
 body { margin: 0; min-width: 320px; background: #101114; color: #f5f5f3; }
-button, input { font: inherit; }
+button, input, select, textarea { font: inherit; }
 button { cursor: pointer; }
 .pular { position: fixed; left: 12px; top: -80px; z-index: 30; padding: 10px 14px; background: white; color: #111; border-radius: 8px; }
 .pular:focus { top: 12px; }
@@ -720,22 +884,68 @@ button { cursor: pointer; }
 .negrito { font-weight: 720; }
 .alinhamento-center { text-align: center; }
 .alinhamento-right { text-align: right; }
-.caixa { margin: 24px 0; padding: 18px; border: 1px solid var(--linha); border-radius: 14px; background: var(--painel); }
+.caixa { position:relative; margin: 24px 0; padding: 18px; border: 1px solid var(--linha); border-radius: 14px; background: var(--painel); }
+.caixa[hidden] { display:none; }
 .caixa-emphasis { background: var(--painel2); }
 .caixa-accent { border-color: var(--acento); background: var(--acento-fraco); }
+.caixa-tocavel { transition:border-color .14s, transform .14s, box-shadow .14s; }
+.caixa-tocavel:hover { border-color:var(--acento); transform:translateY(-1px); box-shadow:0 9px 24px color-mix(in srgb, var(--texto) 10%, transparent); }
+.caixa-toque { position:absolute; inset:0; z-index:2; width:100%; border:0; border-radius:inherit; background:transparent; }
+.caixa-toque:focus-visible { outline:3px solid var(--foco); outline-offset:3px; }
+.caixa-tocavel:has(> .caixa:not([hidden])) > .caixa-toque { pointer-events:none; }
 .caixa-grade-compacta { display: grid; grid-template-columns: repeat(auto-fit,minmax(150px,1fr)); gap: 9px; }
 .caixa-grade-compacta > .caixa { margin: 0; padding: 13px; background: var(--fundo); }
+.caixa-grade-larga { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:10px; }
+.caixa-grade-etiquetas { display:flex; flex-wrap:wrap; gap:6px; margin:7px 0; padding:0; border:0; background:transparent; }
+.caixa-grade-etiquetas > .texto { margin:0; padding:5px 9px; border:1px solid var(--linha); border-radius:999px; background:var(--fundo); line-height:1.2; }
 .colunas { display: flex; gap: 12px; margin: 12px 0; }
 .coluna { flex: 1 1 0; min-width: 0; }
-.campo-busca label, .campo-comum label { display: block; margin-bottom: 7px; font-size: 13px; font-weight: 700; }
+.coluna-auto { flex:0 0 auto; }
+.coluna-auto > .caixa-grade-etiquetas { justify-content:center; min-width:38px; }
+.campo-busca label, .campo-comum label, .escolha-lista label { display: block; margin-bottom: 7px; font-size: 13px; font-weight: 700; }
 .entrada-com-icone { position: relative; }
 .lupa { position: absolute; left: 14px; top: 50%; width: 15px; height: 15px; border: 2px solid var(--muted); border-radius: 50%; transform: translateY(-58%); pointer-events: none; }
 .lupa::after { content: ""; position: absolute; width: 7px; height: 2px; right: -6px; bottom: -3px; background: var(--muted); transform: rotate(45deg); }
-.surface input:not([type="hidden"]) { width: 100%; min-height: 46px; padding: 10px 12px; border: 1px solid var(--trilha); border-radius: 10px; outline: none; background: var(--fundo); color: var(--texto); }
+.surface input:not([type="hidden"]), .surface textarea { width: 100%; min-height: 46px; padding: 10px 12px; border: 1px solid var(--trilha); border-radius: 10px; outline: none; background: var(--fundo); color: var(--texto); }
+.surface textarea { min-height:96px; resize:vertical; }
+.surface select { width:100%; min-height:46px; padding:10px 36px 10px 12px; border:1px solid var(--trilha); border-radius:10px; outline:none; background:var(--fundo); color:var(--texto); }
 .entrada-com-icone input { padding-left: 42px !important; }
 .surface input::placeholder { color: var(--muted); opacity: 1; }
-.surface input:focus-visible, .surface button:focus-visible { outline: 3px solid var(--foco); outline-offset: 3px; }
+.surface input:focus-visible, .surface select:focus-visible, .surface textarea:focus-visible, .surface button:focus-visible { outline: 3px solid var(--foco); outline-offset: 3px; }
 .ajuda { margin: 7px 0 0; color: var(--muted); font-size: 11px; }
+.escolha { min-width:0; margin:18px 0; padding:0; border:0; }
+.escolha legend { width:100%; margin:0 0 9px; padding:0; font-size:13px; font-weight:750; }
+.grade-opcoes { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px; }
+.opcao-cartao { position:relative; min-width:0; cursor:pointer; }
+.opcao-cartao > input { position:absolute; width:1px !important; min-height:1px !important; margin:0; opacity:0; }
+.opcao-conteudo { display:flex; align-items:center; gap:10px; min-height:58px; height:100%; padding:10px 12px; border:1px solid var(--trilha); border-radius:11px; background:var(--fundo); transition:border-color .14s, background .14s, box-shadow .14s; }
+.opcao-cartao:hover .opcao-conteudo { border-color:var(--acento); }
+.opcao-cartao input:checked + .opcao-conteudo { border-color:var(--acento); background:var(--acento-fraco); box-shadow:inset 0 0 0 1px var(--acento); }
+.opcao-cartao input:focus-visible + .opcao-conteudo { outline:3px solid var(--foco); outline-offset:3px; }
+.opcao-icone { flex:0 0 auto; font-size:22px; }
+.opcao-textos { display:grid; min-width:0; gap:2px; line-height:1.25; }
+.opcao-textos strong { overflow-wrap:anywhere; font-size:13px; }
+.opcao-textos small { color:var(--muted); font-size:11px; }
+.opcao-marca { display:grid; flex:0 0 22px; width:22px; height:22px; margin-left:auto; place-items:center; border:1px solid var(--trilha); border-radius:50%; color:transparent; font-size:13px; font-weight:900; }
+.opcao-cartao input:checked + .opcao-conteudo .opcao-marca { border-color:var(--acento); background:var(--acento); color:var(--sobre-acento); }
+.progresso { margin:14px 0 20px; }
+.progresso-cabecalho { display:flex; justify-content:space-between; align-items:baseline; gap:12px; margin-bottom:8px; font-size:12px; }
+.progresso-cabecalho span { color:var(--muted); font-variant-numeric:tabular-nums; }
+.progresso progress { display:block; width:100%; height:10px; overflow:hidden; border:0; border-radius:999px; background:var(--painel2); accent-color:var(--acento); }
+.progresso progress::-webkit-progress-bar { background:var(--painel2); border-radius:999px; }
+.progresso progress::-webkit-progress-value { border-radius:999px; background:var(--acento); }
+.progresso progress::-moz-progress-bar { border-radius:999px; background:var(--acento); }
+.midia { display:grid; width:100%; min-height:110px; margin:12px 0; overflow:hidden; place-items:center; border:1px solid var(--linha); border-radius:12px; background:var(--painel2); }
+.midia-large { min-height:180px; }
+.midia img { display:block; width:100%; height:100%; min-height:inherit; object-fit:cover; }
+.sem-imagem { align-content:center; gap:7px; color:var(--muted); text-align:center; }
+.sem-imagem > span { display:grid; width:42px; height:42px; place-items:center; border:1px solid var(--trilha); border-radius:50%; padding-left:3px; }
+.sem-imagem figcaption { font-size:11px; }
+.cronometro { display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:center; gap:12px; margin:14px 0 0; padding:12px; border:1px solid var(--linha); border-radius:11px; background:var(--fundo); }
+.cronometro div { display:grid; gap:2px; }
+.cronometro small { color:var(--muted); font-size:10px; }
+.cronometro time { min-width:52px; font-variant-numeric:tabular-nums; font-weight:800; }
+.cronometro button { min-height:44px; padding:8px 12px; border:1px solid var(--acento); border-radius:9px; background:transparent; color:var(--acento); font-weight:750; }
 .acoes { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 14px; }
 .acao { position: relative; z-index: 3; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 9px 15px; border: 1px solid var(--trilha); border-radius: 10px; background: transparent; color: var(--texto); font-weight: 700; }
 .acao:hover { background: var(--acento-fraco); }
@@ -800,6 +1010,7 @@ button { cursor: pointer; }
 @container (max-width: 600px) {
   .surface h1 { font-size: 28px; }
   .caixa { margin: 20px 0; padding: 14px; }
+  .caixa-grade-etiquetas { margin:7px 0; padding:0; }
   .acoes > .acao { flex: 1 1 145px; }
   .cabecalho-tabela { display: none; }
   .tabela { display: grid; gap: 8px; }
@@ -831,6 +1042,16 @@ function anunciar(texto) {
   resultado.classList.add('visivel');
   clearTimeout(timer);
   timer = setTimeout(() => resultado.classList.remove('visivel'), 4200);
+}
+
+function aplicarToggle(alvos) {
+  document.querySelectorAll('.surface').forEach((surface) => {
+    for (const alvo of alvos) {
+      const elemento = surface.querySelector('#' + CSS.escape(alvo.id));
+      if (!elemento) continue;
+      elemento.hidden = alvo.mostrar === null ? !elemento.hidden : !alvo.mostrar;
+    }
+  });
 }
 
 function marcarDestino(destino) {
@@ -899,15 +1120,23 @@ document.querySelectorAll('[data-viewport]').forEach((botao) => {
 
 document.querySelectorAll('[data-operacao]').forEach((botao) => {
   botao.addEventListener('click', () => {
+    const alvos = JSON.parse(botao.dataset.alvos || '[]');
+    if (alvos.length) {
+      aplicarToggle(alvos);
+      anunciar('Etapa aberta · ' + botao.textContent.trim());
+      return;
+    }
     const campos = JSON.parse(botao.dataset.campos || '[]');
     const escopo = botao.closest('.linha-dado') || botao.closest('.detalhe-app, .tela-app') || botao.closest('.surface');
     const valores = {};
     for (const id of campos) {
       const campo = escopo.querySelector('#' + CSS.escape(id)) || botao.closest('.surface').querySelector('#' + CSS.escape(id));
-      if (campo) valores[campo.name || id] = campo.value;
-      if (campo && campo.required && !campo.value.trim()) {
-        campo.focus();
-        anunciar('Preencha “' + (campo.previousElementSibling?.textContent || campo.name) + '” antes de continuar.');
+      const escolha = campo?.matches('fieldset') ? campo.querySelector('input:checked') : campo;
+      const valor = escolha?.value || '';
+      if (campo) valores[escolha?.dataset.campo || escolha?.name || campo.name || id] = valor;
+      if (campo && (campo.required || campo.dataset.required === 'true') && !valor.trim()) {
+        (campo.querySelector('input') || campo).focus();
+        anunciar('Escolha “' + (campo.querySelector('legend')?.textContent || campo.previousElementSibling?.textContent || id) + '” antes de continuar.');
         return;
       }
     }
@@ -915,6 +1144,46 @@ document.querySelectorAll('[data-operacao]').forEach((botao) => {
     if (abrirResposta(botao.dataset.operacao, valores)) return;
     const complemento = Object.keys(valores).length ? ' · dados: ' + JSON.stringify(valores) : '';
     anunciar('Simulação local · ' + botao.dataset.operacao + complemento);
+    const aposEnviar = JSON.parse(botao.dataset.aposEnviar || '[]');
+    if (aposEnviar.length) aplicarToggle(aposEnviar);
+  });
+});
+
+document.querySelectorAll('[data-toggle-alvos]').forEach((botao) => {
+  botao.addEventListener('click', () => {
+    aplicarToggle(JSON.parse(botao.dataset.toggleAlvos || '[]'));
+    anunciar('Etapa aberta · ' + botao.getAttribute('aria-label'));
+  });
+});
+
+document.querySelectorAll('[data-cronometro]').forEach((botao) => {
+  const total = Number(botao.dataset.cronometro || 0);
+  let restante = total;
+  let intervalo = null;
+  const mostrador = botao.parentElement.querySelector('time');
+  const desenhar = () => {
+    const minutos = String(Math.floor(restante / 60)).padStart(2, '0');
+    const segundos = String(restante % 60).padStart(2, '0');
+    mostrador.textContent = minutos + ':' + segundos;
+  };
+  botao.addEventListener('click', () => {
+    if (intervalo) {
+      clearInterval(intervalo);
+      intervalo = null;
+      botao.textContent = 'Continuar';
+      return;
+    }
+    if (restante <= 0) restante = total;
+    botao.textContent = 'Pausar';
+    intervalo = setInterval(() => {
+      restante -= 1;
+      desenhar();
+      if (restante > 0) return;
+      clearInterval(intervalo);
+      intervalo = null;
+      botao.textContent = 'Reiniciar';
+      anunciar('Descanso concluído');
+    }, 1000);
   });
 });
 
@@ -976,42 +1245,47 @@ def pagina_aplicativo(
     aplicativo: Json, alvo: str, esc: frozenset[str], lei: frozenset[str]
 ) -> str:
     atual = aplicativo.get("atual")
-    blocos = []
-    for superficie in aplicativo.get("superficies") or []:
-        tela = superficie["tela"]
-        oculto = "" if superficie.get("nome") == atual else " hidden"
-        blocos.append(
-            f'<section class="tela-app" tabindex="-1" data-tela="{_e(superficie.get("nome"))}"{oculto}>'
-            + _conteudo_da_tela(tela)
-            + f'<p class="nota-preview">Tema {_e(tela.get("tema") or "padrão")} · superfície {_e(superficie.get("nome"))}</p>'
-            + "</section>"
-        )
-    detalhes = []
     rotulos = {
         str(superficie.get("nome")): str(
             superficie.get("rotulo") or superficie.get("nome") or "lista"
         )
         for superficie in aplicativo.get("superficies") or []
     }
-    for resposta in aplicativo.get("respostas") or []:
-        voltar_para = str(resposta.get("voltar_para") or "")
-        rotulo = rotulos.get(voltar_para, voltar_para)
-        detalhes.append(
-            '<section class="detalhe-app" tabindex="-1" hidden '
-            f'data-operacao="{_e(resposta.get("operacao"))}" '
-            f'data-campo="{_e(resposta.get("campo"))}" '
-            f'data-valor="{_e(resposta.get("valor"))}" '
-            f'data-voltar="{_e(voltar_para)}">'
-            '<div class="barra-detalhe">'
-            f'<button type="button" class="voltar" data-voltar-detalhe="{_e(voltar_para)}">'
-            '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" '
-            'stroke="currentColor" stroke-width="2" stroke-linecap="round" '
-            'stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg>'
-            f"<span>Voltar para {_e(rotulo)}</span></button></div>"
-            + _conteudo_da_tela(resposta["tela"])
-            + "</section>"
-        )
-    conteudo = "".join((*blocos, *detalhes))
+
+    def montar_conteudo(prefixo: str) -> str:
+        blocos = []
+        for superficie in aplicativo.get("superficies") or []:
+            tela = superficie["tela"]
+            oculto = "" if superficie.get("nome") == atual else " hidden"
+            blocos.append(
+                f'<section class="tela-app" tabindex="-1" data-tela="{_e(superficie.get("nome"))}"{oculto}>'
+                + _conteudo_da_tela(tela, prefixo)
+                + f'<p class="nota-preview">Tema {_e(tela.get("tema") or "padrão")} · superfície {_e(superficie.get("nome"))}</p>'
+                + "</section>"
+            )
+        detalhes = []
+        for resposta in aplicativo.get("respostas") or []:
+            voltar_para = str(resposta.get("voltar_para") or "")
+            rotulo = rotulos.get(voltar_para, voltar_para)
+            detalhes.append(
+                '<section class="detalhe-app" tabindex="-1" hidden '
+                f'data-operacao="{_e(resposta.get("operacao"))}" '
+                f'data-campo="{_e(resposta.get("campo"))}" '
+                f'data-valor="{_e(resposta.get("valor"))}" '
+                f'data-voltar="{_e(voltar_para)}">'
+                '<div class="barra-detalhe">'
+                f'<button type="button" class="voltar" data-voltar-detalhe="{_e(voltar_para)}">'
+                '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" '
+                'stroke="currentColor" stroke-width="2" stroke-linecap="round" '
+                'stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"></path></svg>'
+                f"<span>Voltar para {_e(rotulo)}</span></button></div>"
+                + _conteudo_da_tela(resposta["tela"], prefixo)
+                + "</section>"
+            )
+        return "".join((*blocos, *detalhes))
+
+    conteudo_desktop = montar_conteudo("desktop-")
+    conteudo_mobile = montar_conteudo("mobile-")
     navegacao = _navegacao_inferior(aplicativo)
     operacoes = ", ".join(sorted((*lei, *esc))) or "nenhuma"
     return f"""<!doctype html>
@@ -1039,11 +1313,11 @@ def pagina_aplicativo(
   <main id="preview" class="galeria">
     <section class="dispositivo dispositivo-desktop" aria-labelledby="rotulo-desktop">
       <div class="rotulo-dispositivo"><strong id="rotulo-desktop">Desktop</strong><span>fluido · até 1040 px</span></div>
-      <div class="moldura"><div class="surface" data-theme="light">{conteudo}<p class="nota-preview">Operações conferidas: {_e(operacoes)}</p>{navegacao}</div></div>
+      <div class="moldura"><div class="surface" data-theme="light">{conteudo_desktop}<p class="nota-preview">Operações conferidas: {_e(operacoes)}</p>{navegacao}</div></div>
     </section>
     <section class="dispositivo dispositivo-mobile" aria-labelledby="rotulo-mobile">
       <div class="rotulo-dispositivo"><strong id="rotulo-mobile">Celular</strong><span>390 px</span></div>
-      <div class="moldura"><div class="status-aparelho">09:41</div><div class="surface" data-theme="light">{conteudo}{navegacao}</div></div>
+      <div class="moldura"><div class="status-aparelho">09:41</div><div class="surface" data-theme="light">{conteudo_mobile}{navegacao}</div></div>
     </section>
   </main>
   <div class="resultado" role="status" aria-live="polite"></div>

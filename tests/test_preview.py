@@ -208,6 +208,84 @@ APLICATIVO = Aplicativo(
         self.assertIn('class="linha-grafico tom-positivo"', documento)
         self.assertIn("caixa-grade-compacta", documento)
 
+    def test_preview_desenha_escolhas_progresso_e_etapas_ocultas(self):
+        aplicativo = {
+            "nome": "EstouFit",
+            "atual": "treino",
+            "superficies": [
+                {
+                    "nome": "treino",
+                    "rotulo": "Treino",
+                    "icone": "treino",
+                    "tela": {
+                        "corpo": [
+                            {
+                                "tipo": "escolha",
+                                "id": "nivel",
+                                "campo": "nivel",
+                                "rotulo": "Nível",
+                                "forma": "cartoes",
+                                "valor": "iniciante",
+                                "obrigatorio": True,
+                                "opcoes": [
+                                    {
+                                        "valor": "iniciante",
+                                        "rotulo": "Iniciante",
+                                        "nota": "Começando agora",
+                                    },
+                                    {
+                                        "valor": "avancado",
+                                        "rotulo": "Avançado",
+                                        "nota": "Treina há anos",
+                                    },
+                                ],
+                            },
+                            {
+                                "tipo": "progresso",
+                                "rotulo": "Treino de hoje",
+                                "feito": 2,
+                                "de": 5,
+                            },
+                            {
+                                "tipo": "caixa",
+                                "id": "detalhes",
+                                "visivel": False,
+                                "estilo": "emphasis",
+                                "itens": [{"tipo": "texto", "texto": "Detalhes"}],
+                            },
+                            {
+                                "tipo": "acoes",
+                                "botoes": [
+                                    {
+                                        "titulo": "Abrir detalhes",
+                                        "alvos": [{"id": "detalhes", "mostrar": True}],
+                                    }
+                                ],
+                            },
+                        ]
+                    },
+                }
+            ],
+        }
+
+        documento = pagina_aplicativo(
+            aplicativo, "estoufit.py:ALUNO", frozenset(), frozenset()
+        )
+
+        self.assertIn(
+            '<fieldset class="escolha escolha-cartoes" id="mobile-nivel"',
+            documento,
+        )
+        self.assertIn('value="iniciante" checked required', documento)
+        self.assertIn("Começando agora", documento)
+        self.assertIn('<progress value="2" max="5"', documento)
+        self.assertIn('id="mobile-detalhes" hidden', documento)
+        self.assertIn(
+            'data-alvos="[{&quot;id&quot;: &quot;mobile-detalhes&quot;', documento
+        )
+        self.assertNotIn("Componente escolha validado", documento)
+        self.assertNotIn("Componente progresso validado", documento)
+
     def test_clique_pode_abrir_resposta_compilada_por_fabrica_python(self):
         codigo = """\
 from okmigo_cartao.sdk import Acao, Acoes, Aplicativo, Fonte, Superficie, Tela, Texto
