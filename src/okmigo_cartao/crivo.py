@@ -29,7 +29,7 @@ tipo que entra é uma decisão e dois renderizadores. Há chaves com prefixo
 autorização, cronômetro, progresso, gráfico) e DICAS com o mesmo prefixo em
 tipos que existem (`okmigoGrade`, `okmigoSobreposto`, `okmigoRodape`,
 `okmigoAposEnviar`, `okmigoNota`, `okmigoIcone`, `okmigoEstrito`,
-`okmigoSomenteLeitura`). Dica em tipo existente degrada sozinha; tipo novo
+`okmigoSomenteLeitura`, `okmigoBuscar`). Dica em tipo existente degrada sozinha; tipo novo
 some no cliente que não o conhece — e é por isso que tipo novo é mais caro.
 """
 
@@ -55,6 +55,7 @@ class Config:
       APERTAR esse teto (`maxBytes`), nunca subir: quem paga o arquivo em
       memória é o produto.
     """
+
     dominios: tuple[str, ...] = ()
     base_de_imagens: str = ""
     anexo_max_bytes: int = 10 * 1024 * 1024
@@ -95,8 +96,15 @@ DADOS_DO_DIA = {"data"}
 #: de «mexer nela». Os três `nova_*` são o DESTINO de um arrasto e só existem
 #: nesse gesto: num toque chegariam vazios e a operação gravaria lixo.
 DADOS_DO_EVENTO = {
-    "id", "data", "hora", "duracao_minutos", "titulo", "detalhe",
-    "novo_inicio", "nova_data", "nova_hora",
+    "id",
+    "data",
+    "hora",
+    "duracao_minutos",
+    "titulo",
+    "detalhe",
+    "novo_inicio",
+    "nova_data",
+    "nova_hora",
 }
 _DADOS_SO_DE_ARRASTO = {"novo_inicio", "nova_data", "nova_hora"}
 #: A que evento uma ação se aplica. Fechada porque as operações são outras:
@@ -134,11 +142,27 @@ _FORMAS_DE_GRAFICO = {"barras", "linha"}
 #: Cores SEMÂNTICAS, nunca hexadecimal: o serviço declara o que o número
 #: significa; quem pinta é o cliente, com a paleta do tema dele.
 _CORES_DO_GRAFICO = {"positivo", "negativo", "neutro", "atencao", "principal", "suave"}
-_TEMAS_DO_CARTAO = {"financeiro-violeta"}
+#: Temas são MODOS de apresentação escolhidos pelo produto, não paletas que o
+#: serviço controla. O manifesto só declara a natureza da experiência; web e
+#: app traduzem a palavra para seus próprios tokens. Manter a lista fechada
+#: impede que um serviço transforme `okmigoTema` em CSS disfarçado.
+_TEMAS_DO_CARTAO = {
+    "financeiro-violeta",
+    "jornada-ativa",
+    "mercado-editorial",
+    "operacao-direta",
+}
 _NAVEGACOES_DO_CARTAO = {"inferior"}
 _TONS_FINANCEIROS = {
-    "principal", "suave", "violeta", "verde", "laranja", "vermelho", "azul",
-    "escuro", "cinza",
+    "principal",
+    "suave",
+    "violeta",
+    "verde",
+    "laranja",
+    "vermelho",
+    "azul",
+    "escuro",
+    "cinza",
 }
 
 #: Vírgula decimal com ou sem ponto de milhar («1200,00» ou «1.200,00») — a
@@ -172,9 +196,15 @@ ENFASES = ("primaria", "padrao", "discreta", "destrutiva")
 # assinatura é trava que alguém esquece numa delas. `None` = «não confira», que
 # é o que vale para quem valida um cartão sem serviço por trás.
 _config: ContextVar[Config] = ContextVar("config_do_crivo", default=Config())
-_escrituras: ContextVar[frozenset[str] | None] = ContextVar("escrituras_permitidas", default=None)
-_leituras: ContextVar[frozenset[str] | None] = ContextVar("leituras_permitidas", default=None)
-_autorizacoes: ContextVar[list[int] | None] = ContextVar("autorizacoes_do_cartao", default=None)
+_escrituras: ContextVar[frozenset[str] | None] = ContextVar(
+    "escrituras_permitidas", default=None
+)
+_leituras: ContextVar[frozenset[str] | None] = ContextVar(
+    "leituras_permitidas", default=None
+)
+_autorizacoes: ContextVar[list[int] | None] = ContextVar(
+    "autorizacoes_do_cartao", default=None
+)
 
 
 class _Erro(Exception):
@@ -344,8 +374,9 @@ def _formato_do_documento(tipo: str, nome: str) -> str:
     n = (nome or "").lower()
     if t == "application/pdf" or n.endswith(".pdf"):
         return "pdf"
-    if t in ("image/png", "image/jpeg", "image/gif", "image/webp") or \
-            n.endswith((".png", ".jpg", ".jpeg", ".gif", ".webp")):
+    if t in ("image/png", "image/jpeg", "image/gif", "image/webp") or n.endswith(
+        (".png", ".jpg", ".jpeg", ".gif", ".webp")
+    ):
         return "imagem"
     return "outro"
 
@@ -382,6 +413,40 @@ def _enfase(acao: Any) -> str:
     return "padrao"
 
 
+def _icone_de_acao(acao: Any) -> str | None:
+    """A small closed vocabulary of semantic action icons."""
+    if not isinstance(acao, dict):
+        return None
+    return {"delete": "lixeira", "trash": "lixeira", "lixeira": "lixeira"}.get(
+        acao.get("okmigoIcone")
+    )
+
+
+def _consulta_de_acao(acao: Any) -> dict[str, Any] | None:
+    """Rebuild one read-only Execute action for a button or a table row."""
+    if not isinstance(acao, dict) or acao.get("type") != "Action.Execute":
+        return None
+    dados = acao.get("data")
+    operacao = (
+        _txt(dados.get("operacao"), "titulo")[:60]
+        if isinstance(dados, dict)
+        else ""
+    )
+    titulo = _txt(acao.get("title"), "titulo")[:40]
+    if not operacao or not titulo:
+        return None
+    if _leituras.get() is not None and operacao not in _leituras.get():
+        raise _Erro(
+            f"o cartão manda consultar '{operacao}', que não é uma "
+            "operação de leitura deste serviço"
+        )
+    saida = {"titulo": titulo, "consultar": operacao, "enfase": _enfase(acao)}
+    icone = _icone_de_acao(acao)
+    if icone:
+        saida["icone"] = icone
+    return saida
+
+
 def _alvos_de_toggle(acao: Any) -> list[dict]:
     """Os alvos de um `Action.ToggleVisibility` — a mesma forma (`{id, mostrar}`)
     venha de um botão ou do `selectAction` de uma caixa. `mostrar: None` é a
@@ -393,8 +458,12 @@ def _alvos_de_toggle(acao: Any) -> list[dict]:
         if isinstance(t, str):
             alvos.append({"id": _txt(t, "titulo")[:60], "mostrar": None})
         elif isinstance(t, dict) and t.get("elementId"):
-            alvos.append({"id": _txt(t["elementId"], "titulo")[:60],
-                          "mostrar": bool(t.get("isVisible"))})
+            alvos.append(
+                {
+                    "id": _txt(t["elementId"], "titulo")[:60],
+                    "mostrar": bool(t.get("isVisible")),
+                }
+            )
     return alvos
 
 
@@ -449,8 +518,11 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
     comum = {
         "separador": bool(no.get("separator")),
         "espaco": no["spacing"] if no.get("spacing") in ESPACOS else "default",
-        "alinhamento": (no["horizontalAlignment"]
-                        if no.get("horizontalAlignment") in ALINHAMENTOS else "left"),
+        "alinhamento": (
+            no["horizontalAlignment"]
+            if no.get("horizontalAlignment") in ALINHAMENTOS
+            else "left"
+        ),
         # `id` e `isVisible` existem para o ToggleVisibility. O id é cortado e
         # não vai a lugar nenhum além do próprio cartão.
         "id": _txt(no.get("id"), "titulo")[:60] or None,
@@ -462,7 +534,8 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
         if not texto:
             return None
         return {
-            "tipo": "texto", **comum,
+            "tipo": "texto",
+            **comum,
             "texto": texto,
             "tamanho": no["size"] if no.get("size") in TAMANHOS else "default",
             "peso": no["weight"] if no.get("weight") in PESOS else "default",
@@ -486,14 +559,18 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
             titulo = _txt(e.get("titulo"), "titulo")
             if not inicio or not titulo:  # sem início não há onde; sem título, o quê
                 continue
-            eventos.append({
-                "inicio": inicio, "fim": _txt(e.get("fim"), "titulo"),
-                "titulo": titulo, "detalhe": _txt(e.get("detalhe")),
-                # Evento SEM id continua desenhando — só não aceita ação.
-                # Descartá-lo faria a agenda mentir sobre estar livre.
-                "id": _txt(e.get("id"), "titulo")[:64],
-                "tipo": e["tipo"] if e.get("tipo") in EVENTOS_PARA else "",
-            })
+            eventos.append(
+                {
+                    "inicio": inicio,
+                    "fim": _txt(e.get("fim"), "titulo"),
+                    "titulo": titulo,
+                    "detalhe": _txt(e.get("detalhe")),
+                    # Evento SEM id continua desenhando — só não aceita ação.
+                    # Descartá-lo faria a agenda mentir sobre estar livre.
+                    "id": _txt(e.get("id"), "titulo")[:64],
+                    "tipo": e["tipo"] if e.get("tipo") in EVENTOS_PARA else "",
+                }
+            )
         # Um toque abre um FORMULÁRIO; nunca escreve. A confirmação é apertar
         # Salvar. E o serviço nomeia o CAMPO, nunca o VALOR — quem sabe a data
         # é o cliente, que recebeu o toque.
@@ -537,16 +614,22 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
                 campos = {
                     _txt(k, "titulo")[:60]: v
                     for k, v in (a.get("campos") or {}).items()
-                    if v in DADOS_DO_EVENTO and _txt(k, "titulo")
+                    if v in DADOS_DO_EVENTO
+                    and _txt(k, "titulo")
                     # Num TOQUE não existe destino: `novo_inicio` chegaria vazio.
                     and (arrasta or v not in _DADOS_SO_DE_ARRASTO)
                 }
                 if not campos:
                     continue
-                acoes_do_evento.append({
-                    "titulo": titulo or None, "para": para,
-                    "arrasta": arrasta, "enviar": op, "campos": campos,
-                })
+                acoes_do_evento.append(
+                    {
+                        "titulo": titulo or None,
+                        "para": para,
+                        "arrasta": arrasta,
+                        "enviar": op,
+                        "campos": campos,
+                    }
+                )
                 continue
 
             if arrasta:  # arrastar para um formulário não é gesto nenhum
@@ -554,19 +637,26 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
             preencher = {
                 _txt(k, "titulo")[:60]: v
                 for k, v in (a.get("preencher") or {}).items()
-                if v in DADOS_DO_EVENTO and _txt(k, "titulo")
+                if v in DADOS_DO_EVENTO
+                and _txt(k, "titulo")
                 and v not in _DADOS_SO_DE_ARRASTO
             }
             mostrar = _txt(a.get("mostrar"), "titulo")[:60]
             if not mostrar and not preencher:
                 continue
-            acoes_do_evento.append({
-                "titulo": titulo, "para": para, "arrasta": False,
-                "mostrar": mostrar or None, "preencher": preencher,
-            })
+            acoes_do_evento.append(
+                {
+                    "titulo": titulo,
+                    "para": para,
+                    "arrasta": False,
+                    "mostrar": mostrar or None,
+                    "preencher": preencher,
+                }
+            )
 
         return {
-            "tipo": "calendario", **comum,
+            "tipo": "calendario",
+            **comum,
             "ao_tocar_o_dia": ao_tocar,
             "acoes_do_evento": acoes_do_evento,
             "vista": no["vista"] if no.get("vista") in VISTAS else "mes",
@@ -583,7 +673,8 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
         if _perdeu_campo_obrigatorio(no.get("items")):
             itens = [i for i in itens if i.get("tipo") != "acoes"]
         saida = {
-            "tipo": "caixa", **comum,
+            "tipo": "caixa",
+            **comum,
             "estilo": no["style"] if no.get("style") in ESTILOS else "default",
             "altura": _faixa_de_altura(no.get("minHeight")),
             # `okmigoGrade`: os filhos se arrumam em GRADE, não empilhados. É
@@ -595,9 +686,11 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
             # num telefone), `"etiquetas"` (palavras curtas correndo em linha,
             # cada uma do tamanho do próprio texto). Cliente que não conhece
             # uma palavra desenha grade comum ou empilha; nenhum quebra.
-            "grade": (no["okmigoGrade"]
-                      if no.get("okmigoGrade") in ("larga", "compacta", "etiquetas")
-                      else bool(no.get("okmigoGrade"))),
+            "grade": (
+                no["okmigoGrade"]
+                if no.get("okmigoGrade") in ("larga", "compacta", "etiquetas")
+                else bool(no.get("okmigoGrade"))
+            ),
             "itens": itens,
         }
         # `selectAction`: a caixa INTEIRA vira alvo do toque. Só
@@ -621,12 +714,14 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
             if not isinstance(c, dict):
                 continue
             largura = c.get("width")
-            colunas.append({
-                "largura": largura if largura in LARGURAS else "stretch",
-                "estilo": c["style"] if c.get("style") in ESTILOS else "default",
-                "altura": _faixa_de_altura(c.get("minHeight")),
-                "itens": _muitos(c.get("items"), contador),
-            })
+            colunas.append(
+                {
+                    "largura": largura if largura in LARGURAS else "stretch",
+                    "estilo": c["style"] if c.get("style") in ESTILOS else "default",
+                    "altura": _faixa_de_altura(c.get("minHeight")),
+                    "itens": _muitos(c.get("items"), contador),
+                }
+            )
         return {"tipo": "colunas", **comum, "colunas": colunas} if colunas else None
 
     # ── Table: a grade com colunas ALINHADAS entre linhas ─────────────────
@@ -638,19 +733,32 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
         colunas = []
         for c in (no.get("columns") or [])[:_MAX_COLUNAS]:
             w = c.get("width") if isinstance(c, dict) else None
-            colunas.append({"largura": int(w) if isinstance(w, (int, float)) and not isinstance(w, bool) and w > 0 else 1})
+            colunas.append(
+                {
+                    "largura": int(w)
+                    if isinstance(w, (int, float)) and not isinstance(w, bool) and w > 0
+                    else 1
+                }
+            )
         linhas = []
         for r in (no.get("rows") or [])[:_MAX_LINHAS]:
             if not isinstance(r, dict) or r.get("type") != "TableRow":
                 continue
             celulas = []
-            for c in (r.get("cells") or [])[:(len(colunas) or _MAX_COLUNAS)]:
+            for c in (r.get("cells") or [])[: (len(colunas) or _MAX_COLUNAS)]:
                 if not isinstance(c, dict) or c.get("type") != "TableCell":
                     continue
                 contador[0] += 1  # a célula conta como nó: é uma caixa
                 celulas.append({"itens": _muitos(c.get("items"), contador)})
             if celulas:
-                linhas.append({"celulas": celulas})
+                linha: dict[str, Any] = {"celulas": celulas}
+                acao = _consulta_de_acao(r.get("selectAction"))
+                if acao:
+                    acao["campos"] = _campos_de(
+                        [item for celula in celulas for item in celula["itens"]]
+                    )
+                    linha["acao"] = acao
+                linhas.append(linha)
         # Cabeçalho sem linha de dado NÃO é tabela — é um título que promete
         # dado e não entrega. Some, como a lista suspensa sem opção some.
         cabecalho = no.get("firstRowAsHeader") is not False
@@ -659,7 +767,8 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
         if not colunas:
             colunas = [{"largura": 1}] * max(len(r["celulas"]) for r in linhas)
         return {
-            "tipo": "tabela", **comum,
+            "tipo": "tabela",
+            **comum,
             "colunas": colunas,
             "cabecalho": cabecalho,
             "grade": no.get("showGridLines") is not False,
@@ -668,7 +777,10 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
 
     if tipo == "FactSet":
         fatos = [
-            {"titulo": _txt(f.get("title"), "titulo"), "valor": _txt(f.get("value"), "valor")}
+            {
+                "titulo": _txt(f.get("title"), "titulo"),
+                "valor": _txt(f.get("value"), "valor"),
+            }
             for f in (no.get("facts") or [])
             if isinstance(f, dict) and str(f.get("title") or "").strip()
         ]
@@ -687,12 +799,14 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
             if isinstance(alt, dict):
                 return _um(alt, contador)
             return {
-                "tipo": "sem_imagem", **comum,
+                "tipo": "sem_imagem",
+                **comum,
                 "altura": no["height"] if no.get("height") in ALTURAS_IMG else "medium",
                 "alt": _txt(no.get("altText"), "titulo"),
             }
         return {
-            "tipo": "imagem", **comum,
+            "tipo": "imagem",
+            **comum,
             "url": url,
             "altura": no["height"] if no.get("height") in ALTURAS_IMG else "medium",
             # `altText` é o único texto que a imagem carrega — é o que um
@@ -707,7 +821,8 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
         if not campo_id:
             return None
         return {
-            "tipo": "campo", **comum,
+            "tipo": "campo",
+            **comum,
             # `campo` é o NOME NO SERVIÇO e pode se repetir entre caixas (um
             # formulário por dia, todos gravando em `quando`); o `id` tem de ser
             # único no cartão para o estado não colidir. O escopo do `Submit`
@@ -726,8 +841,8 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
             "obrigatorio": bool(no.get("isRequired")),
             # `maxLength` é do autor, mas o teto é do produto.
             "max": min(int(no["maxLength"]), _MAX["texto"])
-                   if isinstance(no.get("maxLength"), int) and no["maxLength"] > 0
-                   else _MAX["texto"],
+            if isinstance(no.get("maxLength"), int) and no["maxLength"] > 0
+            else _MAX["texto"],
             # Só do `Input.Number`, e só quando declarados: limite inventado
             # recusaria um valor legítimo.
             "min": no["min"] if isinstance(no.get("min"), (int, float)) else None,
@@ -763,7 +878,7 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
                 continue
             # `value` é o que VIAJA; `title` é o que a pessoa lê. Os dois são
             # obrigatórios e não se confundem.
-            valor = _txt(escolha.get("value"))[:_MAX["texto"]]
+            valor = _txt(escolha.get("value"))[: _MAX["texto"]]
             rotulo = _txt(escolha.get("title"), "titulo")
             if not valor or not rotulo:
                 continue
@@ -771,9 +886,14 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
             # `okmigoIcone`: o glifo — texto curto (um emoji), nunca imagem;
             # cortado em 12 porque um emoji com modificador chega a 7 pontos de
             # código e o resto seria texto disfarçado.
-            opcoes.append({"valor": valor, "rotulo": rotulo,
-                           "nota": _txt(escolha.get("okmigoNota"), "titulo"),
-                           "icone": _txt(escolha.get("okmigoIcone"), "titulo")[:12]})
+            opcoes.append(
+                {
+                    "valor": valor,
+                    "rotulo": rotulo,
+                    "nota": _txt(escolha.get("okmigoNota"), "titulo"),
+                    "icone": _txt(escolha.get("okmigoIcone"), "titulo")[:12],
+                }
+            )
         # `style: "filtered"` sozinho é o typeahead LIVRE: a lista sugere, mas
         # o valor não fica restrito a ela (um horário fora da grade de 30 min).
         # Com `okmigoEstrito: true`, é a BUSCA que filtra e só aceita o que está
@@ -786,15 +906,23 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
         elif quem_opera:
             pass  # ⛔ idem: `okmigoQuemOpera` nunca é livre, com ou sem estilo
         elif no.get("style") == "filtered":
+            buscar = _txt(no.get("okmigoBuscar"), "titulo")[:60]
+            if buscar and _leituras.get() is not None and buscar not in _leituras.get():
+                raise _Erro(
+                    f"o cartão manda autocompletar em '{buscar}', que não é uma "
+                    "operação de leitura deste serviço"
+                )
             return {
-                "tipo": "escolha_livre", **comum,
+                "tipo": "escolha_livre",
+                **comum,
                 "campo": _txt(no.get("campo"), "titulo")[:60] or campo_id,
                 "rotulo": _txt(no.get("label"), "titulo"),
                 # Aqui `value` é o que já estava gravado, mesmo fora das sugestões.
-                "valor": _txt(no.get("value"))[:_MAX["texto"]],
+                "valor": _txt(no.get("value"))[: _MAX["texto"]],
                 "dica": _txt(no.get("placeholder"), "titulo"),
                 "opcoes": opcoes,
                 "obrigatorio": bool(no.get("isRequired")),
+                "buscar": buscar or None,
             }
 
         # Lista vazia derruba o CAMPO (e a caixa em volta perde os botões — ver
@@ -810,15 +938,20 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
             return None
 
         return {
-            "tipo": "escolha", **comum,
+            "tipo": "escolha",
+            **comum,
             # `style: "expanded"` (do próprio schema): as opções viram FICHAS
             # tocáveis em vez de lista suspensa. O valor continua sendo de um
             # `Input` — viaja no Submit, escopado, recusado se fora das opções.
             # Nenhuma fronteira nova; só o desenho muda. E é CAMPO em tipo que
             # existe: cliente velho ignora e desenha a lista de sempre.
-            "forma": ("cartoes" if no.get("style") == "expanded"
-                      else "busca" if no.get("style") == "filtered"
-                      else "lista"),
+            "forma": (
+                "cartoes"
+                if no.get("style") == "expanded"
+                else "busca"
+                if no.get("style") == "filtered"
+                else "lista"
+            ),
             "campo": _txt(no.get("campo"), "titulo")[:60] or campo_id,
             "rotulo": _txt(no.get("label"), "titulo"),
             # `value` só é aceito se for UMA das opções: um padrão fora da lista
@@ -849,7 +982,8 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
         if isinstance(declarado, int) and 0 < declarado < teto:
             teto = declarado
         return {
-            "tipo": "arquivo", **comum,
+            "tipo": "arquivo",
+            **comum,
             "campo": _txt(no.get("campo"), "titulo")[:60] or campo_id,
             "rotulo": _txt(no.get("label"), "titulo"),
             "aceita": sorted(set(aceita)),
@@ -878,13 +1012,16 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
         pedido = ler.get("pedido") if isinstance(ler.get("pedido"), dict) else {}
         # Só valores ESCALARES, cortados: o pedido volta do cliente tal qual.
         pedido = {
-            _txt(k, "titulo")[:60]: (v if isinstance(v, (int, float, bool)) else _txt(v))
+            _txt(k, "titulo")[:60]: (
+                v if isinstance(v, (int, float, bool)) else _txt(v)
+            )
             for k, v in pedido.items()
             if _txt(k, "titulo") and isinstance(v, (str, int, float, bool))
         }
         tipo_mime = _txt(no.get("tipo"), "titulo")
         return {
-            "tipo": "documento", **comum,
+            "tipo": "documento",
+            **comum,
             "titulo": titulo or nome,
             "nome": nome,
             "formato": _formato_do_documento(tipo_mime, nome),
@@ -912,8 +1049,11 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
             contas[0] += 1
         url, onde = alvo
         return {
-            "tipo": "autorizar", **comum,
-            "rotulo": rotulo, "motivo": motivo, "url": url,
+            "tipo": "autorizar",
+            **comum,
+            "rotulo": rotulo,
+            "motivo": motivo,
+            "url": url,
             # Separado da URL de propósito: deixar cada cliente extrair o host
             # faria cada um extrair de um jeito — e é onde o disfarce mora.
             "onde": onde,
@@ -942,8 +1082,7 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
         segundos = int(segundos)
         if segundos < 1 or segundos > _MAX_CRONOMETRO_S:
             return None
-        return {"tipo": "cronometro", **comum, "rotulo": rotulo,
-                "segundos": segundos}
+        return {"tipo": "cronometro", **comum, "rotulo": rotulo, "segundos": segundos}
 
     # ── okmigoProgresso: quanto do caminho já andou ───────────────────────
     # Recebe `feito` e `de`, NUNCA uma porcentagem: «4 de 6» é o que a pessoa
@@ -960,9 +1099,11 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
         de, feito = int(de), int(max(0.0, min(float(de), feito)))
         tom = no.get("tom") if no.get("tom") in _TONS_FINANCEIROS else None
         return {
-            "tipo": "progresso", **comum,
+            "tipo": "progresso",
+            **comum,
             "rotulo": _txt(no.get("rotulo") or no.get("title"), "titulo")[:40],
-            "feito": feito, "de": de,
+            "feito": feito,
+            "de": de,
             **({"tom": tom} if tom else {}),
         }
 
@@ -975,43 +1116,69 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
             for linha in (item.get("lancamentos") or item.get("linhas") or [])[:12]:
                 if not isinstance(linha, dict):
                     continue
-                lancamentos.append({
-                    "icone": _txt(linha.get("icone"), "texto")[:8],
-                    "titulo": _txt(linha.get("titulo") or linha.get("descricao"), "titulo")[:80],
-                    "subtitulo": _txt(linha.get("subtitulo") or linha.get("detalhe"), "texto")[:120],
-                    "valor": _txt(linha.get("valor") or linha.get("valor_texto"), "texto")[:40],
-                    "semantica": (
-                        linha.get("semantica")
-                        if linha.get("semantica") in {"positivo", "negativo", "neutro"}
-                        else "neutro"
-                    ),
-                })
+                lancamentos.append(
+                    {
+                        "icone": _txt(linha.get("icone"), "texto")[:8],
+                        "titulo": _txt(
+                            linha.get("titulo") or linha.get("descricao"), "titulo"
+                        )[:80],
+                        "subtitulo": _txt(
+                            linha.get("subtitulo") or linha.get("detalhe"), "texto"
+                        )[:120],
+                        "valor": _txt(
+                            linha.get("valor") or linha.get("valor_texto"), "texto"
+                        )[:40],
+                        "semantica": (
+                            linha.get("semantica")
+                            if linha.get("semantica")
+                            in {"positivo", "negativo", "neutro"}
+                            else "neutro"
+                        ),
+                    }
+                )
             titulo = _txt(item.get("titulo") or item.get("nome"), "titulo")[:40]
             if not titulo:
                 continue
-            cartoes.append({
-                "id": _txt(item.get("id"), "valor")[:80] or f"cartao-{len(cartoes) + 1}",
-                "titulo": titulo,
-                "tipo": _txt(item.get("tipo"), "titulo")[:24],
-                "bandeira": _txt(item.get("bandeira"), "titulo")[:24],
-                "numero": _txt(item.get("numero"), "texto")[:40],
-                "titular": _txt(item.get("titular"), "texto")[:50],
-                "validade": _txt(item.get("validade"), "texto")[:16],
-                "tom": (
-                    item.get("tom")
-                    if item.get("tom") in _TONS_FINANCEIROS
-                    else "principal"
-                ),
-                "fatura_rotulo": _txt(item.get("fatura_rotulo"), "titulo")[:40],
-                "fatura": _txt(item.get("fatura"), "texto")[:40],
-                "limite_rotulo": _txt(item.get("limite_rotulo"), "titulo")[:40],
-                "limite": _txt(item.get("limite"), "texto")[:40],
-                "progresso_rotulo": _txt(item.get("progresso_rotulo"), "titulo")[:40],
-                "progresso_texto": _txt(item.get("progresso_texto"), "texto")[:80],
-                "progresso_feito": int(max(0, min(100, _numero_do_ponto(item.get("progresso_feito")) or 0))),
-                "progresso_de": int(max(1, min(100, _numero_do_ponto(item.get("progresso_de")) or 100))),
-                "lancamentos": lancamentos,
-            })
+            cartoes.append(
+                {
+                    "id": _txt(item.get("id"), "valor")[:80]
+                    or f"cartao-{len(cartoes) + 1}",
+                    "titulo": titulo,
+                    "tipo": _txt(item.get("tipo"), "titulo")[:24],
+                    "bandeira": _txt(item.get("bandeira"), "titulo")[:24],
+                    "numero": _txt(item.get("numero"), "texto")[:40],
+                    "titular": _txt(item.get("titular"), "texto")[:50],
+                    "validade": _txt(item.get("validade"), "texto")[:16],
+                    "tom": (
+                        item.get("tom")
+                        if item.get("tom") in _TONS_FINANCEIROS
+                        else "principal"
+                    ),
+                    "fatura_rotulo": _txt(item.get("fatura_rotulo"), "titulo")[:40],
+                    "fatura": _txt(item.get("fatura"), "texto")[:40],
+                    "limite_rotulo": _txt(item.get("limite_rotulo"), "titulo")[:40],
+                    "limite": _txt(item.get("limite"), "texto")[:40],
+                    "progresso_rotulo": _txt(item.get("progresso_rotulo"), "titulo")[
+                        :40
+                    ],
+                    "progresso_texto": _txt(item.get("progresso_texto"), "texto")[:80],
+                    "progresso_feito": int(
+                        max(
+                            0,
+                            min(
+                                100, _numero_do_ponto(item.get("progresso_feito")) or 0
+                            ),
+                        )
+                    ),
+                    "progresso_de": int(
+                        max(
+                            1,
+                            min(100, _numero_do_ponto(item.get("progresso_de")) or 100),
+                        )
+                    ),
+                    "lancamentos": lancamentos,
+                }
+            )
         if not cartoes:
             return None
         return {"tipo": "cartao_bancario", **comum, "cartoes": cartoes}
@@ -1024,20 +1191,27 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
             valor = _numero_do_ponto(item.get("valor"))
             if valor is None:
                 continue
-            itens.append({
-                "rotulo": _txt(item.get("rotulo") or item.get("titulo"), "titulo")[:50],
-                "valor": max(0.0, float(valor)),
-                "texto": _txt(item.get("texto") or item.get("percentual"), "texto")[:24],
-                "tom": (
-                    item.get("tom")
-                    if item.get("tom") in _TONS_FINANCEIROS
-                    else "principal"
-                ),
-            })
+            itens.append(
+                {
+                    "rotulo": _txt(item.get("rotulo") or item.get("titulo"), "titulo")[
+                        :50
+                    ],
+                    "valor": max(0.0, float(valor)),
+                    "texto": _txt(item.get("texto") or item.get("percentual"), "texto")[
+                        :24
+                    ],
+                    "tom": (
+                        item.get("tom")
+                        if item.get("tom") in _TONS_FINANCEIROS
+                        else "principal"
+                    ),
+                }
+            )
         if not itens:
             return None
         return {
-            "tipo": "distribuicao", **comum,
+            "tipo": "distribuicao",
+            **comum,
             "titulo": _txt(no.get("titulo") or no.get("title"), "titulo")[:80],
             "itens": itens,
         }
@@ -1045,7 +1219,8 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
     if tipo == "okmigoListaFinanceira":
         filtros_validos = {"todas", "entradas", "saidas"}
         filtros = [
-            f for f in (no.get("filtros") or ["todas"])
+            f
+            for f in (no.get("filtros") or ["todas"])
             if isinstance(f, str) and f in filtros_validos
         ][:3]
         itens = []
@@ -1055,24 +1230,35 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
             titulo = _txt(item.get("titulo") or item.get("descricao"), "titulo")[:80]
             if not titulo:
                 continue
-            itens.append({
-                "id": _txt(item.get("id"), "valor")[:80],
-                "grupo": _txt(item.get("grupo") or item.get("grupo_data"), "titulo")[:40],
-                "tipo": item.get("tipo") if item.get("tipo") in filtros_validos else "todas",
-                "icone": _txt(item.get("icone"), "texto")[:8],
-                "titulo": titulo,
-                "subtitulo": _txt(item.get("subtitulo") or item.get("detalhe"), "texto")[:120],
-                "valor": _txt(item.get("valor") or item.get("valor_texto"), "texto")[:40],
-                "semantica": (
-                    item.get("semantica")
-                    if item.get("semantica") in {"positivo", "negativo", "neutro"}
-                    else "neutro"
-                ),
-            })
+            itens.append(
+                {
+                    "id": _txt(item.get("id"), "valor")[:80],
+                    "grupo": _txt(
+                        item.get("grupo") or item.get("grupo_data"), "titulo"
+                    )[:40],
+                    "tipo": item.get("tipo")
+                    if item.get("tipo") in filtros_validos
+                    else "todas",
+                    "icone": _txt(item.get("icone"), "texto")[:8],
+                    "titulo": titulo,
+                    "subtitulo": _txt(
+                        item.get("subtitulo") or item.get("detalhe"), "texto"
+                    )[:120],
+                    "valor": _txt(
+                        item.get("valor") or item.get("valor_texto"), "texto"
+                    )[:40],
+                    "semantica": (
+                        item.get("semantica")
+                        if item.get("semantica") in {"positivo", "negativo", "neutro"}
+                        else "neutro"
+                    ),
+                }
+            )
         if not itens:
             return None
         return {
-            "tipo": "lista_financeira", **comum,
+            "tipo": "lista_financeira",
+            **comum,
             "titulo": _txt(no.get("titulo") or no.get("title"), "titulo")[:80],
             "busca": bool(no.get("busca")),
             "filtros": filtros or ["todas"],
@@ -1094,10 +1280,14 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
             rotulo = _txt(sr.get("rotulo") or sr.get("title"), "titulo")[:24]
             if not rotulo:
                 continue
-            series.append({
-                "rotulo": rotulo,
-                "cor": sr["cor"] if sr.get("cor") in _CORES_DO_GRAFICO else "neutro",
-            })
+            series.append(
+                {
+                    "rotulo": rotulo,
+                    "cor": sr["cor"]
+                    if sr.get("cor") in _CORES_DO_GRAFICO
+                    else "neutro",
+                }
+            )
         if not series:
             return None
         pontos = []
@@ -1108,7 +1298,7 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
             rotulo = _txt(pt.get("rotulo"), "titulo")[:16]
             crus = pt.get("valores")
             crus = crus if isinstance(crus, list) else [crus]
-            valores = [_numero_do_ponto(v) for v in crus[:len(series)]]
+            valores = [_numero_do_ponto(v) for v in crus[: len(series)]]
             valores += [None] * (len(series) - len(valores))
             if all(v is None for v in valores):
                 continue
@@ -1116,7 +1306,8 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
         if not pontos:
             return None
         return {
-            "tipo": "grafico", **comum,
+            "tipo": "grafico",
+            **comum,
             "forma": forma,
             "titulo": _txt(no.get("titulo") or no.get("title"), "titulo")[:80],
             "series": series,
@@ -1124,10 +1315,13 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
         }
 
     if tipo == "ActionSet":
-        # Duas ações, e só duas. `Action.ToggleVisibility` não ALCANÇA nada —
+        # Três ações, e só três. `Action.ToggleVisibility` não ALCANÇA nada —
         # mostra e esconde o que já está no cartão; é o que permite abas e
         # telas que se sucedem sem abrir fronteira. `Action.Submit` é a
-        # escrita: quem preencheu e apertou já confirmou. O botão NÃO carrega
+        # escrita: quem preencheu e apertou já confirmou. `Action.Execute` é
+        # a consulta: leva os campos da própria caixa a uma operação de
+        # LEITURA e recebe outro cartão, reconstruído por este mesmo crivo.
+        # O botão NÃO carrega
         # URL — nomeia uma OPERAÇÃO do contrato, e operação fora do declarado
         # RECUSA a tela inteira em vez de sumir (botão que aparece e não grava
         # faz a pessoa culpar o produto, e pior: ela aperta achando que
@@ -1137,9 +1331,18 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
         for a in no.get("actions") or []:
             if not isinstance(a, dict):
                 continue
+            if a.get("type") == "Action.Execute":
+                consulta = _consulta_de_acao(a)
+                if consulta:
+                    botoes.append(consulta)
+                continue
             if a.get("type") == "Action.Submit":
                 dados = a.get("data")
-                op = _txt(dados.get("operacao"), "titulo")[:60] if isinstance(dados, dict) else ""
+                op = (
+                    _txt(dados.get("operacao"), "titulo")[:60]
+                    if isinstance(dados, dict)
+                    else ""
+                )
                 titulo = _txt(a.get("title"), "titulo")[:40]
                 if not op or not titulo:
                     continue
@@ -1149,17 +1352,25 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
                         "operação de escrita deste serviço"
                     )
                 botao = {"titulo": titulo, "enviar": op, "enfase": _enfase(a)}
+                icone = _icone_de_acao(a)
+                if icone:
+                    botao["icone"] = icone
                 # `okmigoAposEnviar`: a transição DEPOIS de salvar — um
                 # `ToggleVisibility` com estados booleanos EXPLÍCITOS. Sem URL,
                 # sem segunda escrita, sem alternância cega. É o que faz telas
                 # em etapas avançarem ao gravar, sem que «uma tela por etapa»
                 # estoure o teto de nós.
                 depois = a.get("okmigoAposEnviar")
-                if isinstance(depois, dict) and depois.get("type") == "Action.ToggleVisibility":
+                if (
+                    isinstance(depois, dict)
+                    and depois.get("type") == "Action.ToggleVisibility"
+                ):
                     bruto = depois.get("targetElements")
-                    alvos = [t for t in (bruto if isinstance(bruto, list) else [])[:60]
-                             if isinstance(t, dict)
-                             and isinstance(t.get("isVisible"), bool)]
+                    alvos = [
+                        t
+                        for t in (bruto if isinstance(bruto, list) else [])[:60]
+                        if isinstance(t, dict) and isinstance(t.get("isVisible"), bool)
+                    ]
                     alvos = _alvos_de_toggle({**depois, "targetElements": alvos})
                     if alvos:
                         botao["apos_enviar"] = alvos
@@ -1170,8 +1381,7 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
             alvos = _alvos_de_toggle(a)
             titulo = _txt(a.get("title"), "titulo")[:40]
             if titulo and alvos:
-                botoes.append({"titulo": titulo, "alvos": alvos,
-                               "enfase": _enfase(a)})
+                botoes.append({"titulo": titulo, "alvos": alvos, "enfase": _enfase(a)})
         if not botoes:
             return None
         saida = {"tipo": "acoes", **comum, "botoes": botoes}
@@ -1195,13 +1405,14 @@ def _perdeu_campo_obrigatorio(itens: Any) -> bool:
     por si. Hoje só a lista ESTRITA pode cair por falta de dado; a `filtered`
     (livre) fica de fora porque sem opção ainda funciona como texto.
     """
-    for filho in (itens or []):
+    for filho in itens or []:
         if not isinstance(filho, dict) or not filho.get("isRequired"):
             continue
         if filho.get("type") != "Input.ChoiceSet" or filho.get("style") == "filtered":
             continue
         validas = [
-            e for e in (filho.get("choices") or [])
+            e
+            for e in (filho.get("choices") or [])
             if isinstance(e, dict) and _txt(e.get("value")) and _txt(e.get("title"))
         ]
         if not validas:
@@ -1222,7 +1433,12 @@ def _campos_de(itens: list[dict]) -> list[str]:
     for it in itens:
         if not isinstance(it, dict):
             continue
-        if it.get("tipo") in ("campo", "escolha", "escolha_livre", "arquivo") and it.get("id"):
+        if it.get("tipo") in (
+            "campo",
+            "escolha",
+            "escolha_livre",
+            "arquivo",
+        ) and it.get("id"):
             saida.append(it["id"])
         if it.get("itens"):
             saida.extend(_campos_de(it["itens"]))
@@ -1236,12 +1452,14 @@ def _campos_de(itens: list[dict]) -> list[str]:
 
 def _muitos(itens: Any, contador: list[int]) -> list[dict]:
     prontos = [x for x in (_um(i, contador) for i in (itens or [])) if x]
-    # Todo botão de escrita ganha `campos`: os ids da caixa em que ele mora.
+    # Todo botão que atravessa a fronteira ganha `campos`: os ids da caixa em
+    # que ele mora. Consulta e escrita têm a mesma regra de escopo; o efeito
+    # continua inequívoco pelas chaves `consultar` e `enviar`.
     campos: list[str] | None = None
     for it in prontos:
         if it.get("tipo") == "acoes":
             for b in it["botoes"]:
-                if "enviar" in b:
+                if "enviar" in b or "consultar" in b:
                     if campos is None:
                         campos = _campos_de(prontos)
                     b["campos"] = campos
@@ -1259,7 +1477,7 @@ def validar(
 
     `escrituras` são as operações de ESCRITA que o serviço declarou; um
     `Action.Submit` que nomeie outra coisa recusa o cartão inteiro. `leituras`
-    são as de LEITURA (para `okmigoDocumento`), pela mesma régua. `None`
+    são as de LEITURA (para `Action.Execute` e `okmigoDocumento`), pela mesma régua. `None`
     desliga a conferência — só para quem valida sem serviço por trás.
     `config` diz o que é «nosso» e os tetos do ambiente (ver `Config`).
     """
@@ -1292,8 +1510,10 @@ def _validar(bruto: Any) -> tuple[dict | None, str | None]:
         # Corpo vazio depois de reconstruir = NADA do que veio é conhecido.
         # Devolver a tela em branco seria a tela que abre e não mostra nada,
         # sem ninguém saber por quê.
-        return None, ("nenhum elemento do cartão é conhecido — versão do "
-                      "schema mais nova que este cliente?")
+        return None, (
+            "nenhum elemento do cartão é conhecido — versão do "
+            "schema mais nova que este cliente?"
+        )
     tema = bruto.get("okmigoTema")
     navegacao = bruto.get("okmigoNavegacao")
     saida = {"versao": str(bruto.get("version") or "1.5")[:8], "corpo": corpo}
