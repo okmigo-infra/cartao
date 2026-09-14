@@ -197,6 +197,13 @@ def _contar_entrada(no: Any, contagem: dict[str, int], avisos: list[str], caminh
         return
     if tipo in _ESTRUTURAIS:
         # linha e célula de tabela não são nós por si: vivem e morrem com a tabela
+        if tipo == "TableRow" and no.get("selectAction", {}).get("type") not in (
+            None,
+            "Action.Execute",
+        ):
+            avisos.append(
+                f"{caminho}: `TableRow.selectAction` só aceita `Action.Execute`"
+            )
         for chave in ("cells", "items"):
             if chave in no:
                 _contar_entrada(no[chave], contagem, avisos, f"{caminho}.{chave}")
