@@ -187,6 +187,16 @@ def inferir_operacoes(cartao: Any) -> tuple[frozenset[str], frozenset[str]]:
         buscar = valor.get("okmigoBuscar")
         if isinstance(buscar, str) and buscar:
             leituras.add(buscar)
+        # Blocos nativos também nomeiam capacidades sem usar Action.*. É o
+        # caso do calendário: arrastar um evento leva ``enviar``. A inferência
+        # precisa enxergar essa escrita para o preview conferir o mesmo
+        # contrato que o renderer real confere.
+        enviar = valor.get("enviar")
+        if isinstance(enviar, str) and enviar:
+            escrituras.add(enviar)
+        consultar = valor.get("consultar")
+        if isinstance(consultar, str) and consultar:
+            leituras.add(consultar)
         for filho in valor.values():
             visitar(filho)
 
@@ -318,6 +328,23 @@ def construir_aplicativo(
             )
         bruto = expandir(molde, resumo, linhas)
         tela, erro = validar(bruto, esc_final, lei_final, config=Config())
+        if erro and not dado and "nenhum elemento" in erro:
+            # Algumas telas são integralmente dirigidas por dados (uma tabela
+            # sem título, por exemplo). Sem fixture o preview não deve apagar
+            # a rota inteira: mantém o destino navegável e explicita que falta
+            # conteúdo de demonstração. Com dados fornecidos, qualquer erro
+            # continua sendo fatal.
+            substituto = {
+                "type": "AdaptiveCard",
+                "version": "1.5",
+                "okmigoTema": molde.get("okmigoTema"),
+                "okmigoNavegacao": molde.get("okmigoNavegacao"),
+                "body": [
+                    {"type": "TextBlock", "text": str(superficie.get("titulo") or nome), "size": "large", "weight": "bolder"},
+                    {"type": "TextBlock", "text": "Adicione dados de demonstração para visualizar o conteúdo desta tela.", "wrap": True, "isSubtle": True},
+                ],
+            }
+            tela, erro = validar(substituto, esc_final, lei_final, config=Config())
         if erro or tela is None:
             raise ErroDePreview(
                 f"superfície {nome!r} recusada pelo crivo: {erro or 'sem corpo'}"

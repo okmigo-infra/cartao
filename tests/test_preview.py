@@ -18,6 +18,21 @@ DADOS = RAIZ / "exemplos" / "radaria.dados.json"
 
 
 class PreviewTest(unittest.TestCase):
+    def test_app_mantem_tela_dirigida_por_dados_navegavel_sem_fixture(self):
+        with tempfile.TemporaryDirectory() as pasta:
+            modulo = Path(pasta) / "app.py"
+            modulo.write_text(
+                "APLICATIVO = {'slug':'demo','superficies':[{'nome':'vazia','titulo':'Vazia','cartao':{'type':'AdaptiveCard','version':'1.5','okmigoNavegacao':'inferior','body':[{'type':'Table','columns':[{'width':1}],'rows':[{'_repetir_lista':{'type':'TableRow','cells':[]}}]}]}}]}\n",
+                encoding="utf-8",
+            )
+            app, _, _ = construir_aplicativo(f"{modulo}:APLICATIVO", None)
+
+        self.assertEqual(app["superficies"][0]["nome"], "vazia")
+        self.assertIn(
+            "dados de demonstração",
+            str(app["superficies"][0]["tela"]["corpo"]),
+        )
+
     def test_compila_expande_e_confere_o_sdk(self):
         tela, escrituras, leituras = construir_tela(ALVO, DADOS)
 
