@@ -14,6 +14,74 @@ vocabulário dele, descartando em silêncio o que não conhece. Esse reconstruto
 app), a ponte que busca os dados, o registro, o produto em si. O que se entrega
 é o **contrato** e o **crivo**; a aparência é do produto.
 
+## Piloto: escrever a tela com o SDK Python
+
+O módulo `okmigo_cartao.sdk` experimenta uma forma tipada de autoria. Ele não
+substitui nem afrouxa o contrato: componentes como `Tela`, `Busca`, `Tabela` e
+`Acao` compilam para o mesmo cartão restrito que o crivo já reconstrói. Não há
+HTML, JavaScript ou URL de ação, e uma linha tocável só pode executar leitura.
+
+```python
+from okmigo_cartao.sdk import Busca, Navegacao, Tela, Tema
+
+tela = Tela(
+    titulo="Meus ativos",
+    tema=Tema.MERCADO,
+    navegacao=Navegacao.INFERIOR,
+    componentes=(
+        Busca(
+            id="ticker_busca",
+            campo="ticker",
+            rotulo="Ativo da B3",
+            placeholder="Digite PETR4",
+            sugestoes_por="buscar_ativos",
+        ),
+    ),
+)
+
+cartao = tela.compilar()  # JSON do contrato atual
+tela.conferir(leituras={"buscar_ativos"})  # o mesmo crivo de produção
+```
+
+O exemplo maior em [`exemplos/sdk_radaria.py`](exemplos/sdk_radaria.py) monta
+uma tela com busca remota, ações com permissão, tabela responsiva, toque para
+detalhe e remoção por lixeira sem escrever JSON manualmente:
+
+```bash
+python -m okmigo_cartao preview exemplos/sdk_radaria.py:tela_de_ativos \
+  --dados exemplos/radaria.dados.json
+```
+
+Para testar o **aplicativo inteiro direto do Python**, exponha um `Aplicativo`
+e passe um mapa de dados por superfície. A navegação inferior troca de verdade
+entre todos os cartões que o produto declarará ao OkMigo:
+
+```bash
+python -m okmigo_cartao preview ../radaria/app/okmigo/manifesto.py:APLICATIVO \
+  --dados exemplos/radaria.aplicativo.dados.json
+```
+
+Também é possível passar o `manifesto.json` compilado; ele é útil para o
+registro e para conferir que a saída do SDK não mudou, mas não é necessário
+para desenvolver ou visualizar o app.
+
+O comando abre `http://localhost:4173` com desktop e celular de 390 px lado a
+lado, navegação entre superfícies e alternância claro/escuro. A página é
+reconstruída a cada recarga, então basta salvar o manifesto/dados e atualizar o
+navegador. Em container, publique ou encaminhe a porta `4173`. Para gerar um
+arquivo sem subir servidor, acrescente `--saida preview.html`.
+
+⚠️ A galeria é uma aproximação visual autocontida para autoria — não é o
+renderer de produção do Tyego. Navegação, responsividade, tema e respostas de
+leitura declaradas em `_preview.respostas` funcionam localmente, inclusive ida
+ao detalhe e volta à lista. Escritas e leituras sem exemplo continuam simuladas
+e não fazem chamadas externas. O próximo estágio do piloto é executar essas
+operações contra um backend de desenvolvimento e usar os renderizadores web e
+Flutter reais.
+
+Este módulo ainda é deliberadamente um piloto: cobre uma tela representativa,
+não todo o vocabulário de `CONTRATO.md`.
+
 ## Comece por aqui
 
 ```bash

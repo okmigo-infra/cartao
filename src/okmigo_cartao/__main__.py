@@ -32,6 +32,12 @@ from .manifesto import e_manifesto, escolher, operacoes, superficies
 
 
 def main(argv: list[str] | None = None) -> int:
+    argumentos = list(sys.argv[1:] if argv is None else argv)
+    if argumentos and argumentos[0] == "preview":
+        from .preview import main_preview
+
+        return main_preview(argumentos[1:])
+
     p = argparse.ArgumentParser(prog="okmigo-cartao", description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("cartao", type=Path, help="um cartão, um molde, ou o MANIFESTO inteiro (JSON)")
@@ -44,7 +50,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--html", type=Path, help="escreve a casca (HTML sem CSS) neste arquivo")
     p.add_argument("--json", action="store_true", help="imprime o cartão reconstruído em JSON")
     p.add_argument("--quieto", action="store_true", help="só o veredito e os avisos")
-    a = p.parse_args(argv)
+    a = p.parse_args(argumentos)
 
     bruto = json.loads(a.cartao.read_text(encoding="utf-8"))
     esc_do_manifesto = lei_do_manifesto = None
