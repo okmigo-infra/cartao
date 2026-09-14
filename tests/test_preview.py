@@ -14,8 +14,7 @@ from okmigo_cartao.preview import (
 )
 
 RAIZ = Path(__file__).resolve().parents[1]
-ALVO = str(RAIZ / "exemplos" / "sdk_radaria.py") + ":tela_de_ativos"
-DADOS = RAIZ / "exemplos" / "radaria.dados.json"
+ALVO = str(RAIZ / "exemplos" / "sdk_catalogo.py") + ":FORMULARIO"
 
 
 class PreviewTest(unittest.TestCase):
@@ -65,17 +64,17 @@ class PreviewTest(unittest.TestCase):
         self.assertIn("Mais", html)
 
     def test_compila_expande_e_confere_o_sdk(self):
-        tela, escrituras, leituras = construir_tela(ALVO, DADOS)
+        tela, escrituras, leituras = construir_tela(ALVO, None)
 
-        self.assertEqual("mercado-editorial", tela["tema"])
-        self.assertEqual({"adicionar_acompanhado", "remover_acompanhado"}, escrituras)
-        self.assertEqual({"buscar_ativos", "detalhar_ativo"}, leituras)
+        self.assertEqual("jornada-ativa", tela["tema"])
+        self.assertEqual({"salvar_cadastro"}, escrituras)
+        self.assertEqual(set(), leituras)
 
         documento = pagina(tela, ALVO, escrituras, leituras)
         for esperado in (
-            "Meus ativos",
-            "PETR4",
-            "SANB11",
+            "Novo cadastro",
+            "Prioridade",
+            "Anexo opcional",
             "Desktop",
             "Celular",
             "Renderer Web oficial",
@@ -84,32 +83,40 @@ class PreviewTest(unittest.TestCase):
         self.assertNotIn("<script src=", documento)
         self.assertNotIn("não é o renderer de produção", documento)
 
+    def test_aplicativo_infere_leitura_de_documento_do_catalogo(self):
+        alvo = str(RAIZ / "exemplos" / "sdk_catalogo.py") + ":APLICATIVO"
+
+        aplicativo, escrituras, leituras = construir_aplicativo(alvo, None)
+
+        self.assertIn("baixar_extrato", leituras)
+        self.assertIn("salvar_cadastro", escrituras)
+        self.assertEqual(4, len(aplicativo["superficies"]))
+
     def test_comando_pode_gerar_html_sem_iniciar_servidor(self):
         with tempfile.TemporaryDirectory() as temporario:
-            saida = Path(temporario) / "radaria.html"
-            codigo = main_preview([ALVO, "--dados", str(DADOS), "--saida", str(saida)])
+            saida = Path(temporario) / "catalogo.html"
+            codigo = main_preview([ALVO, "--saida", str(saida)])
 
             self.assertEqual(0, codigo)
             self.assertTrue(saida.is_file())
-            self.assertIn("SANB11", saida.read_text(encoding="utf-8"))
+            self.assertIn("Salvar cadastro", saida.read_text(encoding="utf-8"))
 
     def test_manifesto_inteiro_vira_aplicativo_navegavel(self):
         cartao = carregar_alvo(ALVO)
-        dados = json.loads(DADOS.read_text(encoding="utf-8"))
         manifesto = {
-            "slug": "radaria",
-            "nome_visivel": "RadarIA",
+            "slug": "catalogo",
+            "nome_visivel": "Catálogo",
             "superficies": [
                 {
-                    "nome": "ativos",
-                    "rotulo": "Ativos",
-                    "icone": "ativos",
+                    "nome": "cadastro",
+                    "rotulo": "Cadastro",
+                    "icone": "perfil",
                     "cartao": cartao,
                 },
                 {
-                    "nome": "fiis",
-                    "rotulo": "FIIs",
-                    "icone": "fiis",
+                    "nome": "revisao",
+                    "rotulo": "Revisão",
+                    "icone": "inicio",
                     "cartao": cartao,
                 },
             ],
@@ -120,7 +127,7 @@ class PreviewTest(unittest.TestCase):
             caminho_dados = raiz / "dados.json"
             caminho_manifesto.write_text(json.dumps(manifesto), encoding="utf-8")
             caminho_dados.write_text(
-                json.dumps({"ativos": dados, "fiis": dados}), encoding="utf-8"
+                json.dumps({"cadastro": {}, "revisao": {}}), encoding="utf-8"
             )
 
             aplicativo, escrituras, leituras = construir_aplicativo(
@@ -131,10 +138,11 @@ class PreviewTest(unittest.TestCase):
             )
 
         self.assertEqual(
-            ["ativos", "fiis"], [s["nome"] for s in aplicativo["superficies"]]
+            ["cadastro", "revisao"],
+            [s["nome"] for s in aplicativo["superficies"]],
         )
-        self.assertIn('"nome":"RadarIA"', documento)
-        self.assertIn('"nome":"fiis"', documento)
+        self.assertIn('"nome":"Catálogo"', documento)
+        self.assertIn('"nome":"revisao"', documento)
         self.assertIn("superficie-bottom-nav", documento)
         self.assertIn("Renderer Web oficial", documento)
 

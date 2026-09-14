@@ -16,12 +16,12 @@ nativo, a ponte que busca os dados e o registro. O pacote inclui somente um
 continua recebendo apenas o contrato e o crivo; aparência e componentes não
 podem ser fornecidos pelo app.
 
-## Piloto: escrever a tela com o SDK Python
+## Escrever a tela com o SDK Python
 
-O módulo `okmigo_cartao.sdk` experimenta uma forma tipada de autoria. Ele não
-substitui nem afrouxa o contrato: componentes como `Tela`, `Busca`, `Tabela` e
-`Acao` compilam para o mesmo cartão restrito que o crivo já reconstrói. Não há
-HTML, JavaScript ou URL de ação, e uma linha tocável só pode executar leitura.
+O SDK Python oferece uma forma tipada de autoria. Ele não substitui nem
+afrouxa o contrato: componentes como `Tela`, `Busca`, `Tabela` e `Acao`
+compilam para o mesmo cartão restrito que o crivo já reconstrói. Não há HTML,
+JavaScript ou URL de ação, e uma linha tocável só pode executar leitura.
 
 ```python
 from okmigo_cartao.sdk import Busca, Navegacao, Tela, Tema
@@ -45,13 +45,12 @@ cartao = tela.compilar()  # JSON do contrato atual
 tela.conferir(leituras={"buscar_ativos"})  # o mesmo crivo de produção
 ```
 
-O exemplo maior em [`exemplos/sdk_radaria.py`](exemplos/sdk_radaria.py) monta
-uma tela com busca remota, ações com permissão, tabela responsiva, toque para
-detalhe e remoção por lixeira sem escrever JSON manualmente:
+O aplicativo neutro em
+[`exemplos/sdk_catalogo.py`](exemplos/sdk_catalogo.py) reúne formulários,
+métricas, agenda, documentos e componentes financeiros em quatro superfícies:
 
 ```bash
-python -m okmigo_cartao preview exemplos/sdk_radaria.py:tela_de_ativos \
-  --dados exemplos/radaria.dados.json
+python -m okmigo_cartao preview exemplos/sdk_catalogo.py:APLICATIVO
 ```
 
 Para testar o **aplicativo inteiro direto do Python**, exponha um `Aplicativo`
@@ -59,26 +58,8 @@ e passe um mapa de dados por superfície. A navegação inferior troca de verdad
 entre todos os cartões que o produto declarará ao OkMigo:
 
 ```bash
-python -m okmigo_cartao preview ../radaria/app/okmigo/manifesto.py:APLICATIVO \
-  --dados exemplos/radaria.aplicativo.dados.json
-```
-
-O EstouFit usa o mesmo fluxo. A fixture abaixo abre as telas de treino e
-perfil com escolhas editáveis, progresso, detalhes dos exercícios e
-cronômetro de descanso:
-
-```bash
-python -m okmigo_cartao preview ../estoufit/okmigo/gerar_manifestos.py:ALUNO \
-  --dados exemplos/estoufit-aluno.aplicativo.dados.json \
-  --host 0.0.0.0 --port 44174
-```
-
-O DinFinance exercita os componentes financeiros e suas cinco telas:
-
-```bash
-python -m okmigo_cartao preview ../dinfinance/okmigo/gerar_manifesto.py:APLICATIVO \
-  --dados exemplos/dinfinance.aplicativo.dados.json \
-  --host 0.0.0.0 --port 44178
+python -m okmigo_cartao preview seu_app/okmigo/manifesto.py:APLICATIVO \
+  --dados seu_app/okmigo/exemplos/preview.dados.json
 ```
 
 Também é possível passar o `manifesto.json` compilado; ele é útil para o
@@ -99,9 +80,18 @@ ida ao detalhe e volta à lista. Escritas são simuladas e nenhuma ação faz
 requisição externa. O quadro de 390 px reproduz o Web responsivo; a conferência
 final do cliente nativo continua sendo feita no emulador Flutter.
 
-O SDK tipado ainda é deliberadamente um piloto e não possui classes de autoria
-para todo o vocabulário de `CONTRATO.md`. O preview, porém, usa o renderer Web
-oficial e exibe todo componente que o produto Web já reconhece.
+O catálogo tipado cobre estrutura responsiva, formulários, escolhas, mídia,
+arquivos, estados e etapas, repetição de dados, calendário, gráficos e blocos
+financeiros. Padrões de produto como ficha, grade de métricas e estado vazio
+são composições dessas primitivas e não aumentam a superfície do contrato.
+Consulte [`docs/CATALOGO-SDK.md`](docs/CATALOGO-SDK.md) para a lista completa,
+exemplos e a regra para evoluir o vocabulário.
+
+Para passear pelo catálogo em quatro superfícies navegáveis:
+
+```bash
+python -m okmigo_cartao preview exemplos/sdk_catalogo.py:APLICATIVO
+```
 
 ### Trazendo um aplicativo existente
 
@@ -130,8 +120,7 @@ OkMigo.
 
 ```bash
 pip install -e '.[dev]'
-python -m okmigo_cartao exemplos/academia.json --dados exemplos/academia.dados.json \
-    --escrituras guardar_perfil,iniciar_treino,encerrar_treino --html saida/academia.html
+python -m okmigo_cartao preview exemplos/sdk_catalogo.py:APLICATIVO
 ```
 
 A linha de comando responde as três perguntas que importam:

@@ -1,4 +1,4 @@
-"""Piloto do SDK tipado para escrever telas declaradas do OkMigo.
+"""SDK tipado para escrever telas declaradas do OkMigo.
 
 O SDK e uma camada de autoria: ele produz exatamente o contrato Adaptive Card
 que o crivo ja aceita. Nenhum objeto daqui atravessa a fronteira em runtime e
@@ -113,11 +113,18 @@ class Texto:
 class Opcao:
     titulo: str
     valor: str
+    nota: str | None = None
+    icone: str | None = None
 
     def compilar(self) -> Json:
         if not self.titulo or not self.valor:
             raise ContratoDoSdkInvalido("opcao precisa de titulo e valor")
-        return {"title": self.titulo, "value": self.valor}
+        no = {"title": self.titulo, "value": self.valor}
+        if self.nota:
+            no["okmigoNota"] = self.nota
+        if self.icone:
+            no["okmigoIcone"] = self.icone
+        return no
 
 
 @dataclass(frozen=True, slots=True)
