@@ -283,10 +283,11 @@ class LinhaDeTabela:
 @dataclass(frozen=True, slots=True)
 class TabelaFlexivel:
     larguras: tuple[int, ...]
-    linhas: tuple[LinhaDeTabela, ...]
-    cabecalho: bool = True
-    grade: bool = False
-    vazio: str = "Nada para mostrar agora."
+    linhas: tuple[Componente, ...]
+    cabecalho: bool | None = True
+    grade: bool | None = False
+    vazio: str | None = "Nada para mostrar agora."
+    alternativa: Componente | None = None
 
     def __post_init__(self) -> None:
         if not self.larguras or len(self.larguras) > 16:
@@ -295,18 +296,22 @@ class TabelaFlexivel:
             raise ContratoDoSdkInvalido("larguras da tabela precisam ser positivas")
         if not 1 <= len(self.linhas) <= 200:
             raise ContratoDoSdkInvalido("tabela precisa de 1 a 200 linhas")
-        if any(len(linha.celulas) != len(self.larguras) for linha in self.linhas):
-            raise ContratoDoSdkInvalido("todas as linhas precisam preencher as colunas")
 
     def compilar(self) -> Json:
-        return {
+        tabela: Json = {
             "type": "Table",
             "columns": [{"width": largura} for largura in self.larguras],
-            "firstRowAsHeader": self.cabecalho,
-            "showGridLines": self.grade,
             "rows": _compilar(self.linhas),
-            "fallback": Texto(self.vazio, PapelDoTexto.AUXILIAR).compilar(),
         }
+        if self.cabecalho is not None:
+            tabela["firstRowAsHeader"] = self.cabecalho
+        if self.grade is not None:
+            tabela["showGridLines"] = self.grade
+        if self.alternativa is not None:
+            tabela["fallback"] = self.alternativa.compilar()
+        elif self.vazio is not None:
+            tabela["fallback"] = Texto(self.vazio, PapelDoTexto.AUXILIAR).compilar()
+        return tabela
 
 
 class FormaDaEscolhaMultipla(StrEnum):

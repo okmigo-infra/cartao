@@ -98,10 +98,9 @@ python -m okmigo_cartao preview exemplos/sdk_catalogo.py:APLICATIVO
 
 ### Trazendo um aplicativo existente
 
-Uma migração grande não precisa reescrever centenas de componentes no mesmo
-commit. `AplicativoDoContrato` transforma o manifesto que o produto já testa
-num objeto do SDK, acrescenta a navegação/tema compartilhados e permite abrir
-o aplicativo inteiro no preview Python:
+Há duas etapas possíveis. `AplicativoDoContrato` é uma ponte temporária: ele
+transforma o manifesto que o produto já testa num objeto compilável e permite
+abrir o aplicativo inteiro no preview Python:
 
 ```python
 from okmigo_cartao import AplicativoDoContrato, Tema
@@ -113,11 +112,23 @@ APLICATIVO = AplicativoDoContrato(
 MANIFESTO = APLICATIVO.compilar()
 ```
 
-O adaptador valida a forma do aplicativo, nomes únicos e a presença de um
-cartão por superfície. Ele é a ponte de migração; telas novas devem usar os
-componentes tipados (`Tela`, `Texto`, `Painel`, `Tabela` etc.). Nos dois casos,
-o JSON que cruza a fronteira continua passando pelo mesmo crivo fechado do
-OkMigo.
+O estado final é não depender de dicionários crus. Para uma conversão mecânica
+inicial, o repositório inclui um transpilador que transforma um ou mais
+manifestos existentes em código Python com `Aplicativo`, `Superficie`, `Tela`
+e os componentes públicos do catálogo:
+
+```bash
+python scripts/transpilar_manifesto.py \
+  ../seu-app/okmigo/manifesto.json \
+  --saida ../seu-app/okmigo/aplicativo_sdk_seu_app.py
+```
+
+Depois da conversão, esse arquivo Python vira a fonte que o time evolui; o
+`gerar_manifesto.py` do produto só reexporta o `APLICATIVO` e materializa o
+JSON para registro. O transpilador não fica no caminho de execução e não deve
+ser rodado novamente sobre o JSON gerado, pois sobrescreveria edições feitas
+no código tipado. Nos dois estágios, o JSON que cruza a fronteira passa pelo
+mesmo crivo fechado do OkMigo.
 
 ## Comece por aqui
 

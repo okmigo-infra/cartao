@@ -47,19 +47,22 @@ class FormaDaEscolha(StrEnum):
 @dataclass(frozen=True, slots=True)
 class CampoTexto:
     id: str
-    campo: str
-    rotulo: str
+    campo: str | None
+    rotulo: str | None
     placeholder: str = ""
-    valor: str = ""
-    obrigatorio: bool = False
-    varias_linhas: bool = False
+    valor: str | None = None
+    obrigatorio: bool | None = False
+    varias_linhas: bool | None = False
     maximo_de_caracteres: int | None = None
     somente_leitura: bool = False
+    visivel: bool = True
 
     def __post_init__(self) -> None:
         _nome(self.id, "id do campo")
-        _nome(self.campo, "campo")
-        _obrigatorio(self.rotulo, "rotulo do campo")
+        if self.campo is not None:
+            _nome(self.campo, "campo")
+        if self.visivel and self.rotulo is not None:
+            _obrigatorio(self.rotulo, "rotulo do campo")
         if self.maximo_de_caracteres is not None and self.maximo_de_caracteres < 1:
             raise ContratoDoSdkInvalido("maximo de caracteres precisa ser positivo")
 
@@ -67,38 +70,46 @@ class CampoTexto:
         no: Json = {
             "type": "Input.Text",
             "id": self.id,
-            "campo": self.campo,
-            "label": self.rotulo,
-            "isRequired": self.obrigatorio,
-            "isMultiline": self.varias_linhas,
         }
+        if self.rotulo is not None:
+            no["label"] = self.rotulo
+        if self.campo is not None:
+            no["campo"] = self.campo
+        if self.obrigatorio is not None:
+            no["isRequired"] = self.obrigatorio
+        if self.varias_linhas is not None:
+            no["isMultiline"] = self.varias_linhas
         if self.placeholder:
             no["placeholder"] = self.placeholder
-        if self.valor:
+        if self.valor is not None:
             no["value"] = self.valor
         if self.maximo_de_caracteres is not None:
             no["maxLength"] = self.maximo_de_caracteres
         if self.somente_leitura:
             no["okmigoSomenteLeitura"] = True
+        if not self.visivel:
+            no["isVisible"] = False
         return no
 
 
 @dataclass(frozen=True, slots=True)
 class CampoNumero:
     id: str
-    campo: str
-    rotulo: str
+    campo: str | None
+    rotulo: str | None
     placeholder: str = ""
     valor: str | int | float | None = None
-    obrigatorio: bool = False
+    obrigatorio: bool | None = False
     minimo: int | float | None = None
     maximo: int | float | None = None
     somente_leitura: bool = False
 
     def __post_init__(self) -> None:
         _nome(self.id, "id do campo")
-        _nome(self.campo, "campo")
-        _obrigatorio(self.rotulo, "rotulo do campo")
+        if self.campo is not None:
+            _nome(self.campo, "campo")
+        if self.rotulo is not None:
+            _obrigatorio(self.rotulo, "rotulo do campo")
         if self.minimo is not None and self.maximo is not None:
             if self.minimo > self.maximo:
                 raise ContratoDoSdkInvalido("minimo nao pode ser maior que maximo")
@@ -107,10 +118,13 @@ class CampoNumero:
         no: Json = {
             "type": "Input.Number",
             "id": self.id,
-            "campo": self.campo,
-            "label": self.rotulo,
-            "isRequired": self.obrigatorio,
         }
+        if self.rotulo is not None:
+            no["label"] = self.rotulo
+        if self.campo is not None:
+            no["campo"] = self.campo
+        if self.obrigatorio is not None:
+            no["isRequired"] = self.obrigatorio
         if self.placeholder:
             no["placeholder"] = self.placeholder
         if self.valor is not None:
@@ -127,38 +141,43 @@ class CampoNumero:
 @dataclass(frozen=True, slots=True)
 class Escolha:
     id: str
-    campo: str
-    rotulo: str
-    opcoes: tuple[Componente, ...] = ()
+    campo: str | None
+    rotulo: str | None
+    opcoes: tuple[Componente, ...] | None = ()
     forma: FormaDaEscolha = FormaDaEscolha.LISTA
     placeholder: str = ""
-    valor: str = ""
-    obrigatoria: bool = False
+    valor: str | None = None
+    obrigatoria: bool | None = False
     quem_opera: bool = False
+    estrita: bool | None = None
 
     def __post_init__(self) -> None:
         _nome(self.id, "id da escolha")
-        _nome(self.campo, "campo")
-        _obrigatorio(self.rotulo, "rotulo da escolha")
-        if not self.opcoes and not self.quem_opera:
+        if self.campo is not None:
+            _nome(self.campo, "campo")
+        if self.opcoes == () and not self.quem_opera:
             raise ContratoDoSdkInvalido("escolha precisa de opcoes")
 
     def compilar(self) -> Json:
         no: Json = {
             "type": "Input.ChoiceSet",
             "id": self.id,
-            "campo": self.campo,
-            "label": self.rotulo,
-            "choices": _compilar(self.opcoes),
-            "isRequired": self.obrigatoria,
         }
+        if self.opcoes is not None:
+            no["choices"] = _compilar(self.opcoes)
+        if self.rotulo is not None:
+            no["label"] = self.rotulo
+        if self.campo is not None:
+            no["campo"] = self.campo
+        if self.obrigatoria is not None:
+            no["isRequired"] = self.obrigatoria
         if self.forma != FormaDaEscolha.LISTA:
             no["style"] = self.forma.value
-        if self.forma == FormaDaEscolha.BUSCA:
-            no["okmigoEstrito"] = True
+        if self.estrita is not None:
+            no["okmigoEstrito"] = self.estrita
         if self.placeholder:
             no["placeholder"] = self.placeholder
-        if self.valor:
+        if self.valor is not None:
             no["value"] = self.valor
         if self.quem_opera:
             no["okmigoQuemOpera"] = True
@@ -282,20 +301,23 @@ class Copiar:
 @dataclass(frozen=True, slots=True)
 class Cronometro:
     rotulo: str
-    segundos: int
+    segundos: int | str
+    com_alternativa: bool = True
 
     def __post_init__(self) -> None:
         _obrigatorio(self.rotulo, "rotulo do cronometro")
-        if not 1 <= self.segundos <= 3600:
+        if isinstance(self.segundos, int) and not 1 <= self.segundos <= 3600:
             raise ContratoDoSdkInvalido("cronometro precisa ter de 1 a 3600 segundos")
 
     def compilar(self) -> Json:
-        return {
+        no: Json = {
             "type": "okmigoCronometro",
             "rotulo": self.rotulo,
             "segundos": self.segundos,
-            "fallback": Texto(f"{self.rotulo}: {self.segundos} s").compilar(),
         }
+        if self.com_alternativa:
+            no["fallback"] = Texto(f"{self.rotulo}: {self.segundos} s").compilar()
+        return no
 
 
 class TomFinanceiro(StrEnum):
@@ -314,22 +336,24 @@ class TomFinanceiro(StrEnum):
 class Progresso:
     feito: int | float | str
     de: int | float | str
-    rotulo: str = ""
-    tom: TomFinanceiro | None = None
+    rotulo: str | None = None
+    tom: TomFinanceiro | str | None = None
+    com_alternativa: bool = True
 
     def compilar(self) -> Json:
         no: Json = {
             "type": "okmigoProgresso",
             "feito": self.feito,
             "de": self.de,
-            "fallback": Texto(
-                f"{self.rotulo}: {self.feito} de {self.de}".strip(": ")
-            ).compilar(),
         }
-        if self.rotulo:
+        if self.com_alternativa:
+            no["fallback"] = Texto(
+                f"{self.rotulo or ''}: {self.feito} de {self.de}".strip(": ")
+            ).compilar()
+        if self.rotulo is not None:
             no["rotulo"] = self.rotulo
         if self.tom is not None:
-            no["tom"] = self.tom.value
+            no["tom"] = self.tom.value if isinstance(self.tom, TomFinanceiro) else self.tom
         return no
 
 
@@ -352,6 +376,7 @@ class Alternar:
     titulo: str
     alvos: tuple[AlvoDeVisibilidade, ...]
     enfase: EnfaseDaAcao = EnfaseDaAcao.PADRAO
+    modo_secundario: bool = False
 
     def __post_init__(self) -> None:
         _obrigatorio(self.titulo, "titulo da acao")
@@ -369,6 +394,8 @@ class Alternar:
         elif self.enfase == EnfaseDaAcao.DESTRUTIVA:
             no["style"] = "destructive"
         elif self.enfase == EnfaseDaAcao.SECUNDARIA:
+            no["mode"] = "secondary"
+        if self.modo_secundario:
             no["mode"] = "secondary"
         return no
 
@@ -418,12 +445,14 @@ class AlturaDaSecao(StrEnum):
 class Secao:
     itens: tuple[Componente, ...]
     id: str | None = None
-    visivel: bool = True
-    tom: TomDaSecao = TomDaSecao.PADRAO
+    visivel: bool | None = None
+    tom: TomDaSecao | str | None = TomDaSecao.PADRAO
     grade: str | bool | None = None
     altura: AlturaDaSecao | None = None
     sobreposta: bool = False
     ao_tocar: tuple[AlvoDeVisibilidade, ...] = ()
+    espaco: str | None = None
+    separador: bool | None = None
 
     def __post_init__(self) -> None:
         if not self.itens:
@@ -434,15 +463,13 @@ class Secao:
             raise ContratoDoSdkInvalido("forma de grade desconhecida")
 
     def compilar(self) -> Json:
-        no: Json = {
-            "type": "Container",
-            "style": self.tom.value,
-            "items": _compilar(self.itens),
-        }
+        no: Json = {"type": "Container", "items": _compilar(self.itens)}
+        if self.tom is not None:
+            no["style"] = self.tom.value if isinstance(self.tom, TomDaSecao) else self.tom
         if self.id is not None:
             no["id"] = self.id
-        if not self.visivel:
-            no["isVisible"] = False
+        if self.visivel is not None:
+            no["isVisible"] = self.visivel
         if self.grade is not None:
             no["okmigoGrade"] = self.grade
         if self.altura is not None:
@@ -454,6 +481,10 @@ class Secao:
                 "type": "Action.ToggleVisibility",
                 "targetElements": [alvo.compilar() for alvo in self.ao_tocar],
             }
+        if self.espaco is not None:
+            no["spacing"] = self.espaco
+        if self.separador is not None:
+            no["separator"] = self.separador
         return no
 
 
@@ -640,7 +671,7 @@ class LancamentoFinanceiro:
     valor: str
     subtitulo: str = ""
     icone: str = ""
-    semantica: SemanticaFinanceira = SemanticaFinanceira.NEUTRO
+    semantica: SemanticaFinanceira | str = SemanticaFinanceira.NEUTRO
     id: str = ""
     grupo: str = ""
     tipo: str = "todas"
@@ -657,7 +688,11 @@ class LancamentoFinanceiro:
             "titulo": self.titulo,
             "subtitulo": self.subtitulo,
             "valor": self.valor,
-            "semantica": self.semantica.value,
+            "semantica": (
+                self.semantica.value
+                if isinstance(self.semantica, SemanticaFinanceira)
+                else self.semantica
+            ),
         }
 
 
@@ -670,7 +705,7 @@ class CartaoFinanceiro:
     numero: str = ""
     titular: str = ""
     validade: str = ""
-    tom: TomFinanceiro = TomFinanceiro.PRINCIPAL
+    tom: TomFinanceiro | str = TomFinanceiro.PRINCIPAL
     fatura_rotulo: str = ""
     fatura: str = ""
     limite_rotulo: str = ""
@@ -693,7 +728,7 @@ class CartaoFinanceiro:
             "numero": self.numero,
             "titular": self.titular,
             "validade": self.validade,
-            "tom": self.tom.value,
+            "tom": self.tom.value if isinstance(self.tom, TomFinanceiro) else self.tom,
             "fatura_rotulo": self.fatura_rotulo,
             "fatura": self.fatura,
             "limite_rotulo": self.limite_rotulo,
@@ -723,7 +758,7 @@ class ItemDeDistribuicao:
     rotulo: str
     valor: int | float | str
     texto: str = ""
-    tom: TomFinanceiro = TomFinanceiro.PRINCIPAL
+    tom: TomFinanceiro | str = TomFinanceiro.PRINCIPAL
 
     def __post_init__(self) -> None:
         _obrigatorio(self.rotulo, "rotulo da distribuicao")
@@ -733,7 +768,7 @@ class ItemDeDistribuicao:
             "rotulo": self.rotulo,
             "valor": self.valor,
             "texto": self.texto,
-            "tom": self.tom.value,
+            "tom": self.tom.value if isinstance(self.tom, TomFinanceiro) else self.tom,
         }
 
 

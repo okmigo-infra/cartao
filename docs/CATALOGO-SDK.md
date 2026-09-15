@@ -163,6 +163,32 @@ Uma tela nova deve ser montada somente com objetos exportados por
 catálogo, ela entra primeiro no SDK, no crivo, nos renderers, nos fallbacks e
 nos testes; só depois um produto passa a usá-la.
 
+## Aplicativo e fontes de dados
+
+`Aplicativo`, `Superficie` e `Tela` tipam a árvore completa, não apenas o corpo
+visual. `Fonte` aceita consultas diferentes para `resumo` e `lista`; use
+`ConsultaDaFonte` quando precisar declarar `caminho` ou um `pedido` fixo.
+Metadados universais também têm tipos próprios: `OperacaoParametrizada`,
+`Convite`, `MarcaSolicitada`, `ContatoAceito`, `CatalogoPublico` e
+`MarcaHorario`. Eles evitam que cada produto volte a abrir uma saída lateral
+por `dict` ou `extras`.
+
+```python
+fonte = Fonte(
+    resumo=ConsultaDaFonte("resumir_agenda"),
+    lista=ConsultaDaFonte(
+        "listar_horarios",
+        caminho="horarios",
+        pedido={"periodo": "hoje"},
+    ),
+)
+```
+
+O padrão de um produto é manter `okmigo/gerar_manifesto.py` como entrada
+estável, a autoria tipada em um módulo vizinho e dados fictícios em
+`okmigo/examples/`. O JSON materializado é artefato de registro, não fonte de
+edição.
+
 ## Mídia, documentos e utilidades
 
 | intenção | componentes |
