@@ -17,7 +17,10 @@ from typing import Any, Protocol, Self
 from urllib.parse import urlsplit
 
 Json = dict[str, Any]
-_NOME = re.compile(r"^[a-zA-Z][a-zA-Z0-9_.{}-]*$")
+_NOME = re.compile(
+    r"^(?:[A-Za-z][A-Za-z0-9_.-]*|\{[A-Za-z][A-Za-z0-9_.-]*\})"
+    r"(?:[A-Za-z0-9_.-]+|\{[A-Za-z][A-Za-z0-9_.-]*\})*$"
+)
 
 
 class ContratoDoSdkInvalido(ValueError):
@@ -83,13 +86,19 @@ class Texto:
     alinhamento: Alinhamento | None = None
     separador: bool | None = None
     espaco: Espaco | None = None
+    tamanho: str | None = None
+    peso: str | None = None
+    sutil: bool | None = None
+    quebrar: bool | None = True
 
     def __post_init__(self) -> None:
         if not self.texto:
             raise ContratoDoSdkInvalido("texto nao pode ser vazio")
 
     def compilar(self) -> Json:
-        no: Json = {"type": "TextBlock", "text": self.texto, "wrap": True}
+        no: Json = {"type": "TextBlock", "text": self.texto}
+        if self.quebrar is not None:
+            no["wrap"] = self.quebrar
         if self.papel == PapelDoTexto.TITULO:
             no.update(size="extraLarge", weight="bolder", spacing="none")
         elif self.papel == PapelDoTexto.SECAO:
@@ -106,6 +115,12 @@ class Texto:
             no["separator"] = self.separador
         if self.espaco is not None:
             no["spacing"] = self.espaco.value
+        if self.tamanho is not None:
+            no["size"] = self.tamanho
+        if self.peso is not None:
+            no["weight"] = self.peso
+        if self.sutil is not None:
+            no["isSubtle"] = self.sutil
         return no
 
 
@@ -230,6 +245,10 @@ class Acao:
     enfase: EnfaseDaAcao = EnfaseDaAcao.PADRAO
     icone: str | None = None
     confirmacao: Confirmacao | None = None
+    dados: Mapping[str, Any] = field(default_factory=dict)
+    modo_secundario: bool = False
+    alvos_apos_enviar: tuple[Componente, ...] = ()
+    transicao_tipada: bool = True
 
     def __post_init__(self) -> None:
         _nome(self.operacao, "operacao")
@@ -246,8 +265,16 @@ class Acao:
         *,
         enfase: EnfaseDaAcao = EnfaseDaAcao.PADRAO,
         confirmacao: Confirmacao | None = None,
+        dados: Mapping[str, Any] | None = None,
+        modo_secundario: bool = False,
+        alvos_apos_enviar: tuple[Componente, ...] = (),
+        transicao_tipada: bool = True,
     ) -> Self:
-        return cls(titulo, operacao, TipoDeAcao.LEITURA, enfase, None, confirmacao)
+        return cls(
+            titulo, operacao, TipoDeAcao.LEITURA, enfase, None,
+            confirmacao, dados or {}, modo_secundario,
+            alvos_apos_enviar, transicao_tipada,
+        )
 
     @classmethod
     def escrever(
@@ -258,8 +285,16 @@ class Acao:
         enfase: EnfaseDaAcao = EnfaseDaAcao.PADRAO,
         icone: str | None = None,
         confirmacao: Confirmacao | None = None,
+        dados: Mapping[str, Any] | None = None,
+        modo_secundario: bool = False,
+        alvos_apos_enviar: tuple[Componente, ...] = (),
+        transicao_tipada: bool = True,
     ) -> Self:
-        return cls(titulo, operacao, TipoDeAcao.ESCRITA, enfase, icone, confirmacao)
+        return cls(
+            titulo, operacao, TipoDeAcao.ESCRITA, enfase, icone,
+            confirmacao, dados or {}, modo_secundario,
+            alvos_apos_enviar, transicao_tipada,
+        )
 
     def compilar(self) -> Json:
         no: Json = {
@@ -267,7 +302,7 @@ class Acao:
             if self.tipo == TipoDeAcao.LEITURA
             else "Action.Submit",
             "title": self.titulo,
-            "data": {"operacao": self.operacao},
+            "data": {"operacao": self.operacao, **deepcopy(dict(self.dados))},
         }
         if self.enfase == EnfaseDaAcao.PRIMARIA:
             no["style"] = "positive"
@@ -275,10 +310,19 @@ class Acao:
             no["style"] = "destructive"
         elif self.enfase == EnfaseDaAcao.SECUNDARIA:
             no["mode"] = "secondary"
+        if self.modo_secundario:
+            no["mode"] = "secondary"
         if self.icone == "lixeira":
             no["okmigoIcone"] = "delete"
         if self.confirmacao is not None:
             no["okmigoConfirmacao"] = self.confirmacao.compilar()
+        if self.alvos_apos_enviar:
+            alvos = _compilar(self.alvos_apos_enviar)
+            no["okmigoAposEnviar"] = (
+                {"type": "Action.ToggleVisibility", "targetElements": alvos}
+                if self.transicao_tipada
+                else alvos
+            )
         return no
 
 
@@ -286,6 +330,7 @@ class Acao:
 class Acoes:
     itens: tuple[Componente, ...]
     rodape: bool = False
+    espaco: Espaco | None = None
 
     def __post_init__(self) -> None:
         if not self.itens:
@@ -295,6 +340,8 @@ class Acoes:
         no: Json = {"type": "ActionSet", "actions": _compilar(self.itens)}
         if self.rodape:
             no["okmigoRodape"] = True
+        if self.espaco is not None:
+            no["spacing"] = self.espaco.value
         return no
 
 
@@ -333,29 +380,40 @@ class LarguraDaArea(StrEnum):
 class Area:
     itens: tuple[Componente, ...]
     largura: LarguraDaArea = LarguraDaArea.FLEXIVEL
+    tom: str | None = None
+    alinhamento_vertical: str | None = None
 
     def __post_init__(self) -> None:
         if not self.itens:
             raise ContratoDoSdkInvalido("area de colunas nao pode ser vazia")
 
     def compilar(self) -> Json:
-        return {
+        no: Json = {
             "type": "Column",
             "width": self.largura.value,
             "items": _compilar(self.itens),
         }
+        if self.tom is not None:
+            no["style"] = self.tom
+        if self.alinhamento_vertical is not None:
+            no["verticalContentAlignment"] = self.alinhamento_vertical
+        return no
 
 
 @dataclass(frozen=True, slots=True)
 class Faixa:
     areas: tuple[Area, ...]
+    espaco: Espaco | None = None
 
     def __post_init__(self) -> None:
         if not 1 <= len(self.areas) <= 12:
             raise ContratoDoSdkInvalido("faixa precisa ter entre 1 e 12 areas")
 
     def compilar(self) -> Json:
-        return {"type": "ColumnSet", "columns": _compilar(self.areas)}
+        no: Json = {"type": "ColumnSet", "columns": _compilar(self.areas)}
+        if self.espaco is not None:
+            no["spacing"] = self.espaco.value
+        return no
 
 
 @dataclass(frozen=True, slots=True)
@@ -372,13 +430,20 @@ class Fato:
 @dataclass(frozen=True, slots=True)
 class Fatos:
     itens: tuple[Fato, ...]
+    espaco: Espaco | None = None
+    separador: bool | None = None
 
     def __post_init__(self) -> None:
         if not self.itens:
             raise ContratoDoSdkInvalido("conjunto de fatos nao pode ser vazio")
 
     def compilar(self) -> Json:
-        return {"type": "FactSet", "facts": _compilar(self.itens)}
+        no: Json = {"type": "FactSet", "facts": _compilar(self.itens)}
+        if self.espaco is not None:
+            no["spacing"] = self.espaco.value
+        if self.separador is not None:
+            no["separator"] = self.separador
+        return no
 
 
 class FormaDoGrafico(StrEnum):
@@ -602,83 +667,291 @@ class Tela:
 
 
 @dataclass(frozen=True, slots=True)
-class Fonte:
+class ConsultaDaFonte:
+    """Uma chamada declarada para preencher resumo ou lista de uma superfície."""
+
     operacao: str
     caminho: str | None = None
+    pedido: Mapping[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         _nome(self.operacao, "operacao da fonte")
         if self.caminho is not None:
-            _nome(self.caminho, "caminho da lista")
+            _nome(self.caminho, "caminho da fonte")
+        for chave in self.pedido:
+            _nome(chave, "campo do pedido da fonte")
 
     def compilar(self) -> Json:
-        fonte: Json = {"resumo": {"operacao": self.operacao}}
-        if self.caminho:
-            fonte["lista"] = {
-                "operacao": self.operacao,
-                "caminho": self.caminho,
-            }
+        consulta: Json = {"operacao": self.operacao}
+        if self.pedido:
+            consulta["pedido"] = deepcopy(dict(self.pedido))
+        if self.caminho is not None:
+            consulta["caminho"] = self.caminho
+        return consulta
+
+
+@dataclass(frozen=True, slots=True)
+class Fonte:
+    """Fontes independentes para o resumo e a lista de uma superfície.
+
+    ``Fonte("operacao", "itens")`` continua sendo o atalho usado pelo
+    piloto do RadarIA: a mesma operação alimenta o resumo e a lista.
+    """
+
+    resumo: ConsultaDaFonte | str
+    lista: ConsultaDaFonte | str | None = None
+
+    def __post_init__(self) -> None:
+        resumo = self.resumo
+        if isinstance(resumo, str):
+            resumo = ConsultaDaFonte(resumo)
+            object.__setattr__(self, "resumo", resumo)
+        if isinstance(self.lista, str):
+            object.__setattr__(
+                self,
+                "lista",
+                ConsultaDaFonte(resumo.operacao, caminho=self.lista),
+            )
+
+    def compilar(self) -> Json:
+        fonte: Json = {"resumo": self.resumo.compilar()}
+        if self.lista is not None:
+            fonte["lista"] = self.lista.compilar()
         return fonte
+
+
+@dataclass(frozen=True, slots=True)
+class OperacaoParametrizada:
+    operacao: str
+    parametro: str
+
+    def __post_init__(self) -> None:
+        _nome(self.operacao, "operacao")
+        _nome(self.parametro, "parametro")
+
+    def compilar(self) -> Json:
+        return {"operacao": self.operacao, "parametro": self.parametro}
+
+
+@dataclass(frozen=True, slots=True)
+class Convite:
+    operacao: str
+    parametro: str
+    par: str
+
+    def __post_init__(self) -> None:
+        _nome(self.operacao, "operacao do convite")
+        _nome(self.parametro, "parametro do convite")
+        _nome(self.par, "par do convite")
+
+    def compilar(self) -> Json:
+        return {"operacao": self.operacao, "parametro": self.parametro, "par": self.par}
+
+
+@dataclass(frozen=True, slots=True)
+class MarcaSolicitada:
+    operacao: str
+    nome: str
+    logo: str
+
+    def __post_init__(self) -> None:
+        _nome(self.operacao, "operacao da marca")
+        _nome(self.nome, "campo do nome da marca")
+        _nome(self.logo, "campo do logo da marca")
+
+    def compilar(self) -> Json:
+        return {"operacao": self.operacao, "nome": self.nome, "logo": self.logo}
+
+
+@dataclass(frozen=True, slots=True)
+class ContatoAceito:
+    operacao: str
+    parametro: str
+    rotulo: str
+
+    def __post_init__(self) -> None:
+        _nome(self.operacao, "operacao do contato")
+        _nome(self.parametro, "parametro do contato")
+        _nome(self.rotulo, "campo do rotulo do contato")
+
+    def compilar(self) -> Json:
+        return {"operacao": self.operacao, "parametro": self.parametro, "rotulo": self.rotulo}
+
+
+@dataclass(frozen=True, slots=True)
+class CatalogoPublico:
+    ofertas: str
+    expediente: str | None = None
+
+    def __post_init__(self) -> None:
+        _nome(self.ofertas, "operacao das ofertas publicas")
+        if self.expediente is not None:
+            _nome(self.expediente, "operacao do expediente publico")
+
+    def compilar(self) -> Json:
+        publico: Json = {"ofertas": self.ofertas}
+        if self.expediente is not None:
+            publico["expediente"] = self.expediente
+        return publico
+
+
+@dataclass(frozen=True, slots=True)
+class MarcaHorario:
+    operacao: str
+    ofertas: str
+
+    def __post_init__(self) -> None:
+        _nome(self.operacao, "operacao de horario")
+        _nome(self.ofertas, "operacao das ofertas do horario")
+
+    def compilar(self) -> Json:
+        return {"operacao": self.operacao, "ofertas": self.ofertas}
+
+
+@dataclass(frozen=True, slots=True)
+class PainelResumido:
+    rotulo: str
+    valor: str
+    quebra: tuple[str, ...] = ()
+
+    def compilar(self) -> Json:
+        painel: Json = {"rotulo": self.rotulo, "valor": self.valor}
+        if self.quebra:
+            painel["quebra"] = list(self.quebra)
+        return painel
+
+
+@dataclass(frozen=True, slots=True)
+class ItemResumido:
+    id: str
+    texto: str
+    apoio: str
+    marca: str
+
+    def compilar(self) -> Json:
+        return {
+            "id": self.id,
+            "texto": self.texto,
+            "apoio": self.apoio,
+            "marca": self.marca,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class TelaResumida:
+    titulo: str
+    resumo: str
+    paineis: tuple[PainelResumido, ...]
+    item: ItemResumido
+    agrupar_por: str | None = None
+    ordem_dos_grupos: tuple[str, ...] = ()
+    titulo_do_grupo: Mapping[str, str] = field(default_factory=dict)
+
+    def compilar(self) -> Json:
+        tela: Json = {
+            "titulo": self.titulo,
+            "resumo": self.resumo,
+            "paineis": _compilar(self.paineis),
+            "item": self.item.compilar(),
+        }
+        if self.agrupar_por is not None:
+            tela["agrupar_por"] = self.agrupar_por
+        if self.ordem_dos_grupos:
+            tela["ordem_dos_grupos"] = list(self.ordem_dos_grupos)
+        if self.titulo_do_grupo:
+            tela["titulo_do_grupo"] = deepcopy(dict(self.titulo_do_grupo))
+        return tela
 
 
 @dataclass(frozen=True, slots=True)
 class Superficie:
     nome: str
     titulo: str
-    rotulo: str
-    icone: str
+    rotulo: str | None
+    icone: str | None
     hint: str
     fonte: Fonte
     tela: Tela
+    representacao: TelaResumida | None = None
+    visivel: bool | None = None
+    rotulo_superficie: str | None = None
 
     def __post_init__(self) -> None:
         _nome(self.nome, "nome da superficie")
-        _nome(self.icone, "icone da superficie")
-        if not self.titulo or not self.rotulo or not self.hint:
+        if self.icone is not None:
+            _nome(self.icone, "icone da superficie")
+        if not self.titulo or not self.hint:
             raise ContratoDoSdkInvalido(
-                "superficie precisa de titulo, rotulo e explicacao"
+                "superficie precisa de titulo e explicacao"
             )
 
     def compilar(self) -> Json:
-        return {
+        superficie: Json = {
             "nome": self.nome,
             "titulo": self.titulo,
-            "rotulo": self.rotulo,
-            "icone": self.icone,
             "hint": self.hint,
             "fonte": self.fonte.compilar(),
             "cartao": self.tela.compilar(),
         }
+        if self.rotulo is not None:
+            superficie["rotulo"] = self.rotulo
+        if self.icone is not None:
+            superficie["icone"] = self.icone
+        if self.representacao is not None:
+            superficie["tela"] = self.representacao.compilar()
+        if self.visivel is not None:
+            superficie["isVisible"] = self.visivel
+        if self.rotulo_superficie is not None:
+            superficie["rotulo_superficie"] = self.rotulo_superficie
+        return superficie
 
 
 @dataclass(frozen=True, slots=True)
 class Aplicativo:
     slug: str
     endpoint: str
-    para_tipo: str
+    para_tipo: str | None
     descricao: str
-    descricao_humana: str
-    nome_visivel: str
+    descricao_humana: str | None
+    nome_visivel: str | None
     versao: str
-    conversa: tuple[str, ...]
+    conversa: tuple[str, ...] | None
     superficies: tuple[Superficie, ...]
     forma: str = "do_operador"
+    eventos: OperacaoParametrizada | None = None
+    avisa_antes: OperacaoParametrizada | None = None
+    relata_mudancas: OperacaoParametrizada | None = None
+    convite: Convite | None = None
+    quer_a_marca: MarcaSolicitada | None = None
+    aceita_contato: ContatoAceito | None = None
+    publico: CatalogoPublico | None = None
+    marca_horario: MarcaHorario | None = None
+    so_por_convite: bool = False
+    em_breve: bool = False
+    tipo: str | None = None
+    tenant_sondagem: str | None = None
+    credencial_sondagem: str | None = None
+    vitrine_url: str | None = None
     extras: Mapping[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         _nome(self.slug, "slug")
-        if self.forma != "do_operador" or self.para_tipo not in {"amigo", "socio"}:
+        if self.forma != "do_operador" or self.para_tipo not in {None, "amigo", "socio"}:
             raise ContratoDoSdkInvalido("forma ou destinatario do aplicativo invalido")
         if not self.endpoint.startswith(("http://", "https://")):
             raise ContratoDoSdkInvalido("endpoint precisa ser http ou https")
         if not self.superficies:
             raise ContratoDoSdkInvalido("aplicativo precisa de superficies")
-        for operacao in self.conversa:
-            _nome(operacao, "operacao de conversa")
+        if self.conversa is not None:
+            for operacao in self.conversa:
+                _nome(operacao, "operacao de conversa")
         reservadas = {
             "slug", "endpoint", "forma", "para_tipo", "descricao",
             "descricao_humana", "nome_visivel", "versao", "conversa",
-            "superficies",
+            "superficies", "eventos", "avisa_antes", "relata_mudancas",
+            "convite", "quer_a_marca", "aceita_contato", "publico",
+            "marca_horario", "so_por_convite", "em_breve", "tipo",
+            "tenant_sondagem", "credencial_sondagem", "vitrine_url",
         }
         conflito = reservadas.intersection(self.extras)
         if conflito:
@@ -688,19 +961,45 @@ class Aplicativo:
             )
 
     def compilar(self) -> Json:
-        return {
+        aplicativo: Json = {
             **deepcopy(dict(self.extras)),
             "slug": self.slug,
             "endpoint": self.endpoint,
             "forma": self.forma,
-            "para_tipo": self.para_tipo,
             "descricao": self.descricao,
-            "descricao_humana": self.descricao_humana,
-            "nome_visivel": self.nome_visivel,
             "versao": self.versao,
-            "conversa": list(self.conversa),
             "superficies": _compilar(self.superficies),
         }
+        if self.conversa is not None:
+            aplicativo["conversa"] = list(self.conversa)
+        opcionais = {
+            "para_tipo": self.para_tipo,
+            "descricao_humana": self.descricao_humana,
+            "nome_visivel": self.nome_visivel,
+            "tipo": self.tipo,
+            "tenant_sondagem": self.tenant_sondagem,
+            "credencial_sondagem": self.credencial_sondagem,
+            "vitrine_url": self.vitrine_url,
+        }
+        aplicativo.update({chave: valor for chave, valor in opcionais.items() if valor is not None})
+        compostos = {
+            "eventos": self.eventos,
+            "avisa_antes": self.avisa_antes,
+            "relata_mudancas": self.relata_mudancas,
+            "convite": self.convite,
+            "quer_a_marca": self.quer_a_marca,
+            "aceita_contato": self.aceita_contato,
+            "publico": self.publico,
+            "marca_horario": self.marca_horario,
+        }
+        aplicativo.update(
+            {chave: valor.compilar() for chave, valor in compostos.items() if valor is not None}
+        )
+        if self.so_por_convite:
+            aplicativo["so_por_convite"] = True
+        if self.em_breve:
+            aplicativo["em_breve"] = True
+        return aplicativo
 
 
 @dataclass(frozen=True, slots=True)

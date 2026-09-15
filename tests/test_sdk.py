@@ -10,9 +10,13 @@ from okmigo_cartao.sdk import (
     AplicativoDoContrato,
     Autorizar,
     Busca,
+    CatalogoPublico,
     CampoOculto,
     Coluna,
+    ConsultaDaFonte,
+    ContatoAceito,
     ContratoDoSdkInvalido,
+    Convite,
     EnfaseDaAcao,
     Fato,
     Fatos,
@@ -21,6 +25,7 @@ from okmigo_cartao.sdk import (
     Grafico,
     Navegacao,
     Opcao,
+    OperacaoParametrizada,
     Ponto,
     Serie,
     Superficie,
@@ -131,6 +136,8 @@ class SdkTest(unittest.TestCase):
         with self.assertRaises(ContratoDoSdkInvalido):
             Busca("ticker com espaco", "ticker", "Ativo", "Digite", "buscar")
         with self.assertRaises(ContratoDoSdkInvalido):
+            CampoOculto("item_{id", "item_id", "{id}")
+        with self.assertRaises(ContratoDoSdkInvalido):
             Tabela(
                 colunas=(Coluna("Ativo", (Texto("PETR4"),)),),
                 ao_tocar=Acao("Apagar", "apagar", TipoDeAcao.ESCRITA),
@@ -190,6 +197,61 @@ class SdkTest(unittest.TestCase):
         normalizada = tela.conferir()
         self.assertEqual("fatos", normalizada["corpo"][1]["tipo"])
         self.assertEqual("grafico", normalizada["corpo"][2]["tipo"])
+
+    def test_sdk_compila_fontes_e_metadados_do_aplicativo_sem_extras(self):
+        aplicativo = Aplicativo(
+            slug="agenda",
+            endpoint="https://agenda.example/mcp/",
+            para_tipo="socio",
+            descricao="Agenda compartilhada",
+            descricao_humana="Organize os atendimentos",
+            nome_visivel="Agenda",
+            versao="2.0.0",
+            conversa=("listar_horarios",),
+            superficies=(
+                Superficie(
+                    "hoje",
+                    "Hoje",
+                    "Hoje",
+                    "calendario",
+                    "atendimentos do dia",
+                    Fonte(
+                        resumo=ConsultaDaFonte("resumir_agenda"),
+                        lista=ConsultaDaFonte(
+                            "listar_horarios",
+                            caminho="horarios",
+                            pedido={"periodo": "hoje"},
+                        ),
+                    ),
+                    Tela("Hoje", componentes=(Texto("Sem horários"),)),
+                ),
+            ),
+            eventos=OperacaoParametrizada("listar_eventos", "periodo"),
+            avisa_antes=OperacaoParametrizada("avisar_evento", "evento_id"),
+            convite=Convite("convidar_cliente", "cliente_id", "cliente"),
+            aceita_contato=ContatoAceito("aceitar_contato", "contato_id", "nome"),
+            publico=CatalogoPublico("listar_servicos", "consultar_expediente"),
+        )
+
+        manifesto = aplicativo.compilar()
+
+        self.assertEqual(
+            {
+                "operacao": "listar_horarios",
+                "pedido": {"periodo": "hoje"},
+                "caminho": "horarios",
+            },
+            manifesto["superficies"][0]["fonte"]["lista"],
+        )
+        self.assertEqual(
+            {"operacao": "listar_eventos", "parametro": "periodo"},
+            manifesto["eventos"],
+        )
+        self.assertEqual(
+            {"ofertas": "listar_servicos", "expediente": "consultar_expediente"},
+            manifesto["publico"],
+        )
+        self.assertNotIn("extras", manifesto)
 
 
 if __name__ == "__main__":
