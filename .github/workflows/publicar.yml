@@ -65,6 +65,10 @@ jobs:
       # e não a tag, que vai dentro do `pyproject.toml` de cada um.
       # ⛔ Tag se move; SHA não. O pino é SHA por decisão — a tag serve para o
       # humano saber o que é aquele SHA, nunca para resolver o download.
+      # ⚠️ `gh` aqui é seguro porque este job roda em `ubuntu-latest`, que já
+      # vem com ele. ⛔ Nenhuma outra esteira do okmigo usa `gh`: elas rodam no
+      # runner do nosso cluster, que NÃO o tem — por isso o `sre` abre PR pela
+      # API, e não por comando.
       - name: Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
