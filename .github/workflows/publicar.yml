@@ -1,0 +1,106 @@
+name: publicar
+
+on:
+  push:
+    tags: ["v*"]
+
+# ⛔ Só o Release deste repositório. Nada aqui escreve em outro repo — o aviso
+# aos dez consumidores NÃO mora nesta esteira, e o porquê está no passo final.
+permissions:
+  contents: write
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # ⛔⛔ **A tag e o `version` são o mesmo número, ou não publica.**
+      # É a mesma regra do tyego, e nasceu do mesmo defeito: em 15/09 este repo
+      # tinha `version = "0.6.0"` com a tag mais nova em `v0.4.0`. Duas entregas
+      # foram ao ar sem nome — e o pino do consumidor, que é um SHA, não tinha
+      # como acusar. A tag é o único momento em que dá para travar isto.
+      - name: a tag é a versão?
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          VER=$(sed -n 's/^version = "\(.*\)"/\1/p' pyproject.toml | head -1)
+          echo "  tag: $GITHUB_REF_NAME  ·  pyproject: $VER"
+          [ "$TAG" = "$VER" ] || {
+            echo "✗ a tag diz $TAG e o pyproject.toml diz $VER." >&2
+            echo "  Publicar assim faz o nome mentir para os dez consumidores." >&2
+            echo "  Apague a tag, acerte o pyproject.toml e marque de novo." >&2
+            exit 1; }
+          echo "  ✅ conferem"
+
+      # ⛔ A suíte roda DE NOVO aqui. Sim, ela já rodou na PR — mas a tag pode
+      # ser marcada em qualquer commit, inclusive num que nunca passou por PR.
+      # Quem publica é a TAG; então é na tag que a prova tem de valer.
+      - name: instalar e provar
+        run: |
+          pip install -e '.[dev]'
+          pytest -q
+
+      - name: o tarball que o consumidor vai baixar
+        run: |
+          git archive --format=tar.gz --prefix=cartao/ HEAD -o /tmp/cartao.tar.gz
+          python -m venv /tmp/limpo
+          /tmp/limpo/bin/pip install -q /tmp/cartao.tar.gz
+          cd /tmp && /tmp/limpo/bin/python -c "
+          import importlib.metadata as m, importlib.resources as r, okmigo_cartao as c
+          v = m.version('okmigo-cartao')
+          assert v == '${GITHUB_REF_NAME#v}', f'instalado {v}, esperado ${GITHUB_REF_NAME#v}'
+          for a in ('renderer.js','renderer.css','renderer.json'):
+              assert (r.files('okmigo_cartao')/'assets'/a).is_file()
+          print(f'  ✅ {v} instala do tarball com {len(c.__all__)} nomes e os assets')
+          "
+
+      # ⭐ O corpo do Release é o que os consumidores vão LER quando a PR de
+      # pino chegar até eles. Por isso ele carrega o SHA por extenso: é ele,
+      # e não a tag, que vai dentro do `pyproject.toml` de cada um.
+      # ⛔ Tag se move; SHA não. O pino é SHA por decisão — a tag serve para o
+      # humano saber o que é aquele SHA, nunca para resolver o download.
+      - name: Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          SHA=$(git rev-parse HEAD)
+          ANT=$(git tag --sort=-v:refname | grep -v "^${GITHUB_REF_NAME}$" | head -1)
+          {
+            echo "O pino que os consumidores usam:"
+            echo
+            echo '```toml'
+            echo "  \"okmigo-cartao @ https://github.com/okmigo-infra/cartao/archive/${SHA}.tar.gz\",  # ${GITHUB_REF_NAME}"
+            echo '```'
+            echo
+            if [ -n "$ANT" ]; then
+              echo "## Desde \`$ANT\`"
+              echo
+              git log --no-merges --format='- %s' "${ANT}..HEAD"
+              echo
+              echo "### Nomes do contrato"
+              python3 scripts/contrato_so_cresce.py "$ANT" 2>&1 | sed 's/^ *//'
+            fi
+          } > /tmp/notas.md
+          gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file /tmp/notas.md
+
+      # ⛔⛔ **E aqui a esteira PARA, de propósito.**
+      # O passo seguinte — abrir a PR de pino nos dez consumidores — exigiria
+      # uma credencial com escrita nos repositórios PRIVADOS do okmigo. Este
+      # repositório é PÚBLICO e existe para receber contribuição de fora:
+      # guardar aqui um segredo que escreve no produto inteiro inverte a
+      # direção da confiança, e o raio de alcance não é este repo, são dez.
+      #
+      # ⭐ Por isso quem avisa é o `sre` (privado), que compara de tempos em
+      # tempos a tag mais nova daqui com o pino de cada consumidor. Além de não
+      # pedir segredo nenhum aqui, ele pega a deriva por QUALQUER causa — tag
+      # feita à mão, pino editado, esteira que falhou — e não só pelo evento.
+      - name: onde o aviso continua
+        run: |
+          echo "  Publicado. Quem abre a PR de pino nos consumidores é o \`sre\`:"
+          echo "  sre/.github/workflows/pino-do-cartao.yml (roda de 30 em 30 min)."

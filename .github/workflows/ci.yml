@@ -1,0 +1,106 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# ⛔⛔ Este repositório é PÚBLICO, e é esse o ponto dele: quem escreve um app
+# para o okmigo testa a tela aqui, sem acesso ao produto. Então NENHUM passo
+# desta esteira pode depender de segredo — PR vinda de fork não recebe segredo
+# nenhum, e um passo assim passaria para nós e falharia para exatamente o
+# público que o repo existe para servir.
+permissions:
+  contents: read
+
+jobs:
+  testes:
+    # ⛔⛔ **`ubuntu-latest`, e NUNCA `[self-hosted, cluster]`.**
+    # Os treze repos privados do okmigo rodam no runner do nosso cluster, que
+    # tem sidecar `privileged` — root no nó. Este aqui é público e aceita PR de
+    # qualquer pessoa: apontá-lo para aquele runner entregaria root no `prod` a
+    # quem abrisse uma PR com um passo `run:`. ⭐ Para repositório público o
+    # runner da GitHub é grátis e ilimitado, então não há sequer o pretexto da
+    # cota — que é o motivo pelo qual os privados saíram de lá.
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      # ⭐ Duas versões, cada uma provando uma coisa diferente:
+      #   3.11 é o PISO que o `pyproject.toml` promete a quem está de fora;
+      #   3.12 é o que roda de verdade — os dez consumidores são `python:3.12-slim`.
+      # ⛔ Testar só uma esconde metade: no piso quebra sintaxe nova, no 3.12
+      # quebra o que a produção vai encontrar.
+      matrix:
+        python: ["3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # ⛔ `fetch-depth: 0`: o passo «mudou o crivo, mudou a versão» compara
+          # com a base. Com o checkout raso não HÁ base, e um check sem «antes»
+          # é um check que aprova tudo — pior do que não ter.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: instalar
+        run: pip install -e '.[dev]'
+
+      - name: suíte
+        run: pytest -q
+
+      # ⛔⛔ **O jeito como o consumidor instala NÃO é `pip install -e .`.**
+      # Os dez repos pinam um TARBALL DO GIT:
+      #     okmigo-cartao @ https://github.com/okmigo-infra/cartao/archive/<sha>.tar.gz
+      # É outro caminho de código: o pip desempacota o tarball e constrói. O
+      # editável acima resolve `src/` pelo disco e por isso NUNCA vê o modo de
+      # falha desta caixa — um `assets/*.js` que ficou de fora do
+      # `package-data`, ou um módulo novo fora do `packages.find`.
+      #
+      # ⚠️ O `git archive` produz o MESMO conteúdo que o GitHub serve naquela
+      # URL (é a árvore do commit), então isto é o ensaio fiel, sem rede.
+      - name: instala como o consumidor instala, e os assets vêm junto
+        run: |
+          git archive --format=tar.gz --prefix=cartao/ HEAD -o /tmp/cartao.tar.gz
+          python -m venv /tmp/limpo
+          /tmp/limpo/bin/pip install -q /tmp/cartao.tar.gz
+          # ⛔ Rodando a partir de `/tmp`: dentro do repo o `import` acharia
+          # `src/` pelo diretório e o passo se aprovaria sozinho.
+          cd /tmp && /tmp/limpo/bin/python - <<'PY'
+          import importlib.metadata as m
+          import importlib.resources as r
+          import okmigo_cartao as c
+          # ⭐ É ASSIM que se lê a versão de dentro de um pod — não há outro
+          # jeito, porque o pino é um SHA sem nome. Imprimir aqui é o ensaio
+          # do gesto que a gente faz quando precisa saber o que está no ar.
+          print("  versão instalada:", m.version("okmigo-cartao"))
+          # o renderer é package-data; se sumir do sdist, o preview quebra no
+          # cliente e em lugar nenhum daqui
+          for a in ("renderer.js", "renderer.css", "renderer.json"):
+              p = r.files("okmigo_cartao") / "assets" / a
+              assert p.is_file() and p.read_bytes(), f"asset ausente ou vazio: {a}"
+          print("  ✅ assets do renderer presentes")
+          faltando = [n for n in c.__all__ if not hasattr(c, n)]
+          assert not faltando, f"__all__ promete o que não existe: {faltando}"
+          print(f"  ✅ os {len(c.__all__)} nomes do __all__ importam")
+          PY
+
+      # ⛔⛔ **Se o crivo mudou, a `version` tem de ter subido junto.**
+      # Os consumidores pinam por SHA, e SHA não tem nome: a única maneira de
+      # saber o que está instalado num pod é a versão que o pacote declara.
+      # ⚠️ Medido em 15/09: o `pyproject` dizia 0.6.0 e a tag mais nova era
+      # v0.4.0 — duas entregas foram ao ar sem nome nenhum.
+      - name: mudou o crivo, mudou a versão?
+        if: matrix.python == '3.12'
+        run: python3 scripts/versao_subiu.py
+
+      # ⛔⛔ **O `__all__` não encolhe.**
+      # Quem consome está pinado num SHA ANTIGO e um dia recebe a PR que troca
+      # o pino. Se um nome sumiu no meio do caminho, o app não quebra no teste
+      # de tela — quebra no `import`, e a esteira INTEIRA dele para. Este passo
+      # é a única coisa entre uma renomeação e dez esteiras vermelhas.
+      - name: o contrato só cresce
+        if: matrix.python == '3.12'
+        run: python3 scripts/contrato_so_cresce.py
