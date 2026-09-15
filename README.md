@@ -24,7 +24,7 @@ compilam para o mesmo cartão restrito que o crivo já reconstrói. Não há HTM
 JavaScript ou URL de ação, e uma linha tocável só pode executar leitura.
 
 ```python
-from okmigo_cartao.sdk import Busca, Navegacao, Tela, Tema
+from okmigo_cartao import Busca, Navegacao, Tela, Tema
 
 tela = Tela(
     titulo="Meus ativos",
@@ -47,7 +47,8 @@ tela.conferir(leituras={"buscar_ativos"})  # o mesmo crivo de produção
 
 O aplicativo neutro em
 [`exemplos/sdk_catalogo.py`](exemplos/sdk_catalogo.py) reúne formulários,
-métricas, agenda, documentos e componentes financeiros em quatro superfícies:
+métricas, agenda, documentos, componentes financeiros e o catálogo universal
+em cinco superfícies:
 
 ```bash
 python -m okmigo_cartao preview exemplos/sdk_catalogo.py:APLICATIVO
@@ -80,14 +81,16 @@ ida ao detalhe e volta à lista. Escritas são simuladas e nenhuma ação faz
 requisição externa. O quadro de 390 px reproduz o Web responsivo; a conferência
 final do cliente nativo continua sendo feita no emulador Flutter.
 
-O catálogo tipado cobre estrutura responsiva, formulários, escolhas, mídia,
-arquivos, estados e etapas, repetição de dados, calendário, gráficos e blocos
-financeiros. Padrões de produto como ficha, grade de métricas e estado vazio
-são composições dessas primitivas e não aumentam a superfície do contrato.
+O catálogo tipado cobre estrutura responsiva, cartões clicáveis, menus de
+ações, confirmação, abas, expansíveis, diálogos, tabelas flexíveis, campos
+semânticos, múltipla escolha, alternância, quantidade, galeria, linha do tempo,
+paginação, estados, calendário, gráficos e blocos financeiros. Padrões de
+produto como ficha, grade de métricas e estado vazio são composições dessas
+primitivas e não aumentam a superfície do contrato.
 Consulte [`docs/CATALOGO-SDK.md`](docs/CATALOGO-SDK.md) para a lista completa,
 exemplos e a regra para evoluir o vocabulário.
 
-Para passear pelo catálogo em quatro superfícies navegáveis:
+Para passear pelo catálogo em cinco superfícies navegáveis:
 
 ```bash
 python -m okmigo_cartao preview exemplos/sdk_catalogo.py:APLICATIVO

@@ -41,6 +41,9 @@ mesmo lugar.
 | listas vindas dos dados | `Repetir`, `Condicao` |
 | estados e degradação | `ComAlternativa`, `EstadoVazio` |
 | resumos | `Metrica`, `GradeDeMetricas`, `Ficha` |
+| navegação local | `Abas`, `FiltroSegmentado`, `Expansivel`, `Dialogo` |
+| dados densos | `TabelaFlexivel`, `LinhaDeTabela`, `CelulaDeTabela`, `Paginacao` |
+| leitura visual | `Etiqueta`, `Status`, `GaleriaDeImagens`, `LinhaDoTempo`, `BarraDeValor` |
 
 `Secao` é o agrupamento completo: pode ter identidade, estado visível, tom
 semântico, grade, altura, comportamento ao toque e apresentação sobreposta.
@@ -59,6 +62,11 @@ Use `Painel` para o caso simples e `Secao` quando uma dessas intenções existir
 | leitura e escrita | `Acao`, `Acoes` |
 | mostrar e esconder | `Alternar`, `AlvoDeVisibilidade` |
 | salvar e avançar uma etapa | `EnviarEAvancar` |
+| múltipla escolha | `EscolhaMultipla`, `FormaDaEscolhaMultipla` |
+| formulário condicional | `EscolhaCondicional`, `RegraAoAlterar` |
+| data, hora, mês e formatos | `CampoData`, `CampoHora`, `CampoMes`, `CampoMoeda`, `CampoDocumento`, `CampoTelefone`, `CampoUrl`, `CampoEtiquetas`, `CampoComUnidade` |
+| quantidade e booleano | `SeletorDeQuantidade`, `Alternancia` |
+| ação contextual | `MenuDeAcoes`, `Confirmacao`, `CartaoClicavel` |
 
 ```python
 from okmigo_cartao import (
@@ -111,6 +119,49 @@ Cada `id` identifica o estado local do campo; `campo` é o nome enviado ao
 serviço. A ação recebe somente os campos da caixa onde está. Operações que o
 serviço não declarou recusam a tela inteira, evitando botões que parecem
 funcionar e não fazem nada.
+
+## Interações universais
+
+`CartaoClicavel` transforma toda a ficha em acesso a uma operação de leitura;
+ele recusa escrita na construção. `MenuDeAcoes` guarda até dez ações
+complementares nos três pontos. Uma ação destrutiva pode exigir `Confirmacao`:
+
+```python
+from okmigo_cartao import Acao, CartaoClicavel, Confirmacao, MenuDeAcoes, Texto
+
+item = CartaoClicavel(
+    (Texto("SANB11"),),
+    Acao.consultar("Abrir SANB11", "detalhar_ativo"),
+    menu=MenuDeAcoes((
+        Acao.escrever(
+            "Remover",
+            "remover_favorito",
+            confirmacao=Confirmacao(
+                "Remover favorito?",
+                "Você poderá adicioná-lo novamente depois.",
+                "Remover",
+            ),
+        ),
+    )),
+)
+```
+
+`Abas` e `FiltroSegmentado` trocam conteúdo já recebido. `Expansivel` revela
+detalhes e `Dialogo` declara conteúdo fora do fluxo. Nenhum deles faz chamada;
+somente `Acao.consultar` e `Acao.escrever` atravessam a fronteira, sempre por
+uma operação declarada.
+
+Campos condicionais usam `RegraAoAlterar` com estado booleano explícito. Isso
+permite mostrar CPF ou CNPJ conforme a escolha sem aceitar expressão, script
+ou lógica arbitrária enviada pelo app.
+
+## Regra de autoria
+
+Uma tela nova deve ser montada somente com objetos exportados por
+`okmigo_cartao`. Dicionários crus ficam restritos ao adaptador legado
+`AplicativoDoContrato`, usado durante migrações. Se uma intenção não estiver no
+catálogo, ela entra primeiro no SDK, no crivo, nos renderers, nos fallbacks e
+nos testes; só depois um produto passa a usá-la.
 
 ## Mídia, documentos e utilidades
 
