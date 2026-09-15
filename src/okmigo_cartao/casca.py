@@ -140,6 +140,10 @@ _ENTRA_SAI: dict[str, set[str]] = {
     "okmigoAutorizar": {"autorizar"},
     "okmigoCronometro": {"cronometro"},
     "okmigoProgresso": {"progresso"},
+    "okmigoEtiqueta": {"etiqueta"},
+    "okmigoGaleria": {"galeria"},
+    "okmigoLinhaDoTempo": {"linha_do_tempo"},
+    "okmigoBarraDeValor": {"barra_valor"},
     "okmigoGrafico": {"grafico"},
     "okmigoCartaoBancario": {"cartao_bancario"},
     "okmigoDistribuicao": {"distribuicao"},
@@ -151,9 +155,10 @@ _DESCARTADAS_DE_PROPOSITO = {
     ("Image", "size"): "tamanho de imagem é `height` em palavra",
     ("Image", "style"): "estilo de imagem não existe neste vocabulário",
 }
-_ACOES_RECUSADAS = {"Action.OpenUrl": "ação nomeia capacidade, nunca endereço",
-                    "Action.ShowCard": "não existe neste subconjunto",
-                    "Action.Execute": "não existe neste subconjunto"}
+_ACOES_RECUSADAS = {
+    "Action.OpenUrl": "ação nomeia capacidade, nunca endereço",
+    "Action.ShowCard": "não existe neste subconjunto",
+}
 #: Filhos estruturais de tabela e de colunas: não são nós por si — vivem e
 #: morrem com o pai.
 _ESTRUTURAIS = {"TableRow", "TableCell", "Column"}
@@ -173,6 +178,10 @@ _POR_QUE_SOME = {
     "okmigoAutorizar": "url fora das travas (https, sem credencial, sem porta/IP, não é domínio do produto), sem rótulo/motivo, ou já havia um no cartão",
     "okmigoCronometro": "sem rótulo, ou segundos fora de 1…3600",
     "okmigoProgresso": "`de` não numérico, ≤ 0 ou > 10000, ou `feito` não numérico",
+    "okmigoEtiqueta": "sem texto",
+    "okmigoGaleria": "sem imagem válida",
+    "okmigoLinhaDoTempo": "sem etapa com título",
+    "okmigoBarraDeValor": "total não numérico, ≤ 0 ou > 10000, ou valor não numérico",
     "okmigoGrafico": "nenhuma série com rótulo, ou nenhum ponto com valor numérico",
     "okmigoCalendario": "nunca some por si — o pai foi descartado",
     "okmigoCartaoBancario": "nenhum cartão com título",
@@ -216,9 +225,24 @@ def _contar_entrada(no: Any, contagem: dict[str, int], avisos: list[str], caminh
         for (t, chave), motivo in _DESCARTADAS_DE_PROPOSITO.items():
             if tipo == t and chave in no:
                 avisos.append(f"{caminho}: `{tipo}.{chave}` é descartado — {motivo}")
-        if tipo == "Container" and no.get("selectAction", {}).get("type") not in (None, "Action.ToggleVisibility"):
-            avisos.append(f"{caminho}: `selectAction` só aceita `Action.ToggleVisibility`")
-    for chave in ("items", "columns", "rows", "cells", "actions", "fallback", "body"):
+        if tipo == "Container" and no.get("selectAction", {}).get("type") not in (
+            None,
+            "Action.ToggleVisibility",
+            "Action.Execute",
+        ):
+            avisos.append(
+                f"{caminho}: `selectAction` só aceita `Action.ToggleVisibility` ou `Action.Execute`"
+            )
+    for chave in (
+        "items",
+        "columns",
+        "rows",
+        "cells",
+        "actions",
+        "fallback",
+        "body",
+        "imagens",
+    ):
         if chave in no:
             _contar_entrada(no[chave], contagem, avisos, f"{caminho}.{chave}")
 
@@ -236,6 +260,8 @@ def _contar_saida(no: Any, contagem: dict[str, int]) -> None:
     for chave in ("itens", "corpo"):
         if chave in no:
             _contar_saida(no[chave], contagem)
+    if t == "galeria":
+        _contar_saida(no.get("imagens"), contagem)
     for c in no.get("colunas") or []:
         if isinstance(c, dict):
             _contar_saida(c.get("itens"), contagem)
@@ -307,7 +333,14 @@ def _no(n: dict, s: list[str]) -> None:
         rot = f"style={_e(n['estilo'])}" if n.get("estilo") != "default" else ""
         grade = f" grade={_e(n['grade'])}" if n.get("grade") else ""
         sobre = " sobreposto" if n.get("sobreposto") else ""
-        toque = f" (toque alterna: {', '.join(a['id'] for a in n['ao_tocar']['alvos'])})" if n.get("ao_tocar") else ""
+        toque = ""
+        if n.get("ao_tocar"):
+            if n["ao_tocar"].get("alvos"):
+                toque = " (toque alterna: " + ", ".join(
+                    a["id"] for a in n["ao_tocar"]["alvos"]
+                ) + ")"
+            elif n["ao_tocar"].get("consultar"):
+                toque = f" (toque consulta: {_e(n['ao_tocar']['consultar'])})"
         s.append(f"<section{ident}{escondido}><!-- caixa {rot}{grade}{sobre}{toque} -->")
         for f in n.get("itens") or []:
             _no(f, s)
@@ -343,24 +376,44 @@ def _no(n: dict, s: list[str]) -> None:
         s.append(f"<figure{ident}{escondido}><figcaption>[sem imagem] {_e(n['alt'])}</figcaption></figure>")
     elif tipo == "campo":
         tag = "textarea" if n["linhas"] > 1 else "input"
-        tipo_html = ' type="number"' if n["formato"] == "numero" else ' type="text"'
+        tipos_html = {
+            "numero": "number",
+            "moeda": "number",
+            "unidade": "number",
+            "data": "date",
+            "hora": "time",
+            "mes": "month",
+            "telefone": "tel",
+            "url": "url",
+        }
+        tipo_html = f' type="{tipos_html.get(n["formato"], "text")}"'
         req = " required" if n["obrigatorio"] else ""
         ro = " readonly" if n.get("somente_leitura") else ""
         val = _e(n["valor"])
+        unidade = f" {_e(n.get('unidade'))}" if n.get("unidade") else ""
         s.append(f"<label{escondido}>{_e(n['rotulo'])} "
                  + (f"<textarea name=\"{_e(n['campo'])}\"{req}{ro}>{val}</textarea>" if tag == "textarea"
                     else f"<input name=\"{_e(n['campo'])}\"{tipo_html} value=\"{val}\" placeholder=\"{_e(n['dica'])}\"{req}{ro}>")
-                 + "</label>")
+                 + unidade + "</label>")
     elif tipo in ("escolha", "escolha_livre"):
         req = " required" if n["obrigatorio"] else ""
         forma = n.get("forma", "lista") if tipo == "escolha" else "livre"
         s.append(f"<fieldset{ident}{escondido}><legend>{_e(n['rotulo'])} <small>({forma})</small></legend>")
-        if forma == "cartoes":
+        selecionados = set(str(n.get("valor") or "").split(","))
+        multipla = n.get("multipla") is True
+        if n.get("controle") == "alternancia":
+            ligado = n.get("valor") == "true"
+            s.append(
+                f'<button type="button" role="switch" aria-checked="{str(ligado).lower()}">'
+                f'{_e("Ligado" if ligado else "Desligado")}</button>'
+            )
+        elif forma == "cartoes":
             for o in n["opcoes"]:
-                marca = " checked" if o["valor"] == n["valor"] else ""
+                marca = " checked" if o["valor"] in selecionados else ""
                 nota = f" <small>{_e(o['nota'])}</small>" if o.get("nota") else ""
                 ic = f"{_e(o['icone'])} " if o.get("icone") else ""
-                s.append(f'<label><input type="radio" name="{_e(n["campo"])}" value="{_e(o["valor"])}"{marca}{req}> {ic}{_e(o["rotulo"])}{nota}</label>')
+                input_tipo = "checkbox" if multipla else "radio"
+                s.append(f'<label><input type="{input_tipo}" name="{_e(n["campo"])}" value="{_e(o["valor"])}"{marca}{req}> {ic}{_e(o["rotulo"])}{nota}</label>')
         else:
             lista = f' list="{_e(n["campo"])}-sugestoes"' if forma == "livre" else ""
             if forma == "livre":
@@ -370,9 +423,10 @@ def _no(n: dict, s: list[str]) -> None:
                     s.append(f'<option value="{_e(o["valor"])}">{_e(o["rotulo"])}</option>')
                 s.append("</datalist>")
             else:
-                s.append(f'<select name="{_e(n["campo"])}"{req}>')
+                multi = " multiple" if multipla else ""
+                s.append(f'<select name="{_e(n["campo"])}"{multi}{req}>')
                 for o in n["opcoes"]:
-                    marca = " selected" if o["valor"] == n["valor"] else ""
+                    marca = " selected" if o["valor"] in selecionados else ""
                     s.append(f'<option value="{_e(o["valor"])}"{marca}>{_e(o["rotulo"])}</option>')
                 s.append("</select>")
         s.append("</fieldset>")
@@ -395,6 +449,22 @@ def _no(n: dict, s: list[str]) -> None:
     elif tipo == "progresso":
         rot = f"{_e(n['rotulo'])} " if n.get("rotulo") else ""
         s.append(f'<p{ident}{escondido}>{rot}<progress value="{n["feito"]}" max="{n["de"]}"></progress> {n["feito"]} de {n["de"]}</p>')
+    elif tipo == "etiqueta":
+        icone = "● " if n.get("status") else ""
+        s.append(f'<span{ident}{escondido} data-tom="{_e(n["tom"])}">{icone}{_e(n["texto"])}</span>')
+    elif tipo == "galeria":
+        s.append(f'<figure{ident}{escondido}><figcaption>{_e(n["rotulo"])}</figcaption>')
+        for imagem in n["imagens"]:
+            _no(imagem, s)
+        s.append("</figure>")
+    elif tipo == "linha_do_tempo":
+        s.append(f'<section{ident}{escondido}><h3>{_e(n["rotulo"])}</h3><ol>')
+        for etapa in n["etapas"]:
+            s.append(f'<li data-estado="{_e(etapa["estado"])}"><b>{_e(etapa["titulo"])}</b> <small>{_e(etapa["detalhe"])}</small></li>')
+        s.append("</ol></section>")
+    elif tipo == "barra_valor":
+        texto = n.get("texto") or f'{n["valor"]} de {n["de"]}'
+        s.append(f'<p{ident}{escondido}>{_e(n["rotulo"])} <meter value="{n["valor"]}" max="{n["de"]}"></meter> {_e(texto)}</p>')
     elif tipo == "grafico":
         s.append(f"<figure{ident}{escondido}><figcaption>{_e(n['titulo'])} <small>({_e(n['forma'])})</small></figcaption><table>")
         s.append("<tr><th></th>" + "".join(f"<th>{_e(sr['rotulo'])} <small>{_e(sr['cor'])}</small></th>" for sr in n["series"]) + "</tr>")
@@ -438,14 +508,25 @@ def _no(n: dict, s: list[str]) -> None:
                      f"<small>{_e(i['subtitulo'])}</small> <b>{_e(i['valor'])}</b></li>")
         s.append("</ul></section>")
     elif tipo == "acoes":
-        rod = " <!-- rodapé -->" if n.get("rodape") else ""
-        s.append(f"<menu{ident}{escondido}>{rod}")
+        notas = []
+        if n.get("rodape"):
+            notas.append("rodapé")
+        if n.get("menu"):
+            notas.append(f'menu: {_e(n.get("rotulo"))}')
+        if n.get("segmentado"):
+            notas.append("segmentado")
+        if n.get("expansivel"):
+            notas.append("expansível")
+        comentario = f" <!-- {', '.join(notas)} -->" if notas else ""
+        s.append(f"<menu{ident}{escondido}>{comentario}")
         for b in n["botoes"]:
             enf = f" ({b['enfase']})" if b.get("enfase") not in (None, "padrao") else ""
             if "enviar" in b:
                 campos = f" <small>campos: {', '.join(b.get('campos') or []) or '—'}</small>" if "campos" in b else ""
                 depois = (" <small>depois: " + ", ".join(f"{a['id']}={'mostra' if a['mostrar'] else 'esconde'}" for a in b["apos_enviar"]) + "</small>") if b.get("apos_enviar") else ""
                 s.append(f'<li><button type="submit" name="operacao" value="{_e(b["enviar"])}">{_e(b["titulo"])}</button>{enf}{campos}{depois}</li>')
+            elif "consultar" in b:
+                s.append(f'<li><button type="button">{_e(b["titulo"])}</button>{enf} <small>consulta: {_e(b["consultar"])}</small></li>')
             else:
                 alvos = ", ".join(f"{a['id']}" + ("" if a["mostrar"] is None else ("=mostra" if a["mostrar"] else "=esconde")) for a in b["alvos"])
                 s.append(f'<li><button type="button">{_e(b["titulo"])}</button>{enf} <small>alterna: {alvos}</small></li>')

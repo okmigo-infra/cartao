@@ -6,12 +6,23 @@ Abra com:
 
 from okmigo_cartao import (
     Acao,
+    Aba,
+    Abas,
     Acoes,
     AlvoDeVisibilidade,
     AoTocarODia,
+    Alternancia,
     Aplicativo,
     Arquivo,
     Calendario,
+    BarraDeValor,
+    CampoComUnidade,
+    CampoData,
+    CampoMoeda,
+    CampoTelefone,
+    CartaoClicavel,
+    CelulaDeTabela,
+    Confirmacao,
     CampoNumero,
     CampoTexto,
     CartaoFinanceiro,
@@ -19,30 +30,45 @@ from okmigo_cartao import (
     Copiar,
     Distribuicao,
     Documento,
+    Dialogo,
     EnfaseDaAcao,
     EnviarEAvancar,
     Escolha,
+    EscolhaMultipla,
     EstadoVazio,
     Evento,
+    EtapaDaLinhaDoTempo,
+    Etiqueta,
+    Expansivel,
     Fonte,
     FormatoDeArquivo,
     FormaDaEscolha,
     Formulario,
     GradeDeMetricas,
+    GaleriaDeImagens,
+    Imagem,
     ItemDeDistribuicao,
     LancamentoFinanceiro,
     ListaFinanceira,
+    LinhaDeTabela,
+    LinhaDoTempo,
     Metrica,
+    MenuDeAcoes,
     Navegacao,
     Opcao,
     Progresso,
+    SeletorDeQuantidade,
     Secao,
     SemanticaFinanceira,
     Superficie,
+    Status,
+    TabelaFlexivel,
     Tela,
     Tema,
+    Texto,
     TipoDeEvento,
     TomFinanceiro,
+    TomDaEtiqueta,
     VistaDoCalendario,
 )
 
@@ -234,6 +260,92 @@ FINANCEIRO = Tela(
 )
 
 
+UNIVERSAIS = Tela(
+    "Componentes universais",
+    (
+        Abas(
+            (
+                Aba(
+                    "resumo",
+                    "Resumo",
+                    (
+                        Etiqueta("Novo", TomDaEtiqueta.INFORMATIVO),
+                        Status("Operação normal", TomDaEtiqueta.POSITIVO),
+                        BarraDeValor("Limite usado", 42, 100, "42%"),
+                    ),
+                ),
+                Aba(
+                    "andamento",
+                    "Andamento",
+                    (
+                        LinhaDoTempo(
+                            (
+                                EtapaDaLinhaDoTempo("Pedido recebido", "09:12"),
+                                EtapaDaLinhaDoTempo("Em preparação", "agora"),
+                                EtapaDaLinhaDoTempo("Entrega"),
+                            )
+                        ),
+                    ),
+                ),
+            )
+        ),
+        CartaoClicavel(
+            (Texto("PETR4 · Petrobras", negrito=True), Texto("R$ 35,20")),
+            Acao.consultar("Abrir detalhes de PETR4", "detalhar_item"),
+            menu=MenuDeAcoes(
+                (
+                    Acao.escrever(
+                        "Remover dos favoritos",
+                        "remover_item",
+                        enfase=EnfaseDaAcao.DESTRUTIVA,
+                        confirmacao=Confirmacao(
+                            "Remover favorito?",
+                            "Você poderá adicioná-lo novamente depois.",
+                            "Remover",
+                        ),
+                    ),
+                )
+            ),
+        ),
+        Expansivel(
+            "campos_avancados",
+            "Testar campos avançados",
+            (
+                CampoData("data_demo", "data", "Data"),
+                CampoMoeda("valor_demo", "valor", "Valor"),
+                CampoTelefone("telefone_demo", "telefone", "Telefone"),
+                CampoComUnidade("peso_demo", "peso", "Peso", unidade="kg"),
+                SeletorDeQuantidade("quantidade_demo", "quantidade", "Quantidade"),
+                Alternancia("notificacoes_demo", "notificacoes", "Receber notificações"),
+                EscolhaMultipla(
+                    "interesses_demo",
+                    "interesses",
+                    "Interesses",
+                    (Opcao("Ações", "acoes"), Opcao("FIIs", "fiis"), Opcao("Renda fixa", "renda_fixa")),
+                ),
+            ),
+        ),
+        GaleriaDeImagens(
+            (
+                Imagem("https://example.invalid/foto-1.jpg", "Primeiro exemplo"),
+                Imagem("https://example.invalid/foto-2.jpg", "Segundo exemplo"),
+            ),
+            "Imagens do item",
+        ),
+        TabelaFlexivel(
+            (2, 1),
+            (
+                LinhaDeTabela((CelulaDeTabela((Texto("Item"),)), CelulaDeTabela((Texto("Valor"),)))),
+                LinhaDeTabela((CelulaDeTabela((Texto("Plano"),)), CelulaDeTabela((Texto("R$ 49"),)))),
+            ),
+        ),
+        Dialogo("dialogo_demo", "Revisar", (Texto("Conteúdo sobreposto e responsivo."),)),
+    ),
+    tema=Tema.OPERACAO,
+    navegacao=Navegacao.INFERIOR,
+)
+
+
 def _superficie(nome: str, titulo: str, icone: str, tela: Tela) -> Superficie:
     return Superficie(
         nome,
@@ -260,5 +372,6 @@ APLICATIVO = Aplicativo(
         _superficie("formulario", "Formulário", "perfil", FORMULARIO),
         _superficie("agenda", "Agenda", "agenda", AGENDA),
         _superficie("financeiro", "Financeiro", "financeiro", FINANCEIRO),
+        _superficie("universais", "Universais", "mais", UNIVERSAIS),
     ),
 )

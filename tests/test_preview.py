@@ -90,7 +90,9 @@ class PreviewTest(unittest.TestCase):
 
         self.assertIn("baixar_extrato", leituras)
         self.assertIn("salvar_cadastro", escrituras)
-        self.assertEqual(4, len(aplicativo["superficies"]))
+        self.assertEqual(5, len(aplicativo["superficies"]))
+        self.assertIn("detalhar_item", leituras)
+        self.assertIn("remover_item", escrituras)
 
     def test_comando_pode_gerar_html_sem_iniciar_servidor(self):
         with tempfile.TemporaryDirectory() as temporario:

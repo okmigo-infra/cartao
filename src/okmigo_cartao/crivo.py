@@ -132,6 +132,8 @@ _MAX_COLUNAS = 16
 _MAX_LINHAS = 200
 _MAX_SERIES = 4
 _MAX_PONTOS = 24
+_MAX_IMAGENS = 12
+_MAX_ETAPAS = 24
 #: O total de uma barra de progresso. «3 de 1000000» não é barra, é número.
 _MAX_PROGRESSO = 10_000
 #: Um cronômetro conta descanso, em segundos; uma hora é folga generosa, e o
@@ -163,6 +165,19 @@ _TONS_FINANCEIROS = {
     "azul",
     "escuro",
     "cinza",
+}
+_TONS_DE_ETIQUETA = {"neutro", "positivo", "atencao", "negativo", "informativo"}
+_ESTADOS_DA_ETAPA = {"concluida", "atual", "futura", "erro"}
+_FORMATOS_DO_CAMPO = {
+    "data",
+    "hora",
+    "mes",
+    "moeda",
+    "documento",
+    "telefone",
+    "url",
+    "etiquetas",
+    "unidade",
 }
 
 #: Vírgula decimal com ou sem ponto de milhar («1200,00» ou «1.200,00») — a
@@ -422,6 +437,25 @@ def _icone_de_acao(acao: Any) -> str | None:
     )
 
 
+def _confirmacao_de_acao(acao: Any) -> dict[str, str] | None:
+    """Confirmação declarativa, sem HTML e sem código executável."""
+    if not isinstance(acao, dict) or not isinstance(acao.get("okmigoConfirmacao"), dict):
+        return None
+    bruto = acao["okmigoConfirmacao"]
+    titulo = _txt(bruto.get("titulo"), "titulo")
+    mensagem = _txt(bruto.get("mensagem"))
+    confirmar = _txt(bruto.get("confirmar"), "titulo")[:40]
+    cancelar = _txt(bruto.get("cancelar"), "titulo")[:40]
+    if not titulo or not mensagem or not confirmar or not cancelar:
+        return None
+    return {
+        "titulo": titulo,
+        "mensagem": mensagem,
+        "confirmar": confirmar,
+        "cancelar": cancelar,
+    }
+
+
 def _consulta_de_acao(acao: Any) -> dict[str, Any] | None:
     """Rebuild one read-only Execute action for a button or a table row."""
     if not isinstance(acao, dict) or acao.get("type") != "Action.Execute":
@@ -444,6 +478,9 @@ def _consulta_de_acao(acao: Any) -> dict[str, Any] | None:
     icone = _icone_de_acao(acao)
     if icone:
         saida["icone"] = icone
+    confirmacao = _confirmacao_de_acao(acao)
+    if confirmacao:
+        saida["confirmacao"] = confirmacao
     return saida
 
 
@@ -693,12 +730,16 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
             ),
             "itens": itens,
         }
-        # `selectAction`: a caixa INTEIRA vira alvo do toque. Só
-        # `Action.ToggleVisibility` — um toque na caixa não pode nascer
-        # ESCRITA; quem escreve é o `Submit` do formulário revelado.
+        # `selectAction`: a caixa INTEIRA vira alvo do toque. Pode alternar
+        # conteúdo local ou fazer uma consulta declarada; nunca escreve.
         alvo = _alvos_de_toggle(no.get("selectAction"))
         if alvo:
             saida["ao_tocar"] = {"alvos": alvo}
+        else:
+            consulta = _consulta_de_acao(no.get("selectAction"))
+            if consulta:
+                consulta["campos"] = _campos_de(itens)
+                saida["ao_tocar"] = consulta
         # `okmigoSobreposto`: a caixa sai do FLUXO e aparece por cima. É
         # intenção («isto não pertence ao fluxo»), não aparência — se vira um
         # diálogo centrado com fundo escurecido é do cliente. Existe porque um
@@ -814,12 +855,93 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
             "alt": _txt(no.get("altText"), "titulo"),
         }
 
+    if tipo == "okmigoEtiqueta":
+        texto = _txt(no.get("texto"), "titulo")
+        if not texto:
+            return None
+        tom = no.get("tom") if no.get("tom") in _TONS_DE_ETIQUETA else "neutro"
+        return {
+            "tipo": "etiqueta",
+            **comum,
+            "texto": texto,
+            "tom": tom,
+            "status": no.get("status") is True,
+        }
+
+    if tipo == "okmigoGaleria":
+        imagens = []
+        for imagem in (no.get("imagens") or [])[:_MAX_IMAGENS]:
+            pronta = _um(imagem, contador)
+            if pronta and pronta.get("tipo") in {"imagem", "sem_imagem"}:
+                imagens.append(pronta)
+        if not imagens:
+            return None
+        return {
+            "tipo": "galeria",
+            **comum,
+            "rotulo": _txt(no.get("rotulo"), "titulo") or "Galeria de imagens",
+            "imagens": imagens,
+        }
+
+    if tipo == "okmigoLinhaDoTempo":
+        etapas = []
+        for etapa in (no.get("etapas") or [])[:_MAX_ETAPAS]:
+            if not isinstance(etapa, dict):
+                continue
+            titulo = _txt(etapa.get("titulo"), "titulo")
+            if not titulo:
+                continue
+            etapas.append(
+                {
+                    "titulo": titulo,
+                    "detalhe": _txt(etapa.get("detalhe")),
+                    "estado": etapa.get("estado")
+                    if etapa.get("estado") in _ESTADOS_DA_ETAPA
+                    else "futura",
+                }
+            )
+        if not etapas:
+            return None
+        return {
+            "tipo": "linha_do_tempo",
+            **comum,
+            "rotulo": _txt(no.get("rotulo"), "titulo") or "Andamento",
+            "etapas": etapas,
+        }
+
+    if tipo == "okmigoBarraDeValor":
+        valor = _numero_do_ponto(no.get("valor"))
+        de = _numero_do_ponto(no.get("de"))
+        if valor is None or de is None or de <= 0 or de > _MAX_PROGRESSO:
+            return None
+        return {
+            "tipo": "barra_valor",
+            **comum,
+            "rotulo": _txt(no.get("rotulo"), "titulo"),
+            "valor": max(0.0, min(de, valor)),
+            "de": de,
+            "texto": _txt(no.get("texto"), "titulo"),
+            "tom": no.get("tom")
+            if no.get("tom") in _TONS_DE_ETIQUETA
+            else "neutro",
+        }
+
     if tipo in ("Input.Text", "Input.Number"):
         # O `id` é obrigatório: é a CHAVE de ESTADO no cliente. Um campo sem id
         # é um texto que a pessoa digita e que não chega a lugar nenhum.
         campo_id = _txt(no.get("id"), "titulo")[:60]
         if not campo_id:
             return None
+        formato_padrao = "numero" if tipo == "Input.Number" else "texto"
+        formato = no.get("okmigoFormato")
+        if formato not in _FORMATOS_DO_CAMPO:
+            formato = formato_padrao
+        # Formatos numéricos não podem transformar texto arbitrário em número.
+        if formato in {"moeda", "unidade"} and tipo != "Input.Number":
+            formato = formato_padrao
+        passo = _numero_do_ponto(no.get("okmigoPasso"))
+        if passo is not None and passo <= 0:
+            passo = None
         return {
             "tipo": "campo",
             **comum,
@@ -836,7 +958,7 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
             # NÚMERO É UM TIPO: «62.900» digitado num campo de texto vira 62,9
             # do outro lado, sem erro. O campo diz que é número e o cliente
             # impede na digitação — validar depois não devolve o dado perdido.
-            "formato": "numero" if tipo == "Input.Number" else "texto",
+            "formato": formato,
             "linhas": 4 if no.get("isMultiline") else 1,
             "obrigatorio": bool(no.get("isRequired")),
             # `maxLength` é do autor, mas o teto é do produto.
@@ -847,6 +969,16 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
             # recusaria um valor legítimo.
             "min": no["min"] if isinstance(no.get("min"), (int, float)) else None,
             "max_valor": no["max"] if isinstance(no.get("max"), (int, float)) else None,
+            "controle": "quantidade"
+            if tipo == "Input.Number" and no.get("okmigoControle") == "quantidade"
+            else None,
+            "passo": passo,
+            "unidade": _txt(no.get("okmigoUnidade"), "titulo")[:20],
+            "moeda": (
+                _txt(no.get("okmigoMoeda"), "titulo")[:3].upper()
+                if formato == "moeda"
+                else ""
+            ),
         }
 
     if tipo == "Input.ChoiceSet":
@@ -937,6 +1069,29 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
         if not opcoes and not quem_opera:
             return None
 
+        multipla = no.get("isMultiSelect") is True
+        crus = [v.strip() for v in _txt(no.get("value")).split(",") if v.strip()]
+        validos = [o["valor"] for o in opcoes]
+        selecionados = [v for v in crus if v in validos]
+        if not multipla:
+            selecionados = selecionados[:1]
+
+        regras = []
+        for regra in (no.get("okmigoAoAlterar") or [])[:_MAX_OPCOES]:
+            if not isinstance(regra, dict) or regra.get("valor") not in validos:
+                continue
+            bruto_alvos = regra.get("alvos")
+            alvos_validos = [
+                alvo
+                for alvo in (bruto_alvos if isinstance(bruto_alvos, list) else [])[:60]
+                if isinstance(alvo, dict) and isinstance(alvo.get("isVisible"), bool)
+            ]
+            alvos = _alvos_de_toggle(
+                {"type": "Action.ToggleVisibility", "targetElements": alvos_validos}
+            )
+            if alvos:
+                regras.append({"valor": regra["valor"], "alvos": alvos})
+
         return {
             "tipo": "escolha",
             **comum,
@@ -956,13 +1111,16 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
             "rotulo": _txt(no.get("label"), "titulo"),
             # `value` só é aceito se for UMA das opções: um padrão fora da lista
             # abriria o formulário já inválido.
-            "valor": next(
-                (o["valor"] for o in opcoes if o["valor"] == _txt(no.get("value"))),
-                "",
-            ),
+            "valor": ",".join(selecionados),
             "dica": _txt(no.get("placeholder"), "titulo"),
             "opcoes": opcoes,
             "obrigatorio": bool(no.get("isRequired")),
+            "multipla": multipla,
+            "controle": "alternancia"
+            if no.get("okmigoControle") == "alternancia"
+            and {o["valor"] for o in opcoes} == {"true", "false"}
+            else None,
+            **({"ao_alterar": regras} if regras else {}),
             # ⭐ O buraco a preencher, marcado na saída: quem hospeda o crivo
             # põe aqui quem opera aquele negócio. Ausente = escolha comum.
             **({"quem_opera": True} if quem_opera else {}),
@@ -1328,7 +1486,10 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
         # gravou). `Action.OpenUrl` fica de fora: ação nomeia capacidade, nunca
         # endereço.
         botoes = []
-        for a in no.get("actions") or []:
+        brutas = no.get("actions") or []
+        if no.get("okmigoMenu") is True:
+            brutas = brutas[:10]
+        for a in brutas:
             if not isinstance(a, dict):
                 continue
             if a.get("type") == "Action.Execute":
@@ -1355,6 +1516,9 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
                 icone = _icone_de_acao(a)
                 if icone:
                     botao["icone"] = icone
+                confirmacao = _confirmacao_de_acao(a)
+                if confirmacao:
+                    botao["confirmacao"] = confirmacao
                 # `okmigoAposEnviar`: a transição DEPOIS de salvar — um
                 # `ToggleVisibility` com estados booleanos EXPLÍCITOS. Sem URL,
                 # sem segunda escrita, sem alternância cega. É o que faz telas
@@ -1390,6 +1554,15 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
         # alcance. Intenção, como tudo: como vira barra fixa é do cliente.
         if no.get("okmigoRodape") is True:
             saida["rodape"] = True
+        if no.get("okmigoMenu") is True:
+            saida["menu"] = True
+            saida["rotulo"] = (
+                _txt(no.get("okmigoRotulo"), "titulo")[:40] or "Mais opções"
+            )
+        if no.get("okmigoSegmentado") is True:
+            saida["segmentado"] = True
+        if no.get("okmigoExpansivel") is True:
+            saida["expansivel"] = True
         return saida
 
     # Desconhecido: cai. ⭐ O `fallback` é tentado por QUEM CHAMA (`_um`), e

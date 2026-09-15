@@ -201,12 +201,35 @@ class EnfaseDaAcao(StrEnum):
 
 
 @dataclass(frozen=True, slots=True)
+class Confirmacao:
+    """Confirma uma operação antes de atravessar a fronteira do produto."""
+
+    titulo: str
+    mensagem: str
+    confirmar: str = "Confirmar"
+    cancelar: str = "Cancelar"
+
+    def __post_init__(self) -> None:
+        if not all((self.titulo.strip(), self.mensagem.strip(), self.confirmar.strip(), self.cancelar.strip())):
+            raise ContratoDoSdkInvalido("confirmacao precisa de todos os textos")
+
+    def compilar(self) -> Json:
+        return {
+            "titulo": self.titulo,
+            "mensagem": self.mensagem,
+            "confirmar": self.confirmar,
+            "cancelar": self.cancelar,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class Acao:
     titulo: str
     operacao: str
     tipo: TipoDeAcao
     enfase: EnfaseDaAcao = EnfaseDaAcao.PADRAO
     icone: str | None = None
+    confirmacao: Confirmacao | None = None
 
     def __post_init__(self) -> None:
         _nome(self.operacao, "operacao")
@@ -222,8 +245,9 @@ class Acao:
         operacao: str,
         *,
         enfase: EnfaseDaAcao = EnfaseDaAcao.PADRAO,
+        confirmacao: Confirmacao | None = None,
     ) -> Self:
-        return cls(titulo, operacao, TipoDeAcao.LEITURA, enfase)
+        return cls(titulo, operacao, TipoDeAcao.LEITURA, enfase, None, confirmacao)
 
     @classmethod
     def escrever(
@@ -233,8 +257,9 @@ class Acao:
         *,
         enfase: EnfaseDaAcao = EnfaseDaAcao.PADRAO,
         icone: str | None = None,
+        confirmacao: Confirmacao | None = None,
     ) -> Self:
-        return cls(titulo, operacao, TipoDeAcao.ESCRITA, enfase, icone)
+        return cls(titulo, operacao, TipoDeAcao.ESCRITA, enfase, icone, confirmacao)
 
     def compilar(self) -> Json:
         no: Json = {
@@ -252,12 +277,14 @@ class Acao:
             no["mode"] = "secondary"
         if self.icone == "lixeira":
             no["okmigoIcone"] = "delete"
+        if self.confirmacao is not None:
+            no["okmigoConfirmacao"] = self.confirmacao.compilar()
         return no
 
 
 @dataclass(frozen=True, slots=True)
 class Acoes:
-    itens: tuple[Acao, ...]
+    itens: tuple[Componente, ...]
     rodape: bool = False
 
     def __post_init__(self) -> None:
