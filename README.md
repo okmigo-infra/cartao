@@ -224,6 +224,42 @@ Duas regras que não se negociam, e estão escritas no próprio crivo:
   saída para um endereço de terceiro é `okmigoAutorizar`, cercada de travas —
   e nenhuma proposta afrouxa uma delas.
 
+## O que a esteira cobra
+
+Toda PR aqui passa por quatro travas. Elas existem porque **este pacote é
+dependência pinada por SHA em dez repositórios**, e um SHA não tem nome: a única
+coisa que diz o que está instalado num pod é o `version` que o pacote declara.
+
+| passo | o que ele impede |
+|---|---|
+| suíte em **3.11 e 3.12** | 3.11 é o piso que o `pyproject` promete a quem está de fora; 3.12 é o que roda em produção nos dez. Testar só um esconde metade |
+| **instala pelo tarball do git** | é como o consumidor instala. O `pip install -e .` resolve `src/` pelo disco e por isso nunca vê um `assets/*.js` ficando fora do `package-data` |
+| `scripts/versao_subiu.py` | mexeu em `src/` ⇒ a `version` sobe. E ela não regride |
+| `scripts/contrato_so_cresce.py` | nome não sai do `__all__` sem a versão dizer — em `0.x`, o slot de quebra é o MENOR |
+
+⛔ **O `__all__` não encolhe de graça.** Quem consome está pinado num SHA antigo e
+um dia recebe a PR que troca o pino. Se um nome sumiu no meio do caminho, o app
+não quebra no teste de tela: quebra no `import`, e a esteira inteira dele para.
+
+## Publicar
+
+Publicar é **tag**, e a tag tem de ser igual ao `version` do `pyproject.toml` —
+`publicar.yml` recusa se discordarem. Ele roda a suíte de novo na tag (a tag pode
+ser marcada em qualquer commit, inclusive num que nunca passou por PR), prova que
+o tarball instala com os assets, e escreve o Release com a linha do pino pronta
+para colar:
+
+```toml
+  "okmigo-cartao @ https://github.com/okmigo-infra/cartao/archive/<sha>.tar.gz",  # vX.Y.Z
+```
+
+⛔ **O pino é SHA, nunca tag nem `main`.** Tag se move; SHA não. A tag serve para
+o humano saber o que é aquele SHA — não para resolver o download.
+
+⚠️ A esteira **para** na publicação, de propósito: avisar os consumidores exigiria
+uma credencial com escrita nos repositórios deles, e este repositório é público.
+Quem avisa é um processo do lado de lá, que compara as versões e abre a PR.
+
 ## Licença
 
 [Apache-2.0](LICENSE). Contribuições entram sob a mesma licença (§5 dela) — é o que
