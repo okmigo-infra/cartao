@@ -24,6 +24,20 @@ somar um décimo sexto à contagem que este projeto já errou três vezes.
 `src/`). Quem instala o cartão não recebe nada de lá. Alguém já teve esta ideia
 e ela parou no meio; é por isso que o código novo entra AQUI.
 
+⭐ **O que já migrou**, e a ordem não foi por gosto:
+
+1. `versao_do_manifesto` (18/09) — oito cópias idênticas, zero debate sobre
+   qual era a canônica. Veio primeiro para provar o mecanismo no caso barato.
+2. `abrir_pr_de_promocao` (18/09) — seis idênticas davam a base, e os cinco
+   desvios se leram um a um: dois eram SUBCONJUNTO ESTRITO (faltava o caminho
+   de promoção sem imagem nova) e um era subconjunto maior ainda (faltava a
+   guarda do ghcr inteira). Nenhum era divergência de comportamento, então
+   adotar a canônica é ganho estrito nos três.
+
+⏳ **Falta o do registro**, e ele é outro tipo de trabalho: é bash com blocos de
+Python dentro de heredocs, então trazê-lo é PORTAR, não mover. É também o mais
+perigoso dos três, e por isso não vem de carona numa PR de mudança de lugar.
+
 ⛔ **Nomes: o assunto, nunca o gesto.** O `scripts/versao_subiu.py` deste repo
 confere se o CRIVO mudou sem a versão do PACOTE subir; o dos oito apps confere
 se o MANIFESTO mudou sem a versão DELE subir. São checagens diferentes que

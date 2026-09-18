@@ -1,6 +1,6 @@
 [project]
 name = "okmigo-cartao"
-version = "0.9.0"
+version = "0.10.0"
 description = "O crivo do cartão declarado do okmigo: valida e normaliza um Adaptive Card (subconjunto) do jeito que o produto faz — para quem escreve um app testar antes de registrar."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -18,6 +18,7 @@ okmigo-cartao = "okmigo_cartao.__main__:main"
 # ⚠️ Comando instalado, não caminho de arquivo: é o que permite a um repo trocar
 # a cópia dele por uma chamada, sem saber onde o pacote foi instalado.
 okmigo-versao-do-manifesto = "okmigo_cartao.esteira.versao_do_manifesto:main"
+okmigo-abrir-pr-de-promocao = "okmigo_cartao.esteira.abrir_pr_de_promocao:main"
 
 [build-system]
 requires = ["setuptools>=68"]
