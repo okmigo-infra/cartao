@@ -885,3 +885,57 @@ class VocabularioTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class OpcaoComImagemTest(unittest.TestCase):
+    """A FOTO de uma opção em cartões (OMINFRA-559).
+
+    ⛔ O `icone` é um glifo — um emoji. Há escolha em que a imagem É o
+    conteúdo: uma grade de áreas de treino em que cada tile mostra o
+    exercício-símbolo. O alvo (Leap «Treino em casa») mostra a foto; nós
+    tínhamos 866 demonstrações hospedadas e o tile só conseguia mostrar emoji.
+    """
+
+    NOSSA = Config(
+        dominios=("exemplo.com", "cdn.exemplo.net"),
+        base_de_imagens="https://exemplo.com/",
+    )
+
+    def _opcao(self, imagem, style="expanded"):
+        tela, _ = validar(
+            cartao({
+                "type": "Input.ChoiceSet", "id": "area", "style": style,
+                "choices": [{"title": "Peito", "value": "peito",
+                             "okmigoNota": "3 exercícios", "okmigoIcone": "💪",
+                             "okmigoImagem": imagem}],
+            }),
+            config=self.NOSSA,
+        )
+        return tela["corpo"][0]["opcoes"][0]
+
+    def test_a_foto_da_casa_atravessa_absoluta(self):
+        self.assertEqual(self._opcao("/img/peito")["imagem"],
+                         "https://exemplo.com/img/peito")
+        self.assertEqual(self._opcao("https://cdn.exemplo.net/p.png")["imagem"],
+                         "https://cdn.exemplo.net/p.png")
+
+    def test_foto_de_terceiro_e_recusada_e_o_campo_some(self):
+        """⛔ A mesma regra de toda imagem do cartão: uma foto servida pelo
+        terceiro faria o aparelho de cada pessoa bater no servidor dele."""
+        for url in ("https://outro.com/p.png", "http://exemplo.com/p.png",
+                    "https://exemplo.com.br/p.png", "https://mau.example@exemplo.com/p"):
+            with self.subTest(url=url):
+                self.assertNotIn("imagem", self._opcao(url))
+
+    def test_o_glifo_continua_valendo_quando_nao_ha_foto(self):
+        """A imagem ACRESCENTA, não substitui: cliente sem foto tem o ícone."""
+        opcao = self._opcao("")
+        self.assertNotIn("imagem", opcao)
+        self.assertEqual(opcao["icone"], "💪")
+
+    def test_a_foto_vale_em_qualquer_forma_de_escolha(self):
+        """Quem desenha é o cliente; o crivo não decide forma por causa dela."""
+        for forma in ("expanded", None, "filtered"):
+            with self.subTest(forma=forma):
+                opcao = self._opcao("/img/peito", style=forma)
+                self.assertEqual(opcao.get("imagem"), "https://exemplo.com/img/peito")

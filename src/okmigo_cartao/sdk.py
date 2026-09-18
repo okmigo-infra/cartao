@@ -130,6 +130,18 @@ class Opcao:
     valor: str
     nota: str | None = None
     icone: str | None = None
+    #: A FOTO da opção, quando a escolha é em cartões (OMINFRA-559).
+    #:
+    #: ⭐ O `icone` é um glifo — um emoji, doze pontos de código no máximo. Há
+    #: escolha em que a imagem É o conteúdo: uma grade de áreas de treino em
+    #: que cada tile mostra o exercício-símbolo, e não um bonequinho.
+    #:
+    #: ⛔ **URL DA CASA, como toda imagem do cartão.** Quem hospeda é o
+    #: produto; endereço de outro domínio é recusado pelo crivo — uma imagem
+    #: servida pelo terceiro faria o aparelho de CADA pessoa que abre a tela
+    #: bater no servidor dele, entregando o IP de quem ela não escolheu
+    #: contatar. Vale `/img/<chave>` ou a URL absoluta da base de imagens.
+    imagem: str | None = None
 
     def compilar(self) -> Json:
         if not self.titulo or not self.valor:
@@ -139,6 +151,8 @@ class Opcao:
             no["okmigoNota"] = self.nota
         if self.icone:
             no["okmigoIcone"] = self.icone
+        if self.imagem:
+            no["okmigoImagem"] = self.imagem
         return no
 
 

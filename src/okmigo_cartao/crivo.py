@@ -28,7 +28,7 @@ tipo que entra é uma decisão e dois renderizadores. Há chaves com prefixo
 `okmigo` para o que o schema não tem (calendário, arquivo, documento, cópia,
 autorização, cronômetro, progresso, gráfico) e DICAS com o mesmo prefixo em
 tipos que existem (`okmigoGrade`, `okmigoSobreposto`, `okmigoRodape`,
-`okmigoAposEnviar`, `okmigoNota`, `okmigoIcone`, `okmigoEstrito`,
+`okmigoAposEnviar`, `okmigoNota`, `okmigoIcone`, `okmigoImagem`, `okmigoEstrito`,
 `okmigoSomenteLeitura`, `okmigoBuscar`). Dica em tipo existente degrada sozinha; tipo novo
 some no cliente que não o conhece — e é por isso que tipo novo é mais caro.
 """
@@ -1018,12 +1018,20 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
             # `okmigoIcone`: o glifo — texto curto (um emoji), nunca imagem;
             # cortado em 12 porque um emoji com modificador chega a 7 pontos de
             # código e o resto seria texto disfarçado.
+            # `okmigoImagem`: a FOTO da opção, para a escolha em cartões
+            # (OMINFRA-559). Passa pelo MESMO `_nossa` de toda imagem do
+            # cartão — endereço de outro domínio é recusado, e o que sobra é
+            # `None`, que o cliente desenha como cartão sem foto em vez de
+            # deixar buraco. ⚠️ Ela NÃO substitui o `icone`: um cliente que não
+            # saiba desenhar imagem continua tendo o glifo.
+            imagem = _nossa(_txt(escolha.get("okmigoImagem"))) or None
             opcoes.append(
                 {
                     "valor": valor,
                     "rotulo": rotulo,
                     "nota": _txt(escolha.get("okmigoNota"), "titulo"),
                     "icone": _txt(escolha.get("okmigoIcone"), "titulo")[:12],
+                    **({"imagem": imagem} if imagem else {}),
                 }
             )
         # `style: "filtered"` sozinho é o typeahead LIVRE: a lista sugere, mas
