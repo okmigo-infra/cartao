@@ -256,3 +256,22 @@ class SdkTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class OpcaoComImagemSdkTest(unittest.TestCase):
+    """`Opcao.imagem` compila para `okmigoImagem` (OMINFRA-559)."""
+
+    def test_a_imagem_entra_e_o_icone_continua(self):
+        from okmigo_cartao.sdk import Opcao
+
+        no = Opcao(titulo="Peito", valor="peito", nota="3 exercícios",
+                   icone="💪", imagem="/img/peito").compilar()
+        self.assertEqual(no["okmigoImagem"], "/img/peito")
+        self.assertEqual(no["okmigoIcone"], "💪")
+        self.assertEqual((no["title"], no["value"]), ("Peito", "peito"))
+
+    def test_sem_imagem_a_chave_nao_aparece(self):
+        """⚠️ Chave vazia no manifesto é chave que o crivo tem de olhar à toa."""
+        from okmigo_cartao.sdk import Opcao
+
+        self.assertNotIn("okmigoImagem", Opcao(titulo="Peito", valor="peito").compilar())

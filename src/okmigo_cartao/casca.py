@@ -411,7 +411,15 @@ def _no(n: dict, s: list[str]) -> None:
             for o in n["opcoes"]:
                 marca = " checked" if o["valor"] in selecionados else ""
                 nota = f" <small>{_e(o['nota'])}</small>" if o.get("nota") else ""
-                ic = f"{_e(o['icone'])} " if o.get("icone") else ""
+                # ⭐ A FOTO vem em CIMA do título (OMINFRA-559) — é ela que o
+                # olho usa para escolher numa grade de áreas. ⚠️ O glifo
+                # continua desenhado quando não há foto: a imagem acrescenta,
+                # não substitui, e quem não declarar `okmigoImagem` vê a mesma
+                # ficha de sempre.
+                if o.get("imagem"):
+                    ic = (f'<img src="{_e(o["imagem"])}" alt="" loading="lazy">')
+                else:
+                    ic = f"{_e(o['icone'])} " if o.get("icone") else ""
                 input_tipo = "checkbox" if multipla else "radio"
                 s.append(f'<label><input type="{input_tipo}" name="{_e(n["campo"])}" value="{_e(o["valor"])}"{marca}{req}> {ic}{_e(o["rotulo"])}{nota}</label>')
         else:
