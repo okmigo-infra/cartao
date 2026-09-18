@@ -921,6 +921,53 @@ class Superficie:
 
 
 @dataclass(frozen=True, slots=True)
+class DocumentoDeclarado:
+    """Os campos de uma operação que carregam DOCUMENTO da pessoa, declarados.
+
+    ⛔⛔ **Existe por causa de uma garantia, não de uma conveniência.** O okmigo
+    passa todo pedido de saída por um filtro de privacidade (D21): o amigo
+    traduz o que sabe no MÍNIMO que o outro agente precisa, e a camada
+    estrutural barra documento, financeiro, saúde e credencial. Medido em
+    18/09, era esse filtro que fazia CONECTAR UM BANCO ser impossível pela
+    tela: o CPF que a pessoa digitava batia no padrão de `documento` e o pedido
+    morria antes de sair, com o formulário certo e o serviço saudável do lado.
+
+    ⭐ **O filtro continua valendo; o que muda é que a exceção passa a ser
+    DECLARADA.** O serviço diz, no contrato que a pessoa aprova ao instalar,
+    quais campos de qual operação recebem documento — e só esses. Um campo
+    `cpf` numa operação não declarada segue barrado, e um serviço que queira
+    colher documento tem de escrever isso onde se lê.
+
+    ⛔ **Isto NÃO autoriza o modelo.** A exceção vale para valor DIGITADO pela
+    pessoa num formulário de tela; o consumidor é quem faz cumprir. É a mesma
+    distinção que o `pela_pessoa` já faz no portão de dois turnos: o portão
+    existe para conter o modelo, e num formulário não há nada a provar.
+
+    ⚠️ Documento é CPF e CNPJ. Senha nunca entra aqui, e não é por esquecimento
+    — quem pede a senha do banco é o banco, na página dele.
+    """
+
+    operacao: str
+    campos: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        _nome(self.operacao, "operacao que recebe documento")
+        if not self.campos:
+            raise ContratoDoSdkInvalido(
+                "documento declarado sem campo nenhum: declare o que recebe")
+        for campo in self.campos:
+            _nome(campo, "campo de documento")
+            if campo not in {"cpf", "cnpj"}:
+                raise ContratoDoSdkInvalido(
+                    f"campo de documento fora da lista fechada: {campo!r}. "
+                    "Documento aqui e CPF ou CNPJ — senha o banco pede na "
+                    "pagina dele.")
+
+    def compilar(self) -> Json:
+        return {"operacao": self.operacao, "campos": list(self.campos)}
+
+
+@dataclass(frozen=True, slots=True)
 class Aplicativo:
     slug: str
     endpoint: str
@@ -940,6 +987,10 @@ class Aplicativo:
     aceita_contato: ContatoAceito | None = None
     publico: CatalogoPublico | None = None
     marca_horario: MarcaHorario | None = None
+    #: ⛔ As operações que recebem DOCUMENTO da pessoa, uma a uma.
+    #: Vazio = nenhuma, e o filtro de privacidade do consumidor barra
+    #: qualquer documento que tente sair — que é o padrão certo.
+    recebe_documento: tuple[DocumentoDeclarado, ...] = ()
     so_por_convite: bool = False
     em_breve: bool = False
     tipo: str | None = None
@@ -964,7 +1015,8 @@ class Aplicativo:
             "descricao_humana", "nome_visivel", "versao", "conversa",
             "superficies", "eventos", "avisa_antes", "relata_mudancas",
             "convite", "quer_a_marca", "aceita_contato", "publico",
-            "marca_horario", "so_por_convite", "em_breve", "tipo",
+            "marca_horario", "recebe_documento", "so_por_convite",
+            "em_breve", "tipo",
             "tenant_sondagem", "credencial_sondagem", "vitrine_url",
         }
         conflito = reservadas.intersection(self.extras)
@@ -1009,6 +1061,9 @@ class Aplicativo:
         aplicativo.update(
             {chave: valor.compilar() for chave, valor in compostos.items() if valor is not None}
         )
+        if self.recebe_documento:
+            aplicativo["recebe_documento"] = [
+                d.compilar() for d in self.recebe_documento]
         if self.so_por_convite:
             aplicativo["so_por_convite"] = True
         if self.em_breve:
