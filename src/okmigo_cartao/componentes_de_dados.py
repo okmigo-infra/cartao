@@ -41,6 +41,7 @@ from .sdk import (
     Texto,
     TipoDeAcao,
     _compilar,
+    _nome,
 )
 
 Json = dict[str, object]
@@ -171,12 +172,21 @@ class Ranking:
     universo: str = ""
     nota: str = ""
     ver_todos: Acao | None = None
+    #: Nome da sublista do dado sobre a qual o PRIMEIRO item é repetido.
+    #:
+    #: ⭐ Sem isto, um ranking só serve para dado fixo escrito no código —
+    #: e um ranking de mercado é, por definição, dinâmico. Com `itens_de`, o
+    #: primeiro item vira o MOLDE e a ponte o expande uma vez por linha da
+    #: sublista, do mesmo jeito que `Repetir` faz com qualquer componente.
+    itens_de: str | None = None
 
     def __post_init__(self) -> None:
         _obrigatorio(self.titulo, "titulo do ranking")
         _obrigatorio(self.criterio, "criterio do ranking")
         if not self.itens:
             raise ContratoDoSdkInvalido("ranking precisa de ao menos um item")
+        if self.itens_de is not None:
+            _nome(self.itens_de, "sublista do ranking")
         if len(self.itens) > MAX_ITENS_DO_RANKING:
             raise ContratoDoSdkInvalido(
                 f"ranking aceita ate {MAX_ITENS_DO_RANKING} itens"
@@ -202,7 +212,12 @@ class Ranking:
             "base": self.base,
             "universo": self.universo,
             "nota": self.nota,
-            "itens": [item.compilar() for item in self.itens],
+            "itens": (
+                # O molde: a ponte expande uma cópia por linha da sublista.
+                [{"_repetir_lista": self.itens[0].compilar(), "_de": self.itens_de}]
+                if self.itens_de is not None
+                else [item.compilar() for item in self.itens]
+            ),
             "fallback": fatos.compilar(),
         }
         if self.ver_todos is not None:
@@ -508,9 +523,15 @@ class Agenda:
     base: str = ""
     vazio: str = "Nada agendado para o período."
     agrupar_por_data: bool = True
+    #: Como em `Ranking`: o primeiro item vira molde e a ponte o repete.
+    itens_de: str | None = None
 
     def __post_init__(self) -> None:
         _obrigatorio(self.titulo, "titulo da agenda")
+        if self.itens_de is not None:
+            if not self.itens:
+                raise ContratoDoSdkInvalido("agenda com `itens_de` precisa de um molde")
+            _nome(self.itens_de, "sublista da agenda")
         if len(self.itens) > MAX_ITENS_DA_AGENDA:
             raise ContratoDoSdkInvalido(
                 f"agenda aceita ate {MAX_ITENS_DA_AGENDA} itens"
@@ -538,7 +559,11 @@ class Agenda:
             "base": self.base,
             "vazio": self.vazio,
             "agruparPorData": self.agrupar_por_data,
-            "itens": [item.compilar() for item in self.itens],
+            "itens": (
+                [{"_repetir_lista": self.itens[0].compilar(), "_de": self.itens_de}]
+                if self.itens_de is not None
+                else [item.compilar() for item in self.itens]
+            ),
             "fallback": {
                 "type": "Container",
                 "items": [

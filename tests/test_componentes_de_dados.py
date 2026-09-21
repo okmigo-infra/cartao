@@ -209,6 +209,54 @@ class RankingTest(unittest.TestCase):
         _, erro = validar(tela.compilar(), leituras={"detalhar_ativo"})
         self.assertIn("operacao_fantasma", erro)
 
+    def test_itens_de_transforma_o_primeiro_item_em_MOLDE(self):
+        """⭐ Sem isto o ranking só serve para dado escrito no código.
+
+        Um ranking de mercado é dinâmico por definição: o molde é expandido
+        pela ponte uma vez por linha da sublista, do mesmo jeito que o
+        `Repetir` faz com qualquer componente.
+        """
+        from okmigo_cartao import expandir
+
+        compilado = Ranking(
+            "Maiores altas",
+            "variação do dia",
+            (ItemDeRanking("{ticker}", "{preco}", variacao="{variacao}"),),
+            itens_de="itens",
+        ).compilar()
+        assert "_repetir_lista" in compilado["itens"][0]
+        assert compilado["itens"][0]["_de"] == "itens"
+
+        pronto = expandir(
+            compilado,
+            {
+                "itens": [
+                    {"ticker": "PETR4", "preco": "R$ 38,20", "variacao": "↑ +2,4%"},
+                    {"ticker": "VALE3", "preco": "R$ 54,10", "variacao": "↑ +1,0%"},
+                ]
+            },
+        )
+        self.assertEqual([i["rotulo"] for i in pronto["itens"]], ["PETR4", "VALE3"])
+        self.assertEqual(pronto["itens"][0]["valor"], "R$ 38,20")
+
+    def test_agenda_tambem_repete_o_molde(self):
+        from okmigo_cartao import expandir
+
+        compilado = Agenda(
+            "Próximos",
+            (ItemDaAgenda("{data}", "{titulo}", valor="{valor}"),),
+            itens_de="eventos",
+        ).compilar()
+        pronto = expandir(
+            compilado,
+            {"eventos": [{"data": "02/10", "titulo": "PETR4 · dividendo", "valor": "R$ 0,72"}]},
+        )
+        self.assertEqual(pronto["itens"][0]["titulo"], "PETR4 · dividendo")
+
+    def test_agenda_com_itens_de_exige_um_molde(self):
+        with self.assertRaises(ContratoDoSdkInvalido):
+            Agenda("Próximos", (), itens_de="eventos")
+
     def test_fallback_do_ranking_e_a_mesma_lista_em_fatos(self):
         compilado = self._ranking().compilar()
         fatos = compilado["fallback"]["facts"]
