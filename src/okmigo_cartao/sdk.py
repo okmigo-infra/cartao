@@ -167,6 +167,15 @@ class Busca:
     valor: str = ""
     obrigatoria: bool = True
     estrita: bool = False
+    #: A consulta disparada ao ESCOLHER uma sugestao — sem segundo toque.
+    #:
+    #: ⛔ Sem isto a busca so PREENCHE o campo, e quem escolhe um resultado
+    #: fica olhando para a tela sem nada acontecer: o valor esta la e nenhuma
+    #: acao o consome. Foi defeito de tela real (21/09).
+    #:
+    #: ⚠️ So LEITURA. Escrever ao escolher seria gravar por engano de toque,
+    #: sem confirmacao — o crivo recusa.
+    ao_escolher: Acao | None = None
 
     def __post_init__(self) -> None:
         _nome(self.id, "id do campo")
@@ -191,6 +200,13 @@ class Busca:
             no["value"] = self.valor
         if self.estrita:
             no["okmigoEstrito"] = True
+        if self.ao_escolher is not None:
+            if self.ao_escolher.tipo is not TipoDeAcao.LEITURA:
+                raise ContratoDoSdkInvalido(
+                    "ao_escolher so aceita acao de LEITURA: escolher uma "
+                    "sugestao nao pode gravar nada"
+                )
+            no["okmigoAoEscolher"] = self.ao_escolher.compilar()
         return no
 
 
