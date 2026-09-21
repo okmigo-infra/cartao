@@ -1122,7 +1122,17 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
                     f"o cartão manda autocompletar em '{buscar}', que não é uma "
                     "operação de leitura deste serviço"
                 )
-            return {
+            # ⭐ A consulta disparada ao ESCOLHER uma sugestão. Sem ela a
+            # busca só PREENCHE o campo, e quem escolhe um resultado fica
+            # olhando para a tela sem nada acontecer — o valor está lá e
+            # nenhuma ação o consome. Foi defeito de tela real (21/09).
+            #
+            # ⛔ Passa pelo MESMO `_consulta_de_acao` dos botões, então a
+            # operação tem de ser leitura declarada. Escrever ao escolher
+            # seria gravar por engano de toque, sem confirmação: um
+            # `Action.Submit` aqui simplesmente não vira nada.
+            ao_escolher = _consulta_de_acao(no.get("okmigoAoEscolher"))
+            saida_busca = {
                 "tipo": "escolha_livre",
                 **comum,
                 "campo": _txt(no.get("campo"), "titulo")[:60] or campo_id,
@@ -1134,6 +1144,9 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
                 "obrigatorio": bool(no.get("isRequired")),
                 "buscar": buscar or None,
             }
+            if ao_escolher:
+                saida_busca["ao_escolher"] = ao_escolher
+            return saida_busca
 
         # Lista vazia derruba o CAMPO (e a caixa em volta perde os botões — ver
         # `_perdeu_campo_obrigatorio`), não a tela: lista vazia é o caso normal

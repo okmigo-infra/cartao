@@ -57,7 +57,7 @@ Use `Painel` para o caso simples e `Secao` quando uma dessas intenções existir
 | texto | `CampoTexto` |
 | número sem perda de formato | `CampoNumero` |
 | lista, cards ou busca estrita | `Escolha`, `FormaDaEscolha`, `Opcao` |
-| autocomplete remoto livre | `Busca` |
+| autocomplete remoto livre | `Busca` (com `ao_escolher=Acao.consultar(...)` a escolha JÁ abre a tela) |
 | upload | `Arquivo`, `FormatoDeArquivo` |
 | formulário completo | `Formulario` |
 | leitura e escrita | `Acao`, `Acoes` |
