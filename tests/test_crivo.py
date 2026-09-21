@@ -12,6 +12,29 @@ def cartao(*corpo, **topo):
 
 
 class EstruturaTest(unittest.TestCase):
+    def test_caixas_clicaveis_aninhadas_nao_misturam_campos(self):
+        def acao(nome):
+            return {"type": "Action.Execute", "title": nome, "data": {"operacao": nome}}
+
+        tela, erro = validar(
+            cartao({
+                "type": "Container", "items": [
+                    {"type": "Input.Text", "id": "criterio_altas", "campo": "criterio", "value": "altas", "isVisible": False},
+                    {"type": "TextBlock", "text": "Maiores altas"},
+                    {"type": "Container", "items": [
+                        {"type": "Input.Text", "id": "ticker_petr4", "campo": "ticker", "value": "PETR4", "isVisible": False},
+                        {"type": "TextBlock", "text": "PETR4"},
+                    ], "selectAction": acao("detalhar_ativo")},
+                ], "selectAction": acao("ranking_do_mercado"),
+            }),
+            leituras={"detalhar_ativo", "ranking_do_mercado"},
+        )
+        self.assertIsNone(erro)
+        mae = tela["corpo"][0]
+        filha = next(item for item in mae["itens"] if item["tipo"] == "caixa")
+        self.assertEqual(mae["ao_tocar"]["campos"], ["criterio_altas"])
+        self.assertEqual(filha["ao_tocar"]["campos"], ["ticker_petr4"])
+
     def test_recusa_o_que_nao_e_cartao(self):
         for bruto, trecho in [
             (42, "objeto"),

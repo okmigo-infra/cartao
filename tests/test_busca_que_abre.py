@@ -51,6 +51,7 @@ class BuscaQueAbre(unittest.TestCase):
         no = _no_da_busca(tela, frozenset({"buscar_ativos", "detalhar_ativo"}))
         self.assertEqual(no["ao_escolher"]["consultar"], "detalhar_ativo")
         self.assertEqual(no["ao_escolher"]["titulo"], "Abrir")
+        self.assertEqual(no["ao_escolher"]["campos"], ["busca_universal"])
 
     def test_o_sdk_recusa_escrever_ao_escolher(self):
         """⛔ Gravar por engano de toque, sem confirmação."""

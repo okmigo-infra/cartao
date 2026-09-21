@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import html
 import importlib.util
+import inspect
 import json
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -119,11 +120,17 @@ def _respostas_do_preview(
                 raise ErroDePreview(
                     f"cada exemplo de {operacao!r} precisa do campo {campo!r}"
                 )
-            bruto = funcao(exemplo)
+            # Moldes de superfície são frequentemente fábricas sem dados:
+            # a expansão usa o `exemplo` logo abaixo. Fichas de detalhe, por
+            # outro lado, precisam dos dados para construir o próprio molde.
+            sem_argumentos = not inspect.signature(funcao).parameters
+            bruto = funcao() if sem_argumentos else funcao(exemplo)
             if hasattr(bruto, "compilar") and callable(bruto.compilar):
                 bruto = bruto.compilar()
             if not isinstance(bruto, dict):
                 raise ErroDePreview(f"{fabrica} não devolveu uma Tela compilável")
+            if sem_argumentos:
+                bruto = expandir(bruto, exemplo, [])
             tela, erro = validar(bruto, escrituras, leituras, config=Config())
             if erro or tela is None:
                 raise ErroDePreview(
