@@ -44,6 +44,7 @@ mesmo lugar.
 | navegação local | `Abas`, `FiltroSegmentado`, `Expansivel`, `Dialogo` |
 | dados densos | `TabelaFlexivel`, `LinhaDeTabela`, `CelulaDeTabela`, `Paginacao` |
 | leitura visual | `Etiqueta`, `Status`, `GaleriaDeImagens`, `LinhaDoTempo`, `BarraDeValor` |
+| leitura de dados | `Ranking`, `ItemDeRanking`, `Minigrafico`, `CabecalhoDeDetalhe`, `Comparador`, `CriterioComparado`, `ItemComparado`, `Agenda`, `ItemDaAgenda`, `EstadoDoDado` |
 
 `Secao` é o agrupamento completo: pode ter identidade, estado visível, tom
 semântico, grade, altura, comportamento ao toque e apresentação sobreposta.

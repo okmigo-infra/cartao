@@ -132,6 +132,15 @@ _MAX_COLUNAS = 16
 _MAX_LINHAS = 200
 _MAX_SERIES = 4
 _MAX_PONTOS = 24
+#: A família de leitura de dados (OMINFRA-625). A tendência aceita mais pontos
+#: que o gráfico porque não desenha rótulo em nenhum deles — são 48 fechamentos
+#: virando 40 px de linha, não 48 legendas para ler.
+_MAX_PONTOS_DA_TENDENCIA = 48
+_MAX_ITENS_DO_RANKING = 50
+_MAX_ITENS_COMPARADOS = 4
+_MAX_CRITERIOS_COMPARADOS = 24
+_MAX_ITENS_DA_AGENDA = 120
+_MAX_ETIQUETAS_DO_CABECALHO = 4
 _MAX_IMAGENS = 12
 _MAX_ETAPAS = 24
 #: O total de uma barra de progresso. «3 de 1000000» não é barra, é número.
@@ -168,6 +177,29 @@ _TONS_FINANCEIROS = {
 }
 _TONS_DE_ETIQUETA = {"neutro", "positivo", "atencao", "negativo", "informativo"}
 _ESTADOS_DA_ETAPA = {"concluida", "atual", "futura", "erro"}
+#: Por que a tela não tem o número que deveria ter. ⛔ `vazio` e `desatualizado`
+#: são estados DIFERENTES: o primeiro diz que não há nada, o segundo que o
+#: coletor parou — e o gesto que cada um pede não é o mesmo.
+_SITUACOES_DO_DADO = {
+    "carregando",
+    "vazio",
+    "parcial",
+    "desatualizado",
+    "erro",
+    "offline",
+    "sem_permissao",
+    "nao_aplicavel",
+}
+#: O quanto se sabe sobre um evento futuro. `previsto` nunca se desenha como
+#: `confirmado`: projeção do serviço e anúncio da companhia pesam diferente.
+_ESTADOS_DO_COMPROMISSO = {
+    "confirmado",
+    "anunciado",
+    "previsto",
+    "realizado",
+    "sem_data",
+    "cancelado",
+}
 _FORMATOS_DO_CAMPO = {
     "data",
     "hora",
@@ -482,6 +514,44 @@ def _consulta_de_acao(acao: Any) -> dict[str, Any] | None:
     if confirmacao:
         saida["confirmacao"] = confirmacao
     return saida
+
+
+def _escrita_de_acao(acao: Any) -> dict[str, Any] | None:
+    """Rebuild one `Action.Submit` — the write side of `_consulta_de_acao`.
+
+    Nasceu extraído do ramo `Action.Submit` do `ActionSet` (OMINFRA-625):
+    o cabeçalho de detalhe também carrega um gesto de escrita (favoritar), e
+    duas cópias da mesma conferência são duas chances de uma delas esquecer de
+    olhar `_escrituras` — que é a trava que impede o cartão de mandar gravar
+    numa operação que o serviço não declarou.
+    """
+    if not isinstance(acao, dict) or acao.get("type") != "Action.Submit":
+        return None
+    dados = acao.get("data")
+    operacao = (
+        _txt(dados.get("operacao"), "titulo")[:60] if isinstance(dados, dict) else ""
+    )
+    titulo = _txt(acao.get("title"), "titulo")[:40]
+    if not operacao or not titulo:
+        return None
+    if _escrituras.get() is not None and operacao not in _escrituras.get():
+        raise _Erro(
+            f"o cartão manda gravar em '{operacao}', que não é uma "
+            "operação de escrita deste serviço"
+        )
+    saida = {"titulo": titulo, "enviar": operacao, "enfase": _enfase(acao)}
+    icone = _icone_de_acao(acao)
+    if icone:
+        saida["icone"] = icone
+    confirmacao = _confirmacao_de_acao(acao)
+    if confirmacao:
+        saida["confirmacao"] = confirmacao
+    return saida
+
+
+def _gesto_de_item(acao: Any) -> dict[str, Any] | None:
+    """O toque de uma linha de dado: consulta, e só consulta."""
+    return _consulta_de_acao(acao)
 
 
 def _alvos_de_toggle(acao: Any) -> list[dict]:
@@ -1480,6 +1550,249 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
             "pontos": pontos,
         }
 
+    # ── A família de LEITURA DE DADOS ────────────────────────────────────
+    # Seis tipos que chegaram juntos (OMINFRA-625) porque respondem à mesma
+    # pergunta: como um produto de DADOS mostra número sem virar conselho.
+    # Duas regras atravessam todos: o `tom` é redundância do TEXTO que o
+    # serviço já formatou (cor nunca é a única pista) e o `base` — a data-base
+    # — viaja junto do número, porque «maior alta» sem data não é informação.
+
+    if tipo == "okmigoMinigrafico":
+        crus = no.get("valores")
+        crus = crus if isinstance(crus, list) else []
+        numeros = [
+            n
+            for v in crus[:_MAX_PONTOS_DA_TENDENCIA]
+            if (n := _numero_do_ponto(v)) is not None
+        ]
+        alternativa = _txt(no.get("alternativa"))
+        # ⛔ Sem alternativa textual o desenho NÃO passa. Um sparkline de 40 px
+        # sem eixo, sem legenda e sem texto é um dado que existe para quem
+        # enxerga e não existe para o resto — e é o único componente do
+        # catálogo em que a alternativa não tem como ser derivada do conteúdo.
+        if len(numeros) < 2 or not alternativa:
+            return None
+        return {
+            "tipo": "minigrafico",
+            **comum,
+            "rotulo": _txt(no.get("rotulo"), "titulo")[:60],
+            "valores": numeros,
+            "tom": no.get("tom") if no.get("tom") in _TONS_DE_ETIQUETA else "neutro",
+            "alternativa": alternativa,
+        }
+
+    if tipo == "okmigoRanking":
+        criterio = _txt(no.get("criterio"), "titulo")[:80]
+        titulo = _txt(no.get("titulo"), "titulo")[:80]
+        # ⛔ Ranking sem critério declarado cai inteiro. Uma lista ordenada que
+        # não diz POR QUE está nessa ordem é a maneira mais barata de
+        # transformar dado bruto em recomendação implícita.
+        if not titulo or not criterio:
+            return None
+        itens = []
+        for bruto in (no.get("itens") or [])[:_MAX_ITENS_DO_RANKING]:
+            if not isinstance(bruto, dict):
+                continue
+            rotulo = _txt(bruto.get("rotulo"), "titulo")[:80]
+            valor = _txt(bruto.get("valor"), "texto")[:40]
+            if not rotulo or not valor:
+                continue
+            contador[0] += 1  # cada posição conta como nó, igual à célula
+            item = {
+                # A POSIÇÃO é do crivo, na ordem recebida: item que traz o
+                # próprio número consegue mentir sobre a ordem, e quem lê
+                # acredita no número impresso, não na sequência.
+                "posicao": len(itens) + 1,
+                "id": _txt(bruto.get("id"), "valor")[:80],
+                "rotulo": rotulo,
+                "apoio": _txt(bruto.get("apoio"), "texto")[:120],
+                "valor": valor,
+                "variacao": _txt(bruto.get("variacao"), "texto")[:40],
+                "tom": bruto.get("tom")
+                if bruto.get("tom") in _TONS_DE_ETIQUETA
+                else "neutro",
+            }
+            tendencia = _reconstruir(bruto.get("tendencia"), contador)
+            if tendencia is not None and tendencia.get("tipo") == "minigrafico":
+                item["tendencia"] = tendencia
+            gesto = _gesto_de_item(bruto.get("aoTocar"))
+            if gesto:
+                item["ao_tocar"] = gesto
+            itens.append(item)
+        if not itens:
+            return None
+        saida = {
+            "tipo": "ranking",
+            **comum,
+            "titulo": titulo,
+            "criterio": criterio,
+            "base": _txt(no.get("base"), "titulo")[:80],
+            "universo": _txt(no.get("universo"), "titulo")[:80],
+            "nota": _txt(no.get("nota")),
+            "itens": itens,
+        }
+        ver_todos = _gesto_de_item(no.get("verTodos"))
+        if ver_todos:
+            saida["ver_todos"] = ver_todos
+        return saida
+
+    if tipo == "okmigoCabecalhoDeDetalhe":
+        titulo = _txt(no.get("titulo"), "titulo")[:120]
+        if not titulo:
+            return None
+        etiquetas = []
+        for bruta in (no.get("etiquetas") or [])[:_MAX_ETIQUETAS_DO_CABECALHO]:
+            reconstruida = _reconstruir(bruta, contador)
+            if reconstruida is not None and reconstruida.get("tipo") == "etiqueta":
+                etiquetas.append(reconstruida)
+        saida = {
+            "tipo": "cabecalho_de_detalhe",
+            **comum,
+            "titulo": titulo,
+            "subtitulo": _txt(no.get("subtitulo"), "texto")[:160],
+            "valor": _txt(no.get("valor"), "texto")[:40],
+            "variacao": _txt(no.get("variacao"), "texto")[:40],
+            "tom": no.get("tom") if no.get("tom") in _TONS_DE_ETIQUETA else "neutro",
+            "base": _txt(no.get("base"), "titulo")[:80],
+            "etiquetas": etiquetas,
+            "destacado": bool(no.get("destacado")),
+        }
+        # O favorito é a única escrita que um componente de leitura carrega, e
+        # passa pela MESMA conferência de `_escrituras` de qualquer botão.
+        destacar = _escrita_de_acao(no.get("destacar"))
+        if destacar:
+            saida["destacar"] = destacar
+        menu = _reconstruir(no.get("menu"), contador)
+        if menu is not None and menu.get("tipo") == "acoes":
+            saida["menu"] = menu
+        return saida
+
+    if tipo == "okmigoEstadoDoDado":
+        titulo = _txt(no.get("titulo"), "titulo")[:120]
+        if not titulo:
+            return None
+        saida = {
+            "tipo": "estado_do_dado",
+            **comum,
+            # Situação desconhecida vira `parcial`, nunca some e nunca vira
+            # `erro`: inventar gravidade que o serviço não declarou assusta
+            # quem lê por um defeito de vocabulário do cliente.
+            "situacao": no.get("situacao")
+            if no.get("situacao") in _SITUACOES_DO_DADO
+            else "parcial",
+            "titulo": titulo,
+            "explicacao": _txt(no.get("explicacao")),
+            "base": _txt(no.get("base"), "titulo")[:80],
+        }
+        acao = _gesto_de_item(no.get("acao")) or _escrita_de_acao(no.get("acao"))
+        if acao:
+            saida["acao"] = acao
+        return saida
+
+    if tipo == "okmigoComparador":
+        titulo = _txt(no.get("titulo"), "titulo")[:80]
+        itens = []
+        for bruto in (no.get("itens") or [])[:_MAX_ITENS_COMPARADOS]:
+            if not isinstance(bruto, dict):
+                continue
+            rotulo = _txt(bruto.get("rotulo"), "titulo")[:40]
+            if not rotulo:
+                continue
+            itens.append(
+                {
+                    "rotulo": rotulo,
+                    "apoio": _txt(bruto.get("apoio"), "texto")[:60],
+                    "id": _txt(bruto.get("id"), "valor")[:80],
+                }
+            )
+        # Comparar um item consigo mesmo não é comparação.
+        if not titulo or len(itens) < 2:
+            return None
+        criterios = []
+        for bruto in (no.get("criterios") or [])[:_MAX_CRITERIOS_COMPARADOS]:
+            if not isinstance(bruto, dict):
+                continue
+            rotulo = _txt(bruto.get("rotulo"), "titulo")[:60]
+            if not rotulo:
+                continue
+            contador[0] += 1
+            crus = bruto.get("valores")
+            crus = crus if isinstance(crus, list) else []
+            # ⛔ A lista é PRENSADA no tamanho de `itens`: valor faltando vira
+            # "" e o cliente desenha «—». Encurtar deslocaria a coluna e o
+            # número de um item apareceria embaixo de outro — a mesma regra do
+            # gráfico, pelo mesmo motivo.
+            valores = [_txt(v, "texto")[:40] for v in crus[: len(itens)]]
+            valores += [""] * (len(itens) - len(valores))
+            criterio = {
+                "rotulo": rotulo,
+                "valores": valores,
+                "explicacao": _txt(bruto.get("explicacao")),
+            }
+            melhor = bruto.get("melhor")
+            if isinstance(melhor, int) and not isinstance(melhor, bool):
+                if 0 <= melhor < len(itens) and valores[melhor]:
+                    criterio["melhor"] = melhor
+            criterios.append(criterio)
+        if not criterios:
+            return None
+        return {
+            "tipo": "comparador",
+            **comum,
+            "titulo": titulo,
+            "base": _txt(no.get("base"), "titulo")[:80],
+            "nota": _txt(no.get("nota")),
+            "itens": itens,
+            "criterios": criterios,
+        }
+
+    if tipo == "okmigoAgenda":
+        titulo = _txt(no.get("titulo"), "titulo")[:80]
+        if not titulo:
+            return None
+        itens = []
+        for bruto in (no.get("itens") or [])[:_MAX_ITENS_DA_AGENDA]:
+            if not isinstance(bruto, dict):
+                continue
+            rotulo = _txt(bruto.get("titulo"), "titulo")[:120]
+            if not rotulo:
+                continue
+            contador[0] += 1
+            estado = (
+                bruto.get("estado")
+                if bruto.get("estado") in _ESTADOS_DO_COMPROMISSO
+                else "anunciado"
+            )
+            data = _txt(bruto.get("data"), "titulo")[:40]
+            # Evento sem data não é descartado — é `sem_data`, que é um estado
+            # de verdade («provento anunciado, pagamento a definir»). O que
+            # não se faz é desenhá-lo na fila como se tivesse dia marcado.
+            if not data:
+                estado = "sem_data"
+            item = {
+                "id": _txt(bruto.get("id"), "valor")[:80],
+                "data": data,
+                "titulo": rotulo,
+                "apoio": _txt(bruto.get("apoio"), "texto")[:120],
+                "valor": _txt(bruto.get("valor"), "texto")[:40],
+                "estado": estado,
+            }
+            gesto = _gesto_de_item(bruto.get("aoTocar"))
+            if gesto:
+                item["ao_tocar"] = gesto
+            itens.append(item)
+        # ⭐ Agenda VAZIA sobrevive, ao contrário da tabela só com cabeçalho:
+        # «nenhum provento anunciado» é a resposta, não a falta dela.
+        return {
+            "tipo": "agenda",
+            **comum,
+            "titulo": titulo,
+            "base": _txt(no.get("base"), "titulo")[:80],
+            "vazio": _txt(no.get("vazio")) or "Nada agendado para o período.",
+            "agrupar_por_data": no.get("agruparPorData") is not False,
+            "itens": itens,
+        }
+
     if tipo == "ActionSet":
         # Três ações, e só três. `Action.ToggleVisibility` não ALCANÇA nada —
         # mostra e esconde o que já está no cartão; é o que permite abas e
@@ -1506,27 +1819,9 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
                     botoes.append(consulta)
                 continue
             if a.get("type") == "Action.Submit":
-                dados = a.get("data")
-                op = (
-                    _txt(dados.get("operacao"), "titulo")[:60]
-                    if isinstance(dados, dict)
-                    else ""
-                )
-                titulo = _txt(a.get("title"), "titulo")[:40]
-                if not op or not titulo:
+                botao = _escrita_de_acao(a)
+                if botao is None:
                     continue
-                if _escrituras.get() is not None and op not in _escrituras.get():
-                    raise _Erro(
-                        f"o cartão manda gravar em '{op}', que não é uma "
-                        "operação de escrita deste serviço"
-                    )
-                botao = {"titulo": titulo, "enviar": op, "enfase": _enfase(a)}
-                icone = _icone_de_acao(a)
-                if icone:
-                    botao["icone"] = icone
-                confirmacao = _confirmacao_de_acao(a)
-                if confirmacao:
-                    botao["confirmacao"] = confirmacao
                 # `okmigoAposEnviar`: a transição DEPOIS de salvar — um
                 # `ToggleVisibility` com estados booleanos EXPLÍCITOS. Sem URL,
                 # sem segunda escrita, sem alternância cega. É o que faz telas

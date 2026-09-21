@@ -148,6 +148,12 @@ _ENTRA_SAI: dict[str, set[str]] = {
     "okmigoCartaoBancario": {"cartao_bancario"},
     "okmigoDistribuicao": {"distribuicao"},
     "okmigoListaFinanceira": {"lista_financeira"},
+    "okmigoMinigrafico": {"minigrafico"},
+    "okmigoRanking": {"ranking"},
+    "okmigoCabecalhoDeDetalhe": {"cabecalho_de_detalhe"},
+    "okmigoEstadoDoDado": {"estado_do_dado"},
+    "okmigoComparador": {"comparador"},
+    "okmigoAgenda": {"agenda"},
 }
 #: Chaves que o crivo LÊ E DESCARTA de propósito — não é «comeu», é regra.
 _DESCARTADAS_DE_PROPOSITO = {
@@ -187,6 +193,12 @@ _POR_QUE_SOME = {
     "okmigoCartaoBancario": "nenhum cartão com título",
     "okmigoDistribuicao": "nenhum item com valor numérico",
     "okmigoListaFinanceira": "nenhum item com título",
+    "okmigoMinigrafico": "menos de dois valores numéricos, ou sem `alternativa` textual",
+    "okmigoRanking": "sem `titulo`, sem `criterio`, ou nenhum item com rótulo E valor",
+    "okmigoCabecalhoDeDetalhe": "sem `titulo`",
+    "okmigoEstadoDoDado": "sem `titulo`",
+    "okmigoComparador": "sem `titulo`, menos de dois itens com rótulo, ou nenhum critério",
+    "okmigoAgenda": "sem `titulo` — a agenda VAZIA não some, o vazio é a resposta",
     "Image": "só some quando cai num `fallback` de outro tipo — sem URL válida vira `sem_imagem`",
     "Container": "nunca some por si — o pai foi descartado",
 }
