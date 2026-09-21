@@ -8,6 +8,7 @@ from okmigo_cartao import (
     Acao,
     Aba,
     Abas,
+    Agenda,
     Acoes,
     AlvoDeVisibilidade,
     AoTocarODia,
@@ -20,6 +21,7 @@ from okmigo_cartao import (
     CampoData,
     CampoMoeda,
     CampoTelefone,
+    CabecalhoDeDetalhe,
     CartaoClicavel,
     CelulaDeTabela,
     Confirmacao,
@@ -27,7 +29,9 @@ from okmigo_cartao import (
     CampoTexto,
     CartaoFinanceiro,
     CartoesFinanceiros,
+    Comparador,
     Copiar,
+    CriterioComparado,
     Distribuicao,
     Documento,
     Dialogo,
@@ -35,6 +39,9 @@ from okmigo_cartao import (
     EnviarEAvancar,
     Escolha,
     EscolhaMultipla,
+    EstadoDaInformacao,
+    EstadoDoCompromisso,
+    EstadoDoDado,
     EstadoVazio,
     Evento,
     EtapaDaLinhaDoTempo,
@@ -53,9 +60,14 @@ from okmigo_cartao import (
     LinhaDeTabela,
     LinhaDoTempo,
     Metrica,
+    ItemComparado,
+    ItemDaAgenda,
+    ItemDeRanking,
     MenuDeAcoes,
+    Minigrafico,
     Navegacao,
     Opcao,
+    Ranking,
     Progresso,
     SeletorDeQuantidade,
     Secao,
@@ -260,6 +272,99 @@ FINANCEIRO = Tela(
 )
 
 
+COMPONENTES_DE_DADOS = (
+        CabecalhoDeDetalhe(
+            "SANB11",
+            valor="R$ 27,35",
+            subtitulo="Santander Brasil · Unit",
+            variacao="↓ -0,80%",
+            tom=TomDaEtiqueta.NEGATIVO,
+            base="fechamento de 19/09",
+            etiquetas=(Etiqueta("Unit"), Etiqueta("Bancos")),
+            destacar=Acao.escrever("Favoritar", "salvar_item"),
+            menu=MenuDeAcoes((Acao.consultar("Comparar", "detalhar_item"),)),
+        ),
+        Ranking(
+            "Maiores altas do dia",
+            "variação percentual, fechamento ajustado",
+            (
+                ItemDeRanking(
+                    "PETR4",
+                    "R$ 38,20",
+                    apoio="Petrobras PN",
+                    variacao="↑ +2,41%",
+                    tom=TomDaEtiqueta.POSITIVO,
+                    id="PETR4",
+                    tendencia=Minigrafico(
+                        (34.1, 35.0, 36.4, 37.3, 38.2),
+                        "subiu em cinco pregões seguidos",
+                        tom=TomDaEtiqueta.POSITIVO,
+                    ),
+                    ao_tocar=Acao.consultar("Abrir PETR4", "detalhar_item"),
+                ),
+                ItemDeRanking(
+                    "VALE3",
+                    "R$ 54,10",
+                    apoio="Vale ON",
+                    variacao="↑ +1,02%",
+                    tom=TomDaEtiqueta.POSITIVO,
+                    id="VALE3",
+                ),
+            ),
+            base="fechamento de 19/09/2026",
+            universo="308 ativos com liquidez mínima; 14 descartados sem preço",
+            nota="Lista informativa, ordenada pelo critério declarado. Não é recomendação.",
+            ver_todos=Acao.consultar("Ver todos", "detalhar_item"),
+        ),
+        Comparador(
+            "PETR4 × VALE3",
+            (ItemComparado("PETR4", "Petrobras"), ItemComparado("VALE3", "Vale")),
+            (
+                CriterioComparado(
+                    "P/L", ("8,20x", "5,10x"), "preço sobre lucro",
+                    melhor=1, rotulo_do_melhor="menor",
+                ),
+                CriterioComparado("Dividend yield 12m", ("14,2%", ""), "provento sobre preço"),
+            ),
+            base="indicadores de 19/09",
+            nota="Critérios objetivos, sem nota final: somar naturezas diferentes seria recomendar.",
+        ),
+        Agenda(
+            "Próximos proventos",
+            (
+                ItemDaAgenda(
+                    "02/10/2026",
+                    "PETR4 · dividendo",
+                    apoio="data-com 20/09",
+                    valor="R$ 0,72/ação",
+                    estado=EstadoDoCompromisso.ANUNCIADO,
+                ),
+                ItemDaAgenda(
+                    "",
+                    "HGLG11 · rendimento",
+                    apoio="informe ainda sem data de pagamento",
+                    estado=EstadoDoCompromisso.SEM_DATA,
+                ),
+            ),
+            base="eventos coletados em 19/09",
+        ),
+        EstadoDoDado(
+            EstadoDaInformacao.DESATUALIZADO,
+            "Indicadores de ontem",
+            "A sincronização das 18h não rodou; os preços são do fechamento anterior.",
+            base="19/09/2026 18:00",
+            acao=Acao.consultar("Tentar de novo", "detalhar_item"),
+        ),
+)
+
+DADOS = Tela(
+    "Leitura de dados",
+    COMPONENTES_DE_DADOS,
+    tema=Tema.MERCADO,
+    navegacao=Navegacao.INFERIOR,
+)
+
+
 UNIVERSAIS = Tela(
     "Componentes universais",
     (
@@ -273,6 +378,11 @@ UNIVERSAIS = Tela(
                         Status("Operação normal", TomDaEtiqueta.POSITIVO),
                         BarraDeValor("Limite usado", 42, 100, "42%"),
                     ),
+                ),
+                Aba(
+                    "dados",
+                    "Dados",
+                    COMPONENTES_DE_DADOS,
                 ),
                 Aba(
                     "andamento",
