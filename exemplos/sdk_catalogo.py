@@ -272,9 +272,7 @@ FINANCEIRO = Tela(
 )
 
 
-DADOS = Tela(
-    "Leitura de dados",
-    (
+COMPONENTES_DE_DADOS = (
         CabecalhoDeDetalhe(
             "SANB11",
             valor="R$ 27,35",
@@ -322,7 +320,10 @@ DADOS = Tela(
             "PETR4 × VALE3",
             (ItemComparado("PETR4", "Petrobras"), ItemComparado("VALE3", "Vale")),
             (
-                CriterioComparado("P/L", ("8,20x", "5,10x"), "preço sobre lucro", melhor=1),
+                CriterioComparado(
+                    "P/L", ("8,20x", "5,10x"), "preço sobre lucro",
+                    melhor=1, rotulo_do_melhor="menor",
+                ),
                 CriterioComparado("Dividend yield 12m", ("14,2%", ""), "provento sobre preço"),
             ),
             base="indicadores de 19/09",
@@ -354,7 +355,11 @@ DADOS = Tela(
             base="19/09/2026 18:00",
             acao=Acao.consultar("Tentar de novo", "detalhar_item"),
         ),
-    ),
+)
+
+DADOS = Tela(
+    "Leitura de dados",
+    COMPONENTES_DE_DADOS,
     tema=Tema.MERCADO,
     navegacao=Navegacao.INFERIOR,
 )
@@ -373,6 +378,11 @@ UNIVERSAIS = Tela(
                         Status("Operação normal", TomDaEtiqueta.POSITIVO),
                         BarraDeValor("Limite usado", 42, 100, "42%"),
                     ),
+                ),
+                Aba(
+                    "dados",
+                    "Dados",
+                    COMPONENTES_DE_DADOS,
                 ),
                 Aba(
                     "andamento",
@@ -472,7 +482,6 @@ APLICATIVO = Aplicativo(
         _superficie("formulario", "Formulário", "perfil", FORMULARIO),
         _superficie("agenda", "Agenda", "agenda", AGENDA),
         _superficie("financeiro", "Financeiro", "financeiro", FINANCEIRO),
-        _superficie("dados", "Dados", "mercado", DADOS),
         _superficie("universais", "Universais", "mais", UNIVERSAIS),
     ),
 )

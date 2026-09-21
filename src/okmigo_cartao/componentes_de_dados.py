@@ -356,9 +356,16 @@ class CriterioComparado:
     valores: tuple[str, ...]
     explicacao: str = ""
     melhor: int | None = None
+    rotulo_do_melhor: str = "destaque"
 
     def __post_init__(self) -> None:
         _obrigatorio(self.rotulo, "rotulo do criterio")
+        # ⛔ O rótulo do destaque é DECLARADO porque «melhor» depende do
+        # critério, e o cliente não sabe qual. A tela mostrou isto: com o
+        # texto fixo «maior», o menor P/L — que é o extremo desejável —
+        # aparecia rotulado como «maior» ao lado de 5,10x contra 8,20x.
+        if self.melhor is not None:
+            _obrigatorio(self.rotulo_do_melhor, "rotulo do destaque")
         if self.melhor is not None and not 0 <= self.melhor < len(self.valores):
             raise ContratoDoSdkInvalido("indice de melhor fora dos valores")
 
@@ -370,6 +377,7 @@ class CriterioComparado:
         }
         if self.melhor is not None:
             compilado["melhor"] = self.melhor
+            compilado["rotuloDoMelhor"] = self.rotulo_do_melhor
         return compilado
 
 

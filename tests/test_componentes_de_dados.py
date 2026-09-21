@@ -331,6 +331,45 @@ class ComparadorTest(unittest.TestCase):
         with self.assertRaises(ContratoDoSdkInvalido):
             Comparador("x", (ItemComparado("A"),), (CriterioComparado("P/L", ("1",)),))
 
+    def test_o_rotulo_do_destaque_e_declarado_porque_menor_as_vezes_e_melhor(self):
+        # ⛔ A tela mostrou isto: com o texto fixo «maior», o MENOR P/L — que é
+        # o extremo desejável — aparecia rotulado «maior» ao lado de 5,10x
+        # contra 8,20x. Quem sabe o sentido do critério é o serviço.
+        comparador = Comparador(
+            "PETR4 × VALE3",
+            (ItemComparado("PETR4"), ItemComparado("VALE3")),
+            (
+                CriterioComparado(
+                    "P/L", ("8,20x", "5,10x"), melhor=1, rotulo_do_melhor="menor"
+                ),
+            ),
+        )
+        no = _corpo(Tela("Comparar", (comparador,)))
+        self.assertEqual(no["criterios"][0]["rotulo_do_melhor"], "menor")
+
+    def test_sem_rotulo_declarado_o_destaque_e_neutro(self):
+        tela = {
+            "type": "AdaptiveCard",
+            "version": "1.5",
+            "body": [
+                {
+                    "type": "okmigoComparador",
+                    "titulo": "A × B",
+                    "itens": [{"rotulo": "A"}, {"rotulo": "B"}],
+                    "criterios": [{"rotulo": "P/L", "valores": ["1", "2"], "melhor": 0}],
+                }
+            ],
+        }
+        reconstruida, _ = validar(tela)
+        # Nunca «maior»: a palavra neutra não mente em nenhum critério.
+        self.assertEqual(
+            reconstruida["corpo"][0]["criterios"][0]["rotulo_do_melhor"], "destaque"
+        )
+
+    def test_marcar_melhor_sem_rotulo_no_sdk_recusa(self):
+        with self.assertRaises(ContratoDoSdkInvalido):
+            CriterioComparado("P/L", ("1", "2"), melhor=0, rotulo_do_melhor="  ")
+
     def test_melhor_apontando_para_valor_ausente_e_descartado(self):
         # Eleger como "melhor" a coluna que está vazia é marcar o buraco.
         tela = {

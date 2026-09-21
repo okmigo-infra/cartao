@@ -1733,6 +1733,12 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
             if isinstance(melhor, int) and not isinstance(melhor, bool):
                 if 0 <= melhor < len(itens) and valores[melhor]:
                     criterio["melhor"] = melhor
+                    # ⛔ Fixar «maior» aqui seria mentir metade das vezes: no
+                    # P/L o extremo desejável é o MENOR. Quem sabe o sentido
+                    # do critério é o serviço, então é ele que nomeia.
+                    criterio["rotulo_do_melhor"] = (
+                        _txt(bruto.get("rotuloDoMelhor"), "titulo")[:24] or "destaque"
+                    )
             criterios.append(criterio)
         if not criterios:
             return None
