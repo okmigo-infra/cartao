@@ -1145,6 +1145,11 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
                 "buscar": buscar or None,
             }
             if ao_escolher:
+                # A escolha consulta somente o valor desta busca. Outros
+                # campos do cartão (por exemplo, tickers ocultos em cards de
+                # favoritos) podem ter o mesmo nome de argumento e sobrescrever
+                # o valor recém-escolhido se a consulta enviar o cartão todo.
+                ao_escolher["campos"] = [campo_id]
                 saida_busca["ao_escolher"] = ao_escolher
             return saida_busca
 
@@ -1675,6 +1680,9 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
         destacar = _escrita_de_acao(no.get("destacar"))
         if destacar:
             saida["destacar"] = destacar
+        desfazer_destaque = _escrita_de_acao(no.get("desfazerDestaque"))
+        if desfazer_destaque:
+            saida["desfazer_destaque"] = desfazer_destaque
         menu = _reconstruir(no.get("menu"), contador)
         if menu is not None and menu.get("tipo") == "acoes":
             saida["menu"] = menu
@@ -1927,6 +1935,11 @@ def _campos_de(itens: list[dict]) -> list[str]:
     saida: list[str] = []
     for it in itens:
         if not isinstance(it, dict):
+            continue
+        # Uma caixa clicável dentro de outra é uma ação independente (por
+        # exemplo, linha de ativo dentro do card do ranking). Os campos da
+        # linha pertencem ao toque nela, nunca ao card externo.
+        if it.get("tipo") == "caixa" and it.get("ao_tocar"):
             continue
         if it.get("tipo") in (
             "campo",

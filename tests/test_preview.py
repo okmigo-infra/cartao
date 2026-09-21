@@ -312,6 +312,9 @@ from okmigo_cartao.sdk import Acao, Acoes, Aplicativo, Fonte, Superficie, Tela, 
 def detalhe(dados):
     return Tela(dados["ticker"], (Texto("Ficha completa"),))
 
+def lista():
+    return Tela("{titulo}", (Texto("Critério: {criterio}"),))
+
 APLICATIVO = Aplicativo(
     slug="exemplo",
     endpoint="http://exemplo.internal/mcp/",
@@ -320,11 +323,11 @@ APLICATIVO = Aplicativo(
     descricao_humana="Exemplo navegável",
     nome_visivel="Exemplo SDK",
     versao="1.0.0",
-    conversa=("detalhar",),
+    conversa=("detalhar", "ranking"),
     superficies=(
         Superficie(
             "ativos", "Ativos", "Ativos", "ativos", "lista", Fonte("ativos"),
-            Tela("Ativos", (Acoes((Acao.consultar("Abrir", "detalhar"),)),)),
+            Tela("Ativos", (Acoes((Acao.consultar("Abrir", "detalhar"), Acao.consultar("Ranking", "ranking"))),)),
         ),
     ),
 )
@@ -339,7 +342,12 @@ APLICATIVO = Aplicativo(
                         "campo": "ticker",
                         "voltar_para": "ativos",
                         "exemplos": [{"ticker": "SANB11"}],
-                    }
+                    },
+                    {
+                        "operacao": "ranking", "fabrica": "lista",
+                        "campo": "criterio", "voltar_para": "ativos",
+                        "exemplos": [{"criterio": "maiores_altas", "titulo": "Maiores altas"}],
+                    },
                 ]
             },
         }
@@ -359,6 +367,7 @@ APLICATIVO = Aplicativo(
         self.assertEqual("SANB11", aplicativo["respostas"][0]["valor"])
         self.assertIn('"valor":"SANB11"', documento)
         self.assertIn("Ficha completa", documento)
+        self.assertIn("Critério: maiores_altas", documento)
         self.assertIn("Sem resposta de demonstração", documento)
         self.assertIn("Voltar para", documento)
 

@@ -296,6 +296,25 @@ class CabecalhoDeDetalheTest(unittest.TestCase):
         _, erro = validar(tela.compilar(), escrituras={"favoritar"})
         self.assertIn("fantasma", erro)
 
+    def test_estrela_declara_as_duas_escritas_e_o_estado(self):
+        tela = Tela("VALE3", (CabecalhoDeDetalhe(
+            "VALE3", destacado=True,
+            destacar=Acao.escrever("Favoritar", "favoritar"),
+            desfazer_destaque=Acao.escrever("Desfavoritar", "desfavoritar"),
+        ),))
+        reconstruida, erro = validar(
+            tela.compilar(), escrituras={"favoritar", "desfavoritar"},
+        )
+        self.assertIsNone(erro)
+        cabecalho = next(no for no in reconstruida["corpo"]
+                         if no["tipo"] == "cabecalho_de_detalhe")
+        self.assertTrue(cabecalho["destacado"])
+        self.assertEqual(cabecalho["destacar"]["enviar"], "favoritar")
+        self.assertEqual(cabecalho["desfazer_destaque"]["enviar"], "desfavoritar")
+
+        _, erro = validar(tela.compilar(), escrituras={"favoritar"})
+        self.assertIn("desfavoritar", erro)
+
     def test_mais_de_quatro_etiquetas_o_sdk_recusa(self):
         with self.assertRaises(ContratoDoSdkInvalido):
             CabecalhoDeDetalhe("X", etiquetas=tuple(Etiqueta(f"e{i}") for i in range(5)))

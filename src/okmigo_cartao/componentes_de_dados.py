@@ -247,6 +247,7 @@ class CabecalhoDeDetalhe:
     etiquetas: tuple[Etiqueta, ...] = ()
     destacar: Acao | None = None
     destacado: bool = False
+    desfazer_destaque: Acao | None = None
     menu: MenuDeAcoes | None = None
 
     def __post_init__(self) -> None:
@@ -281,6 +282,8 @@ class CabecalhoDeDetalhe:
         }
         if self.destacar is not None:
             compilado["destacar"] = self.destacar.compilar()
+        if self.desfazer_destaque is not None:
+            compilado["desfazerDestaque"] = self.desfazer_destaque.compilar()
         if self.menu is not None:
             compilado["menu"] = self.menu.compilar()
         return compilado
