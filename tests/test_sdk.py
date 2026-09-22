@@ -38,6 +38,17 @@ from okmigo_cartao.sdk import (
 
 
 class SdkTest(unittest.TestCase):
+    def test_convite_declara_outros_destinos_sem_mudar_o_par_do_aceite(self):
+        convite = Convite("aceitar_convite", "de", "prediomeu-morador",
+                          pares=("prediomeu-admin",))
+        self.assertEqual(convite.compilar(), {
+            "operacao": "aceitar_convite", "parametro": "de",
+            "par": "prediomeu-morador", "pares": ["prediomeu-admin"],
+        })
+        self.assertNotIn("pares", Convite("aceitar", "de", "morador").compilar())
+        with self.assertRaises(ContratoDoSdkInvalido):
+            Convite("aceitar", "de", "morador", pares=("morador",))
+
     def test_adaptador_leva_app_existente_ao_preview_e_aplica_intencoes(self):
         bruto = {
             "slug": "produto-legado",

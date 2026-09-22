@@ -768,14 +768,24 @@ class Convite:
     operacao: str
     parametro: str
     par: str
+    pares: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         _nome(self.operacao, "operacao do convite")
         _nome(self.parametro, "parametro do convite")
         _nome(self.par, "par do convite")
+        if len(self.pares) > 4 or len(set(self.pares)) != len(self.pares):
+            raise ContratoDoSdkInvalido("convite aceita ate quatro pares adicionais distintos")
+        for adicional in self.pares:
+            _nome(adicional, "par adicional do convite")
+            if adicional == self.par:
+                raise ContratoDoSdkInvalido("par adicional ja e o par principal")
 
     def compilar(self) -> Json:
-        return {"operacao": self.operacao, "parametro": self.parametro, "par": self.par}
+        convite: Json = {"operacao": self.operacao, "parametro": self.parametro, "par": self.par}
+        if self.pares:
+            convite["pares"] = list(self.pares)
+        return convite
 
 
 @dataclass(frozen=True, slots=True)
