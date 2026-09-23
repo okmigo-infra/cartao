@@ -164,3 +164,58 @@ quatro — sem condicional, sem laço, sem expressão:
   sobre uma lista **de dentro do item da vez** (a sublista de um cartão), com
   teto de 50 — dentro de um item repetido a lista da superfície chega vazia,
   senão seria N×N.
+
+## 6 · O agente de domínio (0.17.0, contrato 1)
+
+Um serviço pode declarar um **agente** que entende o domínio dele: o
+vocabulário, as ambiguidades comuns e qual ferramenta resolve o quê. O MCP
+continua sendo a fronteira determinística para dado e ação. **O agente fica
+em cima do MCP, nunca no lugar dele.** Sem o bloco, nada muda: o serviço
+segue só com as operações da `conversa`.
+
+```python
+agente=AgenteDeDominio(
+    competencias=("comparar papéis da B3", "cotação e fundamentos"),
+    ferramentas=("get_quotes", "comparar_ativos_resumo"),
+    instrucoes="Ticker inexistente vira pergunta com as opções; nunca escolha pela pessoa.",
+    exemplos=(Exemplo("sanb11 × itub11", "precisa_esclarecer"),),
+    orcamento=Orcamento(chamadas=3, tokens=12_000, segundos=20),
+)
+```
+
+- **`modo="declarado"`** (o padrão): o consumidor executa o agente com as
+  instruções declaradas e só com as `ferramentas` listadas. A mensagem da
+  pessoa não sai do consumidor; o serviço recebe só os parâmetros das
+  ferramentas, como sempre. **`modo="remoto"`** fica previsto: o serviço
+  executa o agente atrás de UMA operação MCP (`operacao`).
+- ⛔ **O SDK recusa**:
+  - ferramenta fora da `conversa`;
+  - agente declarado sem ferramenta (ele só poderia responder de cabeça);
+  - instruções acima de 4.000 caracteres;
+  - orçamento acima do teto (4 chamadas, 20 mil tokens, 30 s);
+  - contrato de MAJOR desconhecida;
+  - e, no JSON cru (`AgenteDeDominio.de_json`), qualquer campo desconhecido.
+- ⛔ **As instruções não são lugar de regra de negócio.** Elas descrevem
+  vocabulário e uso das ferramentas. A regra mora na operação MCP, onde é
+  testável. O teto existe para isso.
+- As ferramentas são de **leitura**. Escrita só existe como resposta
+  `acao_proposta`, e quem executa é o portão de confirmação do consumidor,
+  no turno seguinte. O SDK não conhece os efeitos das operações, então essa
+  conferência é feita pelo consumidor, ao registrar.
+
+### As quatro respostas
+
+`validar_resposta()` aceita quatro formas, e só quatro:
+
+| `forma` | campos |
+|---|---|
+| `respondido` | `texto`, `fatos` [{`rotulo`, `valor`}], `fontes` [texto], `data_base` |
+| `precisa_esclarecer` | `pergunta`, `opcoes` [texto], `continuacao`? (opaca, assinada pelo consumidor) |
+| `acao_proposta` | `operacao`, `parametros`, `resumo` (e nunca `executado` nem `confirmado`) |
+| `indisponivel` | `codigo` (lista fechada), `mensagem_segura`, `recuperavel` |
+
+⛔ Não existe «quase respondido». Uma resposta fora destas formas levanta
+`RespostaDeAgenteInvalida`, e o consumidor cai para as operações da
+`conversa`. `data_base` é obrigatória porque número sem data é lido como
+número de hoje. Os códigos de `indisponivel` são `dado_ausente`,
+`fonte_indisponivel`, `limite`, `fora_do_dominio` e `falha_interna`.
