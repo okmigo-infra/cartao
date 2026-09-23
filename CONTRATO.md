@@ -183,11 +183,13 @@ agente=AgenteDeDominio(
 )
 ```
 
-- **`modo="declarado"`** (o padrão): o consumidor executa o agente com as
-  instruções declaradas e só com as `ferramentas` listadas. A mensagem da
-  pessoa não sai do consumidor; o serviço recebe só os parâmetros das
-  ferramentas, como sempre. **`modo="remoto"`** fica previsto: o serviço
-  executa o agente atrás de UMA operação MCP (`operacao`).
+- **`modo="declarado"`** (o padrão, e o único que o OkMigo aceita): o
+  consumidor executa o agente com as instruções declaradas e só com as
+  `ferramentas` listadas. A mensagem da pessoa não sai do consumidor; o
+  serviço recebe só os parâmetros das ferramentas, como sempre.
+  ⛔ `modo="remoto"` existe no tipo, mas o OkMigo o **recusa no registro**:
+  nele o pedido em linguagem natural sairia para o modelo do serviço, e essa
+  fronteira não se abre.
 - ⛔ **O SDK recusa**:
   - ferramenta fora da `conversa`;
   - agente declarado sem ferramenta (ele só poderia responder de cabeça);
