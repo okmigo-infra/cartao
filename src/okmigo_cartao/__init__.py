@@ -12,6 +12,14 @@ crivo não entende SOME em silêncio — e é para ver o que sumiu que existe o
 
 from .casca import casca, expandir, relatorio
 from .artefatos import manifesto_confere, materializar_manifesto
+from .agente import (
+    AgenteDeDominio,
+    AgenteInvalido,
+    Exemplo,
+    Orcamento,
+    RespostaDeAgenteInvalida,
+    validar_resposta,
+)
 from .crivo import (
     ALINHAMENTOS,
     ALTURAS_CAIXA,
@@ -185,6 +193,12 @@ from .componentes_avancados import (
 )
 
 __all__ = [
+    "AgenteDeDominio",
+    "AgenteInvalido",
+    "Exemplo",
+    "Orcamento",
+    "RespostaDeAgenteInvalida",
+    "validar_resposta",
     "ALINHAMENTOS",
     "ALTURAS_CAIXA",
     "ALTURAS_IMG",

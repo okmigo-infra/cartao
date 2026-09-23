@@ -16,6 +16,8 @@ from enum import StrEnum
 from typing import Any, Protocol, Self
 from urllib.parse import urlsplit
 
+from .agente import AgenteDeDominio, AgenteInvalido
+
 Json = dict[str, Any]
 _NOME = re.compile(
     r"^(?:[A-Za-z][A-Za-z0-9_.-]*|\{[A-Za-z][A-Za-z0-9_.-]*\})"
@@ -1152,6 +1154,9 @@ class Aplicativo:
     tenant_sondagem: str | None = None
     credencial_sondagem: str | None = None
     vitrine_url: str | None = None
+    #: ⭐ O agente de domínio (contrato 1, ADR 001 do okmigo). Sem ele, o
+    #: serviço segue só MCP — é a compatibilidade, não um modo degradado.
+    agente: AgenteDeDominio | None = None
     extras: Mapping[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -1172,6 +1177,11 @@ class Aplicativo:
         if self.conversa is not None:
             for operacao in self.conversa:
                 _nome(operacao, "operacao de conversa")
+        if self.agente is not None:
+            try:
+                self.agente.conferir_conversa(self.conversa)
+            except AgenteInvalido as erro:
+                raise ContratoDoSdkInvalido(str(erro)) from erro
         reservadas = {
             "slug", "endpoint", "forma", "para_tipo", "descricao",
             "descricao_humana", "nome_visivel", "versao", "conversa",
@@ -1182,7 +1192,7 @@ class Aplicativo:
             "convite", "quer_a_marca", "aceita_contato", "publico",
             "marca_horario", "recebe_documento", "so_por_convite",
             "em_breve", "tipo",
-            "tenant_sondagem", "credencial_sondagem", "vitrine_url",
+            "tenant_sondagem", "credencial_sondagem", "vitrine_url", "agente",
         }
         conflito = reservadas.intersection(self.extras)
         if conflito:
@@ -1235,6 +1245,8 @@ class Aplicativo:
             aplicativo["so_por_convite"] = True
         if self.em_breve:
             aplicativo["em_breve"] = True
+        if self.agente is not None:
+            aplicativo["agente"] = self.agente.compilar()
         return aplicativo
 
 
