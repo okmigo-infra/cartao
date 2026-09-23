@@ -13,6 +13,7 @@ import importlib.util
 import inspect
 import json
 import sys
+from copy import deepcopy
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from importlib.resources import files
 from pathlib import Path
@@ -378,15 +379,19 @@ def construir_aplicativo(
             }
         )
     respostas = _respostas_do_preview(modulo, dados_lidos, esc_final, lei_final)
-    return (
-        {
+    aplicativo = {
             "nome": str(
                 manifesto.get("nome_visivel") or manifesto.get("slug") or caminho.stem
             )[:40],
             "atual": prontas[0]["nome"],
             "superficies": prontas,
             "respostas": respostas,
-        },
+        }
+    navegacao = manifesto.get("navegacao")
+    if isinstance(navegacao, dict):
+        aplicativo["navegacao"] = deepcopy(navegacao)
+    return (
+        aplicativo,
         esc_final,
         lei_final,
     )

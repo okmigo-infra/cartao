@@ -55,6 +55,134 @@ class Navegacao(StrEnum):
     INFERIOR = "inferior"
 
 
+#: Os ícones de tela que os DOIS clientes do OkMigo (web e app) desenham.
+#:
+#: ⛔ Um nome fora daqui não quebra nada — o cliente desenha um ícone padrão —
+#: e é exatamente esse o defeito: todas as abas viram a mesma casinha, sem
+#: erro em lugar nenhum. Aconteceu duas vezes com os ícones das SUPERFÍCIES
+#: (que este SDK não confere, por compatibilidade). O grupo de navegação é novo
+#: e nasce conferido. Ícone novo entra aqui junto com o desenho nos clientes.
+ICONES_DE_TELA: frozenset[str] = frozenset({
+    "agenda", "alunos", "ano", "arquivo", "ativos", "avisos", "balcao",
+    "bloqueios", "cardapio", "carteira", "cartoes", "categorias", "chamados",
+    "clientes", "cobrancas", "comunicados", "contador", "contas", "cozinha",
+    "cvm", "desempenho", "enviados", "enviar", "espacos", "especialidade",
+    "evolucao", "expediente", "extrato", "fiis", "gestao", "hoje", "inicio",
+    "local", "meu-lar", "meu-predio", "nutricao", "pacientes", "patio",
+    "pendencias", "perfil", "predio", "radar", "recebidos", "regras",
+    "renda-fixa", "salao", "sem_assunto", "servicos", "sorteios", "treino",
+    "visao-geral",
+})
+
+
+@dataclass(frozen=True, slots=True)
+class GrupoDeNavegacao:
+    """Um destino principal e as telas relacionadas que vivem dentro dele.
+
+    O grupo vira um item da barra inferior. As ``superficies`` viram abas
+    horizontais no topo; ``inicial`` define qual delas abre ao trocar de grupo.
+    """
+
+    nome: str
+    rotulo: str
+    icone: str
+    superficies: tuple[str, ...]
+    inicial: str | None = None
+
+    def __post_init__(self) -> None:
+        _nome(self.nome, "nome do grupo de navegacao")
+        _nome(self.icone, "icone do grupo de navegacao")
+        if self.icone not in ICONES_DE_TELA:
+            raise ContratoDoSdkInvalido(
+                f"icone {self.icone!r} do grupo {self.nome!r} nao e desenhado "
+                "pelos clientes do OkMigo — viraria o icone padrao, igual aos "
+                "outros; use um de ICONES_DE_TELA"
+            )
+        if not self.rotulo.strip():
+            raise ContratoDoSdkInvalido(
+                "grupo de navegacao precisa de rotulo"
+            )
+        if not self.superficies:
+            raise ContratoDoSdkInvalido(
+                f"grupo de navegacao {self.nome!r} precisa de superficies"
+            )
+        repetidas = {
+            nome for nome in self.superficies
+            if self.superficies.count(nome) > 1
+        }
+        for superficie in self.superficies:
+            _nome(superficie, "superficie do grupo de navegacao")
+        if repetidas:
+            raise ContratoDoSdkInvalido(
+                f"grupo de navegacao {self.nome!r} repete superficies: "
+                + ", ".join(sorted(repetidas))
+            )
+        if self.inicial is not None and self.inicial not in self.superficies:
+            raise ContratoDoSdkInvalido(
+                f"superficie inicial {self.inicial!r} nao pertence ao grupo "
+                f"{self.nome!r}"
+            )
+
+    def compilar(self) -> Json:
+        return {
+            "nome": self.nome,
+            "rotulo": self.rotulo,
+            "icone": self.icone,
+            "superficies": list(self.superficies),
+            "inicial": self.inicial or self.superficies[0],
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class NavegacaoAgrupada:
+    """Navegação em até cinco áreas, sem transformar a última em gaveta."""
+
+    grupos: tuple[GrupoDeNavegacao, ...]
+
+    def __post_init__(self) -> None:
+        if not 2 <= len(self.grupos) <= 5:
+            raise ContratoDoSdkInvalido(
+                "navegacao agrupada precisa ter de 2 a 5 grupos"
+            )
+        nomes = [grupo.nome for grupo in self.grupos]
+        repetidos = {nome for nome in nomes if nomes.count(nome) > 1}
+        if repetidos:
+            raise ContratoDoSdkInvalido(
+                "navegacao agrupada repete grupos: "
+                + ", ".join(sorted(repetidos))
+            )
+
+    def conferir(self, superficies: tuple[str, ...]) -> None:
+        declaradas = [
+            superficie
+            for grupo in self.grupos
+            for superficie in grupo.superficies
+        ]
+        repetidas = {
+            nome for nome in declaradas if declaradas.count(nome) > 1
+        }
+        desconhecidas = set(declaradas) - set(superficies)
+        ausentes = set(superficies) - set(declaradas)
+        problemas = []
+        if repetidas:
+            problemas.append("repetidas: " + ", ".join(sorted(repetidas)))
+        if desconhecidas:
+            problemas.append(
+                "desconhecidas: " + ", ".join(sorted(desconhecidas))
+            )
+        if ausentes:
+            problemas.append("sem grupo: " + ", ".join(sorted(ausentes)))
+        if problemas:
+            raise ContratoDoSdkInvalido(
+                "navegacao agrupada nao cobre as superficies exatamente uma vez ("
+                + "; ".join(problemas)
+                + ")"
+            )
+
+    def compilar(self) -> Json:
+        return {"tipo": "agrupada", "grupos": _compilar(self.grupos)}
+
+
 class PapelDoTexto(StrEnum):
     TITULO = "titulo"
     SECAO = "secao"
@@ -1004,6 +1132,7 @@ class Aplicativo:
     versao: str
     conversa: tuple[str, ...] | None
     superficies: tuple[Superficie, ...]
+    navegacao_agrupada: NavegacaoAgrupada | None = None
     forma: str = "do_operador"
     eventos: OperacaoParametrizada | None = None
     avisa_antes: OperacaoParametrizada | None = None
@@ -1033,13 +1162,23 @@ class Aplicativo:
             raise ContratoDoSdkInvalido("endpoint precisa ser http ou https")
         if not self.superficies:
             raise ContratoDoSdkInvalido("aplicativo precisa de superficies")
+        nomes_das_superficies = tuple(
+            superficie.nome for superficie in self.superficies
+        )
+        if len(set(nomes_das_superficies)) != len(nomes_das_superficies):
+            raise ContratoDoSdkInvalido("aplicativo repete superficies")
+        if self.navegacao_agrupada is not None:
+            self.navegacao_agrupada.conferir(nomes_das_superficies)
         if self.conversa is not None:
             for operacao in self.conversa:
                 _nome(operacao, "operacao de conversa")
         reservadas = {
             "slug", "endpoint", "forma", "para_tipo", "descricao",
             "descricao_humana", "nome_visivel", "versao", "conversa",
-            "superficies", "eventos", "avisa_antes", "relata_mudancas",
+            # ⛔ `navegacao` é o nome COMPILADO de `navegacao_agrupada`. Só o
+            # nome Python aqui deixava `extras={"navegacao": ...}` passar por
+            # cima da conferência — um grupo apontando para tela inexistente.
+            "superficies", "navegacao_agrupada", "navegacao", "eventos", "avisa_antes", "relata_mudancas",
             "convite", "quer_a_marca", "aceita_contato", "publico",
             "marca_horario", "recebe_documento", "so_por_convite",
             "em_breve", "tipo",
@@ -1064,6 +1203,8 @@ class Aplicativo:
         }
         if self.conversa is not None:
             aplicativo["conversa"] = list(self.conversa)
+        if self.navegacao_agrupada is not None:
+            aplicativo["navegacao"] = self.navegacao_agrupada.compilar()
         opcionais = {
             "para_tipo": self.para_tipo,
             "descricao_humana": self.descricao_humana,
