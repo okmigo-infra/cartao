@@ -63,6 +63,31 @@ class PreviewTest(unittest.TestCase):
             self.assertEqual(html.count(f'"nome":"tela-{indice}"'), 1)
         self.assertIn("Mais", html)
 
+    def test_preview_agrupado_mostra_areas_e_abas_sem_gaveta_mais(self):
+        superficies = [
+            {"nome": nome, "rotulo": rotulo, "icone": "inicio", "tela": {"corpo": []}}
+            for nome, rotulo in (
+                ("visao", "Visão"), ("carteira", "Carteira"),
+                ("pagar", "A pagar"), ("receber", "A receber"),
+            )
+        ]
+        html = pagina_aplicativo(
+            {
+                "nome": "Financeiro", "atual": "visao", "superficies": superficies,
+                "navegacao": {"tipo": "agrupada", "grupos": [
+                    {"nome": "inicio", "rotulo": "Início", "icone": "inicio",
+                     "superficies": ["visao", "carteira"], "inicial": "visao"},
+                    {"nome": "operacao", "rotulo": "Operação", "icone": "contas",
+                     "superficies": ["pagar", "receber"], "inicial": "pagar"},
+                ]},
+            },
+            "financeiro.py:APLICATIVO", frozenset(), frozenset(),
+        )
+
+        self.assertIn('"tipo":"agrupada"', html)
+        self.assertIn("superficie-top-tabs", html)
+        self.assertIn("superficie-bottom-nav-agrupada", html)
+
     def test_compila_expande_e_confere_o_sdk(self):
         tela, escrituras, leituras = construir_tela(ALVO, None)
 

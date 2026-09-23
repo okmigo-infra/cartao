@@ -23,7 +23,10 @@ from okmigo_cartao.sdk import (
     Fonte,
     FormaDoGrafico,
     Grafico,
+    GrupoDeNavegacao,
+    ICONES_DE_TELA,
     Navegacao,
+    NavegacaoAgrupada,
     Opcao,
     OperacaoParametrizada,
     Ponto,
@@ -38,6 +41,65 @@ from okmigo_cartao.sdk import (
 
 
 class SdkTest(unittest.TestCase):
+    def test_navegacao_agrupada_cobre_todas_as_telas_uma_vez(self):
+        tela = Tela("Tela", (Texto("Conteúdo"),))
+        superficies = (
+            Superficie("inicio", "Início", "Início", "inicio", "resumo", Fonte("inicio"), tela),
+            Superficie("carteira", "Carteira", "Carteira", "carteira", "carteira", Fonte("carteira"), tela),
+            Superficie("contas", "Contas", "Contas", "contas", "contas", Fonte("contas"), tela),
+        )
+        navegacao = NavegacaoAgrupada((
+            GrupoDeNavegacao("inicio", "Início", "inicio", ("inicio", "carteira")),
+            GrupoDeNavegacao("operacao", "Operação", "contas", ("contas",)),
+        ))
+        app = Aplicativo(
+            slug="financeiro", endpoint="https://financeiro.example/mcp/",
+            para_tipo="socio", descricao="Financeiro", descricao_humana=None,
+            nome_visivel="Financeiro", versao="1.0.0", conversa=(),
+            superficies=superficies, navegacao_agrupada=navegacao,
+        )
+
+        self.assertEqual(app.compilar()["navegacao"], {
+            "tipo": "agrupada",
+            "grupos": [
+                {"nome": "inicio", "rotulo": "Início", "icone": "inicio",
+                 "superficies": ["inicio", "carteira"], "inicial": "inicio"},
+                {"nome": "operacao", "rotulo": "Operação", "icone": "contas",
+                 "superficies": ["contas"], "inicial": "contas"},
+            ],
+        })
+
+        with self.assertRaisesRegex(ContratoDoSdkInvalido, "sem grupo"):
+            Aplicativo(
+                slug="financeiro", endpoint="https://financeiro.example/mcp/",
+                para_tipo="socio", descricao="Financeiro", descricao_humana=None,
+                nome_visivel="Financeiro", versao="1.0.0", conversa=(),
+                superficies=superficies,
+                navegacao_agrupada=NavegacaoAgrupada((
+                    GrupoDeNavegacao("inicio", "Início", "inicio", ("inicio",)),
+                    GrupoDeNavegacao("operacao", "Operação", "contas", ("contas",)),
+                )),
+            )
+
+    def test_navegacao_nao_entra_por_extras_nem_com_icone_que_ninguem_desenha(self):
+        tela = Tela("Tela", (Texto("Conteúdo"),))
+        superficies = (
+            Superficie("inicio", "Início", "Início", "inicio", "resumo", Fonte("inicio"), tela),
+            Superficie("contas", "Contas", "Contas", "contas", "contas", Fonte("contas"), tela),
+        )
+        with self.assertRaisesRegex(ContratoDoSdkInvalido, "reservados: navegacao"):
+            Aplicativo(
+                slug="financeiro", endpoint="https://financeiro.example/mcp/",
+                para_tipo="socio", descricao="Financeiro", descricao_humana=None,
+                nome_visivel="Financeiro", versao="1.0.0", conversa=(),
+                superficies=superficies,
+                extras={"navegacao": {"tipo": "agrupada", "grupos": [
+                    {"nome": "g", "superficies": ["nao-existe"]}]}},
+            )
+        with self.assertRaisesRegex(ContratoDoSdkInvalido, "nao e desenhado"):
+            GrupoDeNavegacao("inicio", "Início", "icone-que-ninguem-desenha", ("inicio",))
+        self.assertIn("contas", ICONES_DE_TELA)
+
     def test_convite_declara_outros_destinos_sem_mudar_o_par_do_aceite(self):
         convite = Convite("aceitar_convite", "de", "prediomeu-morador",
                           pares=("prediomeu-admin",))

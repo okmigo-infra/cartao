@@ -80,6 +80,31 @@ dados) e `operacao-direta` (fila e ação rápida). O cliente escolhe cores,
 tipografia, densidade, raios e espaçamento; um tema desconhecido é ignorado e
 o cartão continua legível com a identidade padrão do produto.
 
+### A navegação agrupada do aplicativo (0.16.0)
+
+Com mais de cinco superfícies, a barra de baixo guarda as quatro primeiras e
+põe o resto num «Mais». A partir de umas dez, esse «Mais» vira uma gaveta
+comprida onde nada se acha. `NavegacaoAgrupada` troca isso por **áreas**:
+
+```python
+navegacao_agrupada=NavegacaoAgrupada((
+    GrupoDeNavegacao("inicio", "Início", "inicio", ("visao-geral", "carteira")),
+    GrupoDeNavegacao("contas", "Contas", "contas", ("a-pagar", "a-receber"),
+                     inicial="a-pagar"),
+))
+```
+
+- **Cada grupo vira um item da barra de baixo.** As superfícies dele viram
+  abas no topo, e `inicial` escolhe a aba que abre ao trocar de área. Sem
+  `inicial`, abre a primeira.
+- ⛔ **O SDK recusa grupos que não cobrem as superfícies exatamente uma vez**:
+  tela sem grupo, tela em dois grupos e nome que não existe. São de 2 a 5
+  grupos. O ícone do grupo tem de estar em `ICONES_DE_TELA`, porque fora dela
+  o cliente desenha o ícone padrão e todas as áreas ficam iguais.
+- No manifesto, o campo sai como `navegacao: {"tipo": "agrupada",
+  "grupos": [...]}`. ⚠️ Um OkMigo sem suporte ignora o campo, e a barra volta
+  ao modelo antigo com «Mais». É degradação, não erro.
+
 ## 3 · Escrita: o que um toque pode e não pode
 
 - **Formulário não é lista.** Quem preencheu e apertou Salvar já confirmou: o
