@@ -89,7 +89,7 @@ LARGURAS = {"auto", "stretch"}
 ALINHAMENTOS = {"left", "center", "right"}
 #: Vistas de calendário. Fechada como as demais: cada uma é um desenho a
 #: manter em dois clientes; entra uma por vez, com motivo.
-VISTAS = {"mes", "semana", "dia"}
+VISTAS = {"mes", "semana", "dia", "agenda"}
 
 #: O que o CLIENTE sabe sobre o dia tocado e pode entregar a um campo. O
 #: serviço nomeia o campo, nunca o valor.
@@ -925,13 +925,60 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
                 }
             )
 
+        vista = no["vista"] if no.get("vista") in VISTAS else "mes"
+        vistas = []
+        for candidata in (no.get("vistas") or [])[:4]:
+            if candidata in VISTAS and candidata not in vistas:
+                vistas.append(candidata)
+        if not vistas:
+            vistas = [vista]
+        elif vista not in vistas:
+            vistas.insert(0, vista)
+
+        hora_inicial = _tamanho(no.get("horaInicial"))
+        hora_final = _tamanho(no.get("horaFinal"))
+        hora_inicial = 7 if hora_inicial is None else hora_inicial
+        hora_final = 21 if hora_final is None else hora_final
+        if not 0 <= hora_inicial < hora_final <= 24:
+            hora_inicial, hora_final = 7, 21
+
+        navegar_periodo = None
+        bruto_navegacao = no.get("aoNavegarPeriodo")
+        if isinstance(bruto_navegacao, dict):
+            parametro = _txt(bruto_navegacao.get("parametro"), "titulo")[:60]
+            parametros = bruto_navegacao.get("parametros") or {}
+            if parametro and isinstance(parametros, dict):
+                acao = _consulta_de_acao({
+                    "type": "Action.Execute",
+                    "title": "Carregar período",
+                    "data": {"okmigoNavegar": {
+                        "rota": bruto_navegacao.get("rota"),
+                        "parametros": {**parametros, parametro: "{periodo}"},
+                    }},
+                })
+                if acao and acao.get("navegar"):
+                    navegar_periodo = {
+                        "rota": acao["navegar"]["rota"],
+                        "parametro": parametro,
+                        "parametros": {
+                            chave: valor
+                            for chave, valor in acao["navegar"]["parametros"].items()
+                            if chave != parametro
+                        },
+                    }
+
         return {
             "tipo": "calendario",
             **comum,
             "ao_tocar_o_dia": ao_tocar,
             "acoes_do_evento": acoes_do_evento,
-            "vista": no["vista"] if no.get("vista") in VISTAS else "mes",
+            "navegar_periodo": navegar_periodo,
+            "vista": vista,
+            "vistas": vistas,
             "de": _txt(no.get("de"), "titulo"),
+            "ate": _txt(no.get("ate"), "titulo"),
+            "hora_inicial": hora_inicial,
+            "hora_final": hora_final,
             "eventos": eventos,
         }
 

@@ -288,9 +288,10 @@ um endereço de terceiro; ações comuns nunca carregam URL.
 
 ## Agenda
 
-`Calendario` cobre mês, semana e dia, abertura de formulário ao tocar numa
-data, abertura de detalhe ao tocar num evento e remarcação explícita por
-arrasto:
+`Calendario` cobre mês, semana, dia e agenda, abertura de formulário ao tocar
+numa data, detalhe do evento e remarcação explícita por arrasto. Quando
+`vistas` é informado, o renderer oferece o seletor responsivo, navega pelo
+período e preserva a data escolhida entre as vistas:
 
 ```python
 from okmigo_cartao import (
@@ -313,6 +314,16 @@ agenda = Calendario(
         ),
     ),
     vista=VistaDoCalendario.SEMANA,
+    vistas=(
+        VistaDoCalendario.DIA,
+        VistaDoCalendario.SEMANA,
+        VistaDoCalendario.MES,
+        VistaDoCalendario.AGENDA,
+    ),
+    de="{periodo_de}",
+    ate="{periodo_ate}",
+    hora_inicial=8,
+    hora_final=20,
     ao_tocar_o_dia=AoTocarODia("novo_atendimento", "data"),
     acoes_do_evento=(
         AcaoDoEvento(

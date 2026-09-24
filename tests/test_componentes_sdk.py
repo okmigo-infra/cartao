@@ -22,6 +22,7 @@ from okmigo_cartao import (
     Cronometro,
     Distribuicao,
     Documento,
+    DestinoDaRota,
     EnfaseDaAcao,
     EnviarEAvancar,
     Escolha,
@@ -38,6 +39,7 @@ from okmigo_cartao import (
     LancamentoFinanceiro,
     ListaFinanceira,
     Metrica,
+    NavegacaoDoCalendario,
     Opcao,
     Progresso,
     Repetir,
@@ -192,6 +194,16 @@ class ComponentesDoSdkTest(unittest.TestCase):
                 ),
             ),
             vista=VistaDoCalendario.SEMANA,
+            vistas=(
+                VistaDoCalendario.DIA,
+                VistaDoCalendario.SEMANA,
+                VistaDoCalendario.MES,
+                VistaDoCalendario.AGENDA,
+            ),
+            de="2026-09-01",
+            ate="2027-08-01",
+            hora_inicial=8,
+            hora_final=20,
             ao_tocar_o_dia=AoTocarODia("novo_atendimento", "data"),
             acoes_do_evento=(
                 AcaoDoEvento(
@@ -207,16 +219,31 @@ class ComponentesDoSdkTest(unittest.TestCase):
                     enviar="remarcar_atendimento",
                 ),
             ),
+            ao_navegar_periodo=NavegacaoDoCalendario(
+                DestinoDaRota("periodo", {}), "mes"
+            ),
         )
 
         normalizada = Tela("Agenda", (calendario,)).conferir(
-            escrituras={"remarcar_atendimento"}
+            escrituras={"remarcar_atendimento"},
+            rotas={"periodo": {"mes": {"tipo": "texto", "obrigatorio": True}}},
         )
         saida = normalizada["corpo"][1]
         self.assertEqual(saida["tipo"], "calendario")
         self.assertEqual(saida["vista"], "semana")
+        self.assertEqual(saida["vistas"], ["dia", "semana", "mes", "agenda"])
+        self.assertEqual(saida["ate"], "2027-08-01")
+        self.assertEqual(saida["hora_inicial"], 8)
+        self.assertEqual(saida["hora_final"], 20)
         self.assertEqual(saida["ao_tocar_o_dia"]["preencher"], {"data": "data"})
         self.assertTrue(saida["acoes_do_evento"][1]["arrasta"])
+        self.assertEqual(saida["navegar_periodo"], {
+            "rota": "periodo", "parametro": "mes", "parametros": {}
+        })
+
+    def test_calendario_recusa_intervalo_de_horas_invalido(self):
+        with self.assertRaisesRegex(ContratoDoSdkInvalido, "horas do calendario"):
+            Calendario((), hora_inicial=22, hora_final=8)
 
     def test_documentos_e_componentes_financeiros_passam_pelo_crivo(self):
         lancamento = LancamentoFinanceiro(
