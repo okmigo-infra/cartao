@@ -17,11 +17,13 @@ from okmigo_cartao import (
     Arquivo,
     Calendario,
     BarraDeValor,
+    BuscaDoAplicativo,
     CampoComUnidade,
     CampoData,
     CampoMoeda,
     CampoTelefone,
     CabecalhoDeDetalhe,
+    CabecalhoDaTela,
     CartaoClicavel,
     CelulaDeTabela,
     Confirmacao,
@@ -43,11 +45,14 @@ from okmigo_cartao import (
     EstadoDoCompromisso,
     EstadoDoDado,
     EstadoVazio,
+    EstadoRestauravel,
+    EtapaDoFluxo,
     Evento,
     EtapaDaLinhaDoTempo,
     Etiqueta,
     Expansivel,
     Fonte,
+    Fluxo,
     FormatoDeArquivo,
     FormaDaEscolha,
     Formulario,
@@ -65,23 +70,73 @@ from okmigo_cartao import (
     ItemDeRanking,
     MenuDeAcoes,
     Minigrafico,
+    MestreDetalhe,
     Navegacao,
+    NavegacaoAgrupada,
+    IndicadorDeNavegacao,
+    EstadoDoIndicador,
     Opcao,
     Ranking,
     Progresso,
+    ParametroDaRota,
+    PersistenciaDoEstado,
+    Rota,
     SeletorDeQuantidade,
     Secao,
     SemanticaFinanceira,
     Superficie,
+    GrupoDeNavegacao,
+    HistoricoDeNavegacao,
     Status,
     TabelaFlexivel,
     Tela,
     Tema,
     Texto,
     TipoDeEvento,
+    TipoDeResultadoDaBusca,
     TomFinanceiro,
     TomDaEtiqueta,
     VistaDoCalendario,
+)
+
+
+NAVEGACAO = Tela(
+    "Navegação e fluxo",
+    (
+        CabecalhoDaTela(
+            "Cliente de exemplo",
+            "Cabeçalho universal com destino interno tipado",
+            acao_principal=Acao.navegar(
+                "Abrir detalhes", "detalhe", parametros={"id": "demo-1"}
+            ),
+            variante="detalhe",
+        ),
+        MestreDetalhe(
+            "clientes_demo",
+            lista=(Texto("Cliente selecionado"), Texto("Outro cliente")),
+            detalhe=(Texto("Detalhes do cliente"), Texto("Plano · Equipe")),
+            selecionado=True,
+        ),
+        Fluxo(
+            "cadastro_demo",
+            etapas=(
+                EtapaDoFluxo(
+                    "dados", "Dados", (Texto("Dados conferidos"),),
+                    avancar=Acao.escrever("Continuar", "avancar_fluxo"),
+                ),
+                EtapaDoFluxo(
+                    "revisao", "Revisão", (Texto("Revise antes de concluir"),),
+                    voltar=Acao.escrever("Voltar", "voltar_fluxo"),
+                    avancar=Acao.escrever("Concluir", "concluir_fluxo"),
+                ),
+                EtapaDoFluxo("fim", "Conclusão", (Texto("Tudo pronto"),)),
+            ),
+            atual="revisao",
+            token_de_retomada="preview-demo",
+        ),
+    ),
+    tema=Tema.OPERACAO,
+    navegacao=Navegacao.INFERIOR,
 )
 
 
@@ -483,5 +538,54 @@ APLICATIVO = Aplicativo(
         _superficie("agenda", "Agenda", "agenda", AGENDA),
         _superficie("financeiro", "Financeiro", "financeiro", FINANCEIRO),
         _superficie("universais", "Universais", "mais", UNIVERSAIS),
+        _superficie("navegacao", "Navegação", "inicio", NAVEGACAO),
     ),
+    navegacao_agrupada=NavegacaoAgrupada((
+        GrupoDeNavegacao(
+            "inicio", "Início", "inicio", ("inicio", "universais"),
+            indicador=IndicadorDeNavegacao(
+                "contar_novidades", "Novidades disponíveis", EstadoDoIndicador.CONTAGEM
+            ),
+        ),
+        GrupoDeNavegacao("trabalho", "Trabalho", "perfil", ("formulario", "agenda")),
+        GrupoDeNavegacao("recursos", "Recursos", "carteira", ("financeiro", "navegacao")),
+    )),
+    rotas=(
+        Rota("detalhe", "navegacao", (ParametroDaRota("id"),)),
+    ),
+    busca=BuscaDoAplicativo(
+        "buscar_catalogo",
+        (TipoDeResultadoDaBusca("componente", "Componente", "detalhe", "inicio"),),
+        placeholder="Buscar componente",
+    ),
+    estados_restauraveis=(
+        EstadoRestauravel(
+            "formulario",
+            campos=("filtros", "rolagem", "rascunho"),
+            persistencia=PersistenciaDoEstado.SINCRONIZADA,
+            visoes_salvas=True,
+        ),
+    ),
+    historico_de_navegacao=HistoricoDeNavegacao(),
+)
+
+
+# Dados somente do preview local. Não entram no manifesto instalado e não são
+# aceitos pelo runtime de produção; servem para conferir visual e navegação.
+INDICADORES_PARA_O_PREVIEW = {"inicio": 3}
+RESULTADOS_DA_BUSCA_PARA_O_PREVIEW = (
+    {
+        "titulo": "Cabeçalho universal",
+        "subtitulo": "Navegação e fluxo",
+        "tipo": "componente",
+        "rota": "detalhe",
+        "parametros": {"id": "cabecalho"},
+    },
+    {
+        "titulo": "Mestre-detalhe adaptativo",
+        "subtitulo": "Navegação e fluxo",
+        "tipo": "componente",
+        "rota": "detalhe",
+        "parametros": {"id": "mestre-detalhe"},
+    },
 )

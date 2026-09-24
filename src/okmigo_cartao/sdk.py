@@ -25,6 +25,22 @@ _NOME = re.compile(
 )
 
 
+#: O nome de um parâmetro de rota: identificador simples, sem ponto, hífen nem
+#: chaves. ⚠️ Mais estreito que `_NOME` de propósito: o nome vira o marcador
+#: `{rota.<nome>}` no `pedido` de uma fonte da ponte, e um nome com chave ou
+#: ponto faria o marcador ambíguo. É a MESMA régua do registro no OkMigo.
+NOME_DE_PARAMETRO_DA_ROTA = re.compile(r"^[A-Za-z][A-Za-z0-9_]{0,39}$")
+
+#: ⛔⛔ Nomes que um parâmetro de rota NUNCA pode ter. São os campos que a
+#: PLATAFORMA afirma no pedido de tela (quem é o negócio, que dia é hoje, quais
+#: grupos a pessoa alcança) e os dois envelopes da navegação. Um parâmetro
+#: chamado `tenant` é o botão de um cartão tentando escolher de qual negócio a
+#: tela lê — e um parâmetro de rota é dado que atravessa o cliente.
+NOMES_RESERVADOS_DA_ROTA: frozenset[str] = frozenset({
+    "credencial", "tenant", "hoje", "grupos", "grupos_nomes", "rota", "parametros",
+})
+
+
 class ContratoDoSdkInvalido(ValueError):
     """O erro de autoria que o SDK consegue detectar antes do crivo."""
 
@@ -55,6 +71,126 @@ class Tema(StrEnum):
 
 class Navegacao(StrEnum):
     INFERIOR = "inferior"
+
+
+class TipoDeParametroDaRota(StrEnum):
+    TEXTO = "texto"
+    INTEIRO = "inteiro"
+    DECIMAL = "decimal"
+    BOOLEANO = "booleano"
+
+
+@dataclass(frozen=True, slots=True)
+class ParametroDaRota:
+    """Um parâmetro fechado que uma rota interna aceita.
+
+    Rotas nunca recebem um endereço livre. O nome e o tipo são publicados no
+    manifesto para que SDK, crivo e clientes rejeitem qualquer dado extra.
+    """
+
+    nome: str
+    tipo: TipoDeParametroDaRota = TipoDeParametroDaRota.TEXTO
+    obrigatorio: bool = True
+
+    def __post_init__(self) -> None:
+        if not NOME_DE_PARAMETRO_DA_ROTA.fullmatch(self.nome):
+            raise ContratoDoSdkInvalido(
+                "parametro da rota precisa ser um identificador simples "
+                f"(letras, números e _), recebi {self.nome!r}"
+            )
+        if self.nome in NOMES_RESERVADOS_DA_ROTA:
+            raise ContratoDoSdkInvalido(
+                f"parametro da rota {self.nome!r} é reservado pela plataforma"
+            )
+
+    def compilar(self) -> Json:
+        return {
+            "nome": self.nome,
+            "tipo": self.tipo.value,
+            "obrigatorio": self.obrigatorio,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class Rota:
+    """Destino interno registrado pelo aplicativo."""
+
+    nome: str
+    superficie: str
+    parametros: tuple[ParametroDaRota, ...] = ()
+    compartilhavel: bool = False
+    historico: bool = False
+    favoritavel: bool = False
+
+    def __post_init__(self) -> None:
+        _nome(self.nome, "nome da rota")
+        _nome(self.superficie, "superficie da rota")
+        nomes = [parametro.nome for parametro in self.parametros]
+        if len(nomes) != len(set(nomes)):
+            raise ContratoDoSdkInvalido(f"rota {self.nome!r} repete parametros")
+
+    def compilar(self) -> Json:
+        return {
+            "nome": self.nome,
+            "superficie": self.superficie,
+            "parametros": _compilar(self.parametros),
+            "compartilhavel": self.compartilhavel,
+            "historico": self.historico,
+            "favoritavel": self.favoritavel,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class DestinoDaRota:
+    """Uma ida tipada para uma rota registrada, nunca para uma URL."""
+
+    rota: str
+    parametros: Mapping[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        _nome(self.rota, "rota de destino")
+        for nome in self.parametros:
+            _nome(nome, "parametro do destino")
+
+    def compilar(self) -> Json:
+        return {
+            "rota": self.rota,
+            "parametros": deepcopy(dict(self.parametros)),
+        }
+
+
+class EstadoDoIndicador(StrEnum):
+    CONTAGEM = "contagem"
+    NOVO = "novo"
+    ATENCAO = "atencao"
+    ERRO = "erro"
+
+
+@dataclass(frozen=True, slots=True)
+class IndicadorDeNavegacao:
+    """Resumo não sensível exibido junto de uma área ou superfície."""
+
+    operacao: str
+    rotulo: str
+    estado: EstadoDoIndicador = EstadoDoIndicador.CONTAGEM
+    caminho: str | None = None
+
+    def __post_init__(self) -> None:
+        _nome(self.operacao, "operacao do indicador")
+        if self.caminho is not None:
+            _nome(self.caminho, "caminho do indicador")
+        if not self.rotulo.strip():
+            raise ContratoDoSdkInvalido("indicador precisa de rotulo acessivel")
+
+    def compilar(self) -> Json:
+        no: Json = {
+            "operacao": self.operacao,
+            "rotulo": self.rotulo,
+            "estado": self.estado.value,
+        }
+        if self.caminho is not None:
+            no["caminho"] = self.caminho
+        return no
 
 
 #: Os ícones de tela que os DOIS clientes do OkMigo (web e app) desenham.
@@ -90,6 +226,7 @@ class GrupoDeNavegacao:
     icone: str
     superficies: tuple[str, ...]
     inicial: str | None = None
+    indicador: IndicadorDeNavegacao | None = None
 
     def __post_init__(self) -> None:
         _nome(self.nome, "nome do grupo de navegacao")
@@ -126,13 +263,16 @@ class GrupoDeNavegacao:
             )
 
     def compilar(self) -> Json:
-        return {
+        compilado: Json = {
             "nome": self.nome,
             "rotulo": self.rotulo,
             "icone": self.icone,
             "superficies": list(self.superficies),
             "inicial": self.inicial or self.superficies[0],
         }
+        if self.indicador is not None:
+            compilado["indicador"] = self.indicador.compilar()
+        return compilado
 
 
 @dataclass(frozen=True, slots=True)
@@ -366,6 +506,7 @@ class CampoOculto:
 class TipoDeAcao(StrEnum):
     LEITURA = "leitura"
     ESCRITA = "escrita"
+    NAVEGACAO = "navegacao"
 
 
 class EnfaseDaAcao(StrEnum):
@@ -400,7 +541,7 @@ class Confirmacao:
 @dataclass(frozen=True, slots=True)
 class Acao:
     titulo: str
-    operacao: str
+    operacao: str | None
     tipo: TipoDeAcao
     enfase: EnfaseDaAcao = EnfaseDaAcao.PADRAO
     icone: str | None = None
@@ -409,9 +550,22 @@ class Acao:
     modo_secundario: bool = False
     alvos_apos_enviar: tuple[Componente, ...] = ()
     transicao_tipada: bool = True
+    destino: DestinoDaRota | None = None
 
     def __post_init__(self) -> None:
-        _nome(self.operacao, "operacao")
+        if self.tipo == TipoDeAcao.NAVEGACAO:
+            if self.operacao is not None or self.destino is None:
+                raise ContratoDoSdkInvalido(
+                    "acao de navegacao precisa apenas de um destino tipado"
+                )
+        else:
+            if self.operacao is None:
+                raise ContratoDoSdkInvalido("acao precisa de operacao")
+            _nome(self.operacao, "operacao")
+            if self.destino is not None:
+                raise ContratoDoSdkInvalido(
+                    "leitura ou escrita nao pode carregar rota interna"
+                )
         if not self.titulo:
             raise ContratoDoSdkInvalido("acao precisa de titulo acessivel")
         if self.icone is not None and self.icone != "lixeira":
@@ -433,7 +587,7 @@ class Acao:
         return cls(
             titulo, operacao, TipoDeAcao.LEITURA, enfase, None,
             confirmacao, dados or {}, modo_secundario,
-            alvos_apos_enviar, transicao_tipada,
+            alvos_apos_enviar, transicao_tipada, None,
         )
 
     @classmethod
@@ -453,17 +607,49 @@ class Acao:
         return cls(
             titulo, operacao, TipoDeAcao.ESCRITA, enfase, icone,
             confirmacao, dados or {}, modo_secundario,
-            alvos_apos_enviar, transicao_tipada,
+            alvos_apos_enviar, transicao_tipada, None,
+        )
+
+    @classmethod
+    def navegar(
+        cls,
+        titulo: str,
+        rota: str,
+        *,
+        parametros: Mapping[str, Any] | None = None,
+        enfase: EnfaseDaAcao = EnfaseDaAcao.PADRAO,
+        modo_secundario: bool = False,
+    ) -> Self:
+        """Abre uma rota interna declarada sem executar leitura ou escrita."""
+        return cls(
+            titulo,
+            None,
+            TipoDeAcao.NAVEGACAO,
+            enfase,
+            None,
+            None,
+            {},
+            modo_secundario,
+            (),
+            True,
+            DestinoDaRota(rota, parametros or {}),
         )
 
     def compilar(self) -> Json:
-        no: Json = {
-            "type": "Action.Execute"
-            if self.tipo == TipoDeAcao.LEITURA
-            else "Action.Submit",
-            "title": self.titulo,
-            "data": {"operacao": self.operacao, **deepcopy(dict(self.dados))},
-        }
+        if self.tipo == TipoDeAcao.NAVEGACAO:
+            no: Json = {
+                "type": "Action.Execute",
+                "title": self.titulo,
+                "data": {"okmigoNavegar": self.destino.compilar()},
+            }
+        else:
+            no = {
+                "type": "Action.Execute"
+                if self.tipo == TipoDeAcao.LEITURA
+                else "Action.Submit",
+                "title": self.titulo,
+                "data": {"operacao": self.operacao, **deepcopy(dict(self.dados))},
+            }
         if self.enfase == EnfaseDaAcao.PRIMARIA:
             no["style"] = "positive"
         elif self.enfase == EnfaseDaAcao.DESTRUTIVA:
@@ -814,12 +1000,15 @@ class Tela:
         *,
         leituras: set[str] | frozenset[str] = frozenset(),
         escrituras: set[str] | frozenset[str] = frozenset(),
+        rotas: Mapping[str, Mapping[str, str]] | None = None,
     ) -> Json:
         """Compila e passa pelo crivo, falhando cedo com uma mensagem útil."""
         from .crivo import validar
 
         normalizada, erro = validar(
-            self.compilar(), leituras=leituras, escrituras=escrituras
+            self.compilar(), leituras=leituras, escrituras=escrituras,
+            rotas={nome: dict(parametros) for nome, parametros in rotas.items()}
+            if rotas is not None else None,
         )
         if erro or normalizada is None:
             raise ContratoDoSdkInvalido(erro or "o crivo recusou a tela")
@@ -1124,6 +1313,127 @@ class DocumentoDeclarado:
 
 
 @dataclass(frozen=True, slots=True)
+class TipoDeResultadoDaBusca:
+    """Uma categoria fechada de resultado da busca do aplicativo."""
+
+    nome: str
+    rotulo: str
+    rota: str
+    icone: str | None = None
+
+    def __post_init__(self) -> None:
+        _nome(self.nome, "tipo de resultado")
+        _nome(self.rota, "rota do resultado")
+        if not self.rotulo.strip():
+            raise ContratoDoSdkInvalido("tipo de resultado precisa de rotulo")
+        if self.icone is not None and self.icone not in ICONES_DE_TELA:
+            raise ContratoDoSdkInvalido(f"icone de resultado desconhecido: {self.icone}")
+
+    def compilar(self) -> Json:
+        no: Json = {"nome": self.nome, "rotulo": self.rotulo, "rota": self.rota}
+        if self.icone is not None:
+            no["icone"] = self.icone
+        return no
+
+
+@dataclass(frozen=True, slots=True)
+class BuscaDoAplicativo:
+    """Busca transversal declarada no manifesto, isolada por aplicativo."""
+
+    operacao: str
+    tipos: tuple[TipoDeResultadoDaBusca, ...]
+    placeholder: str = "Buscar"
+    recentes: bool = True
+
+    def __post_init__(self) -> None:
+        _nome(self.operacao, "operacao da busca do aplicativo")
+        if not self.tipos or len(self.tipos) > 12:
+            raise ContratoDoSdkInvalido("busca do aplicativo aceita de 1 a 12 tipos")
+        nomes = [tipo.nome for tipo in self.tipos]
+        if len(nomes) != len(set(nomes)):
+            raise ContratoDoSdkInvalido("busca do aplicativo repete tipos")
+        if not self.placeholder.strip():
+            raise ContratoDoSdkInvalido("busca do aplicativo precisa de placeholder")
+
+    def compilar(self) -> Json:
+        return {
+            "operacao": self.operacao,
+            "placeholder": self.placeholder,
+            "recentes": self.recentes,
+            "tipos": _compilar(self.tipos),
+        }
+
+
+class PersistenciaDoEstado(StrEnum):
+    SESSAO = "sessao"
+    SINCRONIZADA = "sincronizada"
+
+
+@dataclass(frozen=True, slots=True)
+class EstadoRestauravel:
+    """Estado de UI que o produto pode restaurar sem guardar dado sensível."""
+
+    superficie: str
+    campos: tuple[str, ...] = ("filtros", "ordem", "paginacao", "rolagem")
+    persistencia: PersistenciaDoEstado = PersistenciaDoEstado.SESSAO
+    visoes_salvas: bool = False
+    versao: str = "1"
+    expira_em_horas: int = 24
+
+    def __post_init__(self) -> None:
+        _nome(self.superficie, "superficie do estado")
+        permitidos = {"filtros", "ordem", "paginacao", "rolagem", "selecao", "rascunho"}
+        if not self.campos or set(self.campos) - permitidos:
+            raise ContratoDoSdkInvalido("estado restauravel usa campo desconhecido")
+        if len(self.campos) != len(set(self.campos)):
+            raise ContratoDoSdkInvalido("estado restauravel repete campos")
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,39}", self.versao):
+            raise ContratoDoSdkInvalido(
+                "versao do estado restauravel precisa ter de 1 a 40 caracteres seguros"
+            )
+        if not 1 <= self.expira_em_horas <= 24 * 90:
+            raise ContratoDoSdkInvalido("estado restauravel expira entre 1 hora e 90 dias")
+        if self.visoes_salvas and self.persistencia != PersistenciaDoEstado.SINCRONIZADA:
+            raise ContratoDoSdkInvalido(
+                "visoes salvas precisam de persistencia sincronizada"
+            )
+
+    def compilar(self) -> Json:
+        return {
+            "superficie": self.superficie,
+            "campos": list(self.campos),
+            "persistencia": self.persistencia.value,
+            "visoes_salvas": self.visoes_salvas,
+            "versao": self.versao,
+            "expira_em_horas": self.expira_em_horas,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class HistoricoDeNavegacao:
+    """Política mínima para recentes e favoritos de destinos internos."""
+
+    recentes: bool = True
+    favoritos: bool = True
+    limite: int = 20
+    retencao_dias: int = 30
+
+    def __post_init__(self) -> None:
+        if not 1 <= self.limite <= 50:
+            raise ContratoDoSdkInvalido("historico aceita de 1 a 50 destinos")
+        if not 1 <= self.retencao_dias <= 90:
+            raise ContratoDoSdkInvalido("retencao do historico aceita de 1 a 90 dias")
+
+    def compilar(self) -> Json:
+        return {
+            "recentes": self.recentes,
+            "favoritos": self.favoritos,
+            "limite": self.limite,
+            "retencao_dias": self.retencao_dias,
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class Aplicativo:
     slug: str
     endpoint: str
@@ -1135,6 +1445,10 @@ class Aplicativo:
     conversa: tuple[str, ...] | None
     superficies: tuple[Superficie, ...]
     navegacao_agrupada: NavegacaoAgrupada | None = None
+    rotas: tuple[Rota, ...] = ()
+    busca: BuscaDoAplicativo | None = None
+    estados_restauraveis: tuple[EstadoRestauravel, ...] = ()
+    historico_de_navegacao: HistoricoDeNavegacao | None = None
     forma: str = "do_operador"
     eventos: OperacaoParametrizada | None = None
     avisa_antes: OperacaoParametrizada | None = None
@@ -1174,6 +1488,97 @@ class Aplicativo:
             raise ContratoDoSdkInvalido("aplicativo repete superficies")
         if self.navegacao_agrupada is not None:
             self.navegacao_agrupada.conferir(nomes_das_superficies)
+        nomes_das_rotas = [rota.nome for rota in self.rotas]
+        if len(nomes_das_rotas) != len(set(nomes_das_rotas)):
+            raise ContratoDoSdkInvalido("aplicativo repete rotas")
+        for rota in self.rotas:
+            if rota.superficie not in nomes_das_superficies:
+                raise ContratoDoSdkInvalido(
+                    f"rota {rota.nome!r} aponta para superficie desconhecida {rota.superficie!r}"
+                )
+        if self.busca is not None:
+            desconhecidas = {tipo.rota for tipo in self.busca.tipos} - set(nomes_das_rotas)
+            if desconhecidas:
+                raise ContratoDoSdkInvalido(
+                    "busca aponta para rotas desconhecidas: " + ", ".join(sorted(desconhecidas))
+                )
+        for estado in self.estados_restauraveis:
+            if estado.superficie not in nomes_das_superficies:
+                raise ContratoDoSdkInvalido(
+                    f"estado aponta para superficie desconhecida {estado.superficie!r}"
+                )
+        rotas_por_nome = {rota.nome: rota for rota in self.rotas}
+
+        def conferir_destinos(valor: Any) -> None:
+            if isinstance(valor, list):
+                for item in valor:
+                    conferir_destinos(item)
+                return
+            if not isinstance(valor, dict):
+                return
+            destino = valor.get("okmigoNavegar")
+            if isinstance(destino, dict):
+                nome_da_rota = destino.get("rota")
+                if nome_da_rota not in rotas_por_nome:
+                    raise ContratoDoSdkInvalido(
+                        f"acao aponta para rota desconhecida {nome_da_rota!r}"
+                    )
+                parametros = destino.get("parametros") or {}
+                if not isinstance(parametros, dict):
+                    raise ContratoDoSdkInvalido("parametros da rota precisam ser um mapa")
+                contrato = rotas_por_nome[nome_da_rota]
+                declarados = {parametro.nome: parametro for parametro in contrato.parametros}
+                extras = set(parametros) - set(declarados)
+                ausentes = {
+                    nome for nome, parametro in declarados.items()
+                    if parametro.obrigatorio and nome not in parametros
+                }
+                if extras or ausentes:
+                    partes = []
+                    if extras:
+                        partes.append("extras: " + ", ".join(sorted(extras)))
+                    if ausentes:
+                        partes.append("ausentes: " + ", ".join(sorted(ausentes)))
+                    raise ContratoDoSdkInvalido(
+                        f"destino da rota {nome_da_rota!r} tem parametros invalidos ("
+                        + "; ".join(partes) + ")"
+                    )
+                for nome, valor_do_parametro in parametros.items():
+                    # Um molde ``{campo}`` só ganha tipo depois de a ponte
+                    # expandi-lo. Valores literais, porém, são conferidos já
+                    # na autoria para não chegar um texto numa rota inteira.
+                    if isinstance(valor_do_parametro, str) and re.fullmatch(
+                        r"\{[A-Za-z][A-Za-z0-9_.-]*\}", valor_do_parametro
+                    ):
+                        continue
+                    tipo = declarados[nome].tipo
+                    certo = (
+                        (tipo == TipoDeParametroDaRota.TEXTO and isinstance(valor_do_parametro, str))
+                        or (
+                            tipo == TipoDeParametroDaRota.INTEIRO
+                            and isinstance(valor_do_parametro, int)
+                            and not isinstance(valor_do_parametro, bool)
+                        )
+                        or (
+                            tipo == TipoDeParametroDaRota.DECIMAL
+                            and isinstance(valor_do_parametro, (int, float))
+                            and not isinstance(valor_do_parametro, bool)
+                        )
+                        or (
+                            tipo == TipoDeParametroDaRota.BOOLEANO
+                            and isinstance(valor_do_parametro, bool)
+                        )
+                    )
+                    if not certo:
+                        raise ContratoDoSdkInvalido(
+                            f"parametro {nome!r} da rota {nome_da_rota!r} "
+                            f"precisa ser {tipo.value}"
+                        )
+            for filho in valor.values():
+                conferir_destinos(filho)
+
+        for superficie in self.superficies:
+            conferir_destinos(superficie.tela.compilar())
         if self.conversa is not None:
             for operacao in self.conversa:
                 _nome(operacao, "operacao de conversa")
@@ -1188,7 +1593,9 @@ class Aplicativo:
             # ⛔ `navegacao` é o nome COMPILADO de `navegacao_agrupada`. Só o
             # nome Python aqui deixava `extras={"navegacao": ...}` passar por
             # cima da conferência — um grupo apontando para tela inexistente.
-            "superficies", "navegacao_agrupada", "navegacao", "eventos", "avisa_antes", "relata_mudancas",
+            "superficies", "navegacao_agrupada", "navegacao", "rotas", "busca",
+            "estados_restauraveis", "historico_de_navegacao",
+            "eventos", "avisa_antes", "relata_mudancas",
             "convite", "quer_a_marca", "aceita_contato", "publico",
             "marca_horario", "recebe_documento", "so_por_convite",
             "em_breve", "tipo",
@@ -1215,6 +1622,14 @@ class Aplicativo:
             aplicativo["conversa"] = list(self.conversa)
         if self.navegacao_agrupada is not None:
             aplicativo["navegacao"] = self.navegacao_agrupada.compilar()
+        if self.rotas:
+            aplicativo["rotas"] = _compilar(self.rotas)
+        if self.busca is not None:
+            aplicativo["busca"] = self.busca.compilar()
+        if self.estados_restauraveis:
+            aplicativo["estados_restauraveis"] = _compilar(self.estados_restauraveis)
+        if self.historico_de_navegacao is not None:
+            aplicativo["historico_de_navegacao"] = self.historico_de_navegacao.compilar()
         opcionais = {
             "para_tipo": self.para_tipo,
             "descricao_humana": self.descricao_humana,

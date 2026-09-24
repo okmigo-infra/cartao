@@ -156,6 +156,87 @@ Campos condicionais usam `RegraAoAlterar` com estado booleano explícito. Isso
 permite mostrar CPF ou CNPJ conforme a escolha sem aceitar expressão, script
 ou lógica arbitrária enviada pelo app.
 
+## Navegação do aplicativo
+
+| intenção | componentes |
+|---|---|
+| destino interno fechado | `Rota`, `ParametroDaRota`, `TipoDeParametroDaRota`, `Acao.navegar` |
+| topo consistente | `CabecalhoDaTela` |
+| muitas superfícies | `NavegacaoAgrupada`, `GrupoDeNavegacao` |
+| contador ou alerta na navegação | `IndicadorDeNavegacao`, `EstadoDoIndicador` |
+| lista e detalhe adaptativos | `MestreDetalhe` |
+| jornada retomável | `Fluxo`, `EtapaDoFluxo` |
+| busca transversal | `BuscaDoAplicativo`, `TipoDeResultadoDaBusca` |
+| estado explicitamente restaurável | `EstadoRestauravel`, `PersistenciaDoEstado` |
+| recentes e favoritos | `HistoricoDeNavegacao` |
+
+```python
+from okmigo_cartao import (
+    Acao, Aplicativo, BuscaDoAplicativo, ParametroDaRota, Rota,
+    TipoDeResultadoDaBusca,
+)
+
+abrir = Acao.navegar("Abrir cliente", "cliente", parametros={"id": "cli-42"})
+
+app = Aplicativo(
+    # ...metadados e superfícies...
+    rotas=(Rota("cliente", "detalhe", (ParametroDaRota("id"),)),),
+    busca=BuscaDoAplicativo(
+        "buscar_tudo",
+        (TipoDeResultadoDaBusca("cliente", "Cliente", "cliente", "clientes"),),
+        placeholder="Buscar cliente, pedido ou documento",
+    ),
+)
+```
+
+A operação de busca recebe `{"termo": "..."}` e devolve:
+
+```json
+{
+  "resultados": [
+    {
+      "tipo": "cliente",
+      "titulo": "Ana Souza",
+      "subtitulo": "Cliente desde 2024",
+      "parametros": {"id": "cli-42"}
+    }
+  ]
+}
+```
+
+Nomes de parâmetro são identificadores simples e `credencial`, `tenant`,
+`hoje`, `grupos`, `grupos_nomes`, `rota` e `parametros` são reservados
+(`ParametroDaRota("tenant")` levanta `ContratoDoSdkInvalido`). Ao abrir a tela
+da rota, o serviço recebe os parâmetros conferidos em `parametros` no corpo do
+pedido da superfície; pela ponte MCP, a fonte os pede com o marcador inteiro
+`{rota.<nome>}` no `pedido` (`ConsultaDaFonte("detalhar", pedido={"cliente": "{rota.id}"})`).
+Parâmetro ausente chega como texto vazio.
+
+O serviço não devolve rota ou URL. O tipo escolhe uma rota que já estava no
+manifesto, e os parâmetros atravessam a mesma validação de nome, presença e
+tipo usada ao abrir a tela. Resultados desconhecidos ou com campo extra somem.
+
+`MestreDetalhe` usa o mesmo conteúdo no desktop e no celular: duas colunas
+quando há largura, lista ou detalhe quando não há. `Fluxo` só apresenta etapa,
+progresso e retomada; avançar, persistir ou cancelar continua sendo ação
+declarada. `CabecalhoDaTela` mantém a mesma ordem de voltar, título, favorito,
+ação principal e menu nos dois renderers.
+
+`EstadoRestauravel` é uma lista de permissões, não um depósito genérico. Sem
+`rascunho`, campos digitados não são guardados; sem `rolagem`, a posição não é
+restaurada. Arquivo selecionado nunca é persistido. Use `SESSAO` por padrão;
+`SINCRONIZADA` só para preferências não sensíveis que precisam acompanhar a
+pessoa entre aparelhos (numa conta de negócio, cada colega tem o seu). O estado
+é guardado por destino — rota e parâmetros —, então o rascunho de um registro
+não abre no outro. A versão e a validade descartam estado antigo; visualizações salvas só
+existem no modo sincronizado e podem ser criadas, renomeadas, excluídas e
+marcadas como padrão nos dois renderers.
+
+Uma `Rota(..., compartilhavel=True)` também pode chegar por link profundo.
+O link carrega apenas o nome registrado e seus parâmetros escalares; não
+carrega URL de destino, componente ou estilo. O host reconsulta o índice
+autorizado antes de abrir e ignora parâmetros extras ou com tipo incorreto.
+
 ## Regra de autoria
 
 Uma tela nova deve ser montada somente com objetos exportados por

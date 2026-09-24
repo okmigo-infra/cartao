@@ -10,6 +10,7 @@ from okmigo_cartao.sdk import (
     AplicativoDoContrato,
     Autorizar,
     Busca,
+    BuscaDoAplicativo,
     CatalogoPublico,
     CampoOculto,
     Coluna,
@@ -24,23 +25,165 @@ from okmigo_cartao.sdk import (
     FormaDoGrafico,
     Grafico,
     GrupoDeNavegacao,
+    HistoricoDeNavegacao,
     ICONES_DE_TELA,
     Navegacao,
     NavegacaoAgrupada,
+    EstadoRestauravel,
     Opcao,
     OperacaoParametrizada,
+    ParametroDaRota,
+    PersistenciaDoEstado,
     Ponto,
     Serie,
+    Rota,
     Superficie,
     Tabela,
     Tela,
     Tema,
     Texto,
     TipoDeAcao,
+    TipoDeResultadoDaBusca,
+)
+from okmigo_cartao.componentes_de_navegacao import (
+    CabecalhoDaTela,
+    EtapaDoFluxo,
+    Fluxo,
+    MestreDetalhe,
 )
 
 
 class SdkTest(unittest.TestCase):
+    def test_rotas_internas_sao_tipadas_e_nao_se_confundem_com_operacao(self):
+        cabecalho = CabecalhoDaTela(
+            "Clientes",
+            acao_principal=Acao.navegar(
+                "Abrir cliente", "cliente", parametros={"id": "{id}"}
+            ),
+        )
+        tela = Tela("Clientes", (cabecalho,))
+        app = Aplicativo(
+            slug="clientes", endpoint="https://clientes.example/mcp",
+            para_tipo="socio", descricao="Clientes", descricao_humana=None,
+            nome_visivel="Clientes", versao="1", conversa=(),
+            superficies=(
+                Superficie("lista", "Lista", "Lista", "clientes", "lista", Fonte("listar"), tela),
+                Superficie("detalhe", "Detalhe", "Detalhe", "perfil", "detalhe", Fonte("detalhar"), tela),
+            ),
+            rotas=(Rota("cliente", "detalhe", (ParametroDaRota("id"),)),),
+        )
+
+        manifesto = app.compilar()
+        self.assertEqual(manifesto["rotas"][0]["superficie"], "detalhe")
+        normalizada = tela.conferir(rotas={"cliente": {"id": "texto"}})
+        self.assertEqual(
+            normalizada["corpo"][1]["acao_principal"]["navegar"],
+            {"rota": "cliente", "parametros": {"id": "{id}"}},
+        )
+        with self.assertRaisesRegex(ContratoDoSdkInvalido, "rota desconhecida"):
+            Aplicativo(
+                slug="clientes", endpoint="https://clientes.example/mcp",
+                para_tipo="socio", descricao="Clientes", descricao_humana=None,
+                nome_visivel="Clientes", versao="1", conversa=(),
+                superficies=(Superficie("lista", "Lista", "Lista", "clientes", "lista", Fonte("listar"), tela),),
+            )
+
+    def test_parametro_da_rota_nao_pode_ter_nome_de_campo_da_plataforma(self):
+        # ⛔⛔ `tenant` num parâmetro de rota é o botão escolhendo de qual
+        # negócio a tela lê. Se esta guarda sair, este teste reprova.
+        for reservado in (
+            "credencial", "tenant", "hoje", "grupos", "grupos_nomes", "rota", "parametros",
+        ):
+            with self.subTest(reservado=reservado):
+                with self.assertRaisesRegex(ContratoDoSdkInvalido, "reservado"):
+                    ParametroDaRota(reservado)
+        # E o nome vira o marcador `{rota.<nome>}` da ponte: nada de chave,
+        # ponto ou hífen, que deixariam o marcador ambíguo.
+        for torto in ("{id}", "cliente.id", "cliente-id", "1id", ""):
+            with self.subTest(torto=torto):
+                with self.assertRaises(ContratoDoSdkInvalido):
+                    ParametroDaRota(torto)
+        self.assertEqual(ParametroDaRota("cliente_id").nome, "cliente_id")
+
+    def test_crivo_recusa_parametro_reservado_mesmo_sem_catalogo(self):
+        cartao = {
+            "type": "AdaptiveCard", "version": "1.5",
+            "body": [{"type": "ActionSet", "actions": [{
+                "type": "Action.Execute", "title": "Abrir",
+                "data": {"okmigoNavegar": {"rota": "cliente", "parametros": {"tenant": "outro"}}},
+            }]}],
+        }
+        tela, erro = validar(cartao)
+        self.assertIsNone(tela)
+        self.assertIn("reservado", erro or "")
+
+    def test_voltar_do_cabecalho_que_grava_nao_vira_seta(self):
+        cartao = {
+            "type": "AdaptiveCard", "version": "1.5",
+            "body": [{
+                "type": "okmigoCabecalhoDaTela", "titulo": "Cliente",
+                "voltar": {"type": "Action.Submit", "title": "Voltar",
+                           "data": {"operacao": "apagar"}},
+            }],
+        }
+        tela, erro = validar(cartao, frozenset({"apagar"}))
+        self.assertIsNone(erro)
+        self.assertNotIn("voltar", tela["corpo"][0])
+        cartao["body"][0]["voltar"] = {
+            "type": "Action.Execute", "title": "Voltar",
+            "data": {"okmigoNavegar": {"rota": "lista", "parametros": {}}},
+        }
+        tela, erro = validar(cartao, frozenset({"apagar"}))
+        self.assertIsNone(erro)
+        self.assertEqual(tela["corpo"][0]["voltar"]["navegar"]["rota"], "lista")
+
+    def test_manifesto_compila_busca_estado_e_historico_sem_layout_livre(self):
+        tela = Tela("Início", (Texto("Conteúdo"),))
+        app = Aplicativo(
+            slug="erp", endpoint="https://erp.example/mcp", para_tipo="socio",
+            descricao="ERP", descricao_humana=None, nome_visivel="ERP",
+            versao="1", conversa=(),
+            superficies=(Superficie("inicio", "Início", "Início", "inicio", "resumo", Fonte("inicio"), tela),),
+            rotas=(Rota(
+                "inicio", "inicio", compartilhavel=True,
+                historico=True, favoritavel=True,
+            ),),
+            busca=BuscaDoAplicativo(
+                "buscar", (TipoDeResultadoDaBusca("tela", "Tela", "inicio", "inicio"),)
+            ),
+            estados_restauraveis=(EstadoRestauravel(
+                "inicio", persistencia=PersistenciaDoEstado.SINCRONIZADA,
+                visoes_salvas=True, versao="painel-2", expira_em_horas=72,
+            ),),
+            historico_de_navegacao=HistoricoDeNavegacao(limite=12),
+        )
+        manifesto = app.compilar()
+        self.assertEqual(manifesto["busca"]["operacao"], "buscar")
+        self.assertTrue(manifesto["rotas"][0]["compartilhavel"])
+        self.assertTrue(manifesto["rotas"][0]["historico"])
+        self.assertTrue(manifesto["rotas"][0]["favoritavel"])
+        self.assertTrue(manifesto["estados_restauraveis"][0]["visoes_salvas"])
+        self.assertEqual(manifesto["estados_restauraveis"][0]["versao"], "painel-2")
+        self.assertEqual(manifesto["estados_restauraveis"][0]["expira_em_horas"], 72)
+        self.assertEqual(manifesto["historico_de_navegacao"]["limite"], 12)
+
+    def test_mestre_detalhe_e_fluxo_atravessam_o_crivo(self):
+        tela = Tela("Jornada", (
+            MestreDetalhe("clientes", (Texto("Maria"),), (Texto("Detalhe da Maria"),), selecionado=True),
+            Fluxo(
+                "cadastro",
+                (
+                    EtapaDoFluxo("dados", "Dados", (Texto("Informe os dados"),)),
+                    EtapaDoFluxo("revisao", "Revisão", (Texto("Confira"),)),
+                ),
+                "dados",
+            ),
+        ))
+        normalizada = tela.conferir()
+        self.assertEqual(normalizada["corpo"][1]["tipo"], "mestre_detalhe")
+        self.assertEqual(normalizada["corpo"][2]["tipo"], "fluxo")
+        self.assertEqual(normalizada["corpo"][2]["etapas"][0]["titulo"], "Dados")
+
     def test_navegacao_agrupada_cobre_todas_as_telas_uma_vez(self):
         tela = Tela("Tela", (Texto("Conteúdo"),))
         superficies = (

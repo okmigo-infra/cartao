@@ -69,6 +69,9 @@ dois é bug de um deles.
 | `okmigoComparador` | `{titulo, itens[{rotulo, apoio?, id?}], criterios[{rotulo, valores[], explicacao?, melhor?}], base?, nota?}`; 2 a 4 itens × 24 critérios | `valores` casa com `itens` por ÍNDICE e é PRENSADO no tamanho deles — valor faltando vira `""` e o cliente desenha «—»; encurtar deslocaria a coluna. `melhor` marca o extremo de UM critério (e é descartado se apontar para valor vazio); ⛔ não existe nota final: somar critérios de naturezas diferentes num score é produzir recomendação |
 | `okmigoAgenda` | `{titulo, itens[{data, titulo, apoio?, valor?, estado?, id?, aoTocar?}], base?, vazio?, agruparPorData?}`; teto 120 itens; `estado` em `confirmado/anunciado/previsto/realizado/sem_data/cancelado` | a LISTA do que vem por data — o irmão do `okmigoCalendario`, que é a grade do mês. ⭐ agenda VAZIA **sobrevive** (ao contrário da tabela só com cabeçalho): «nenhum provento anunciado» é a resposta, não a falta dela. Item sem `data` vira `sem_data` em vez de sumir; `previsto` nunca se desenha como `confirmado` |
 | `okmigoCartaoBancario` · `okmigoDistribuicao` · `okmigoListaFinanceira` | blocos do tema financeiro (`okmigoTema: "financeiro-violeta"`, `okmigoNavegacao: "inferior"` no topo do cartão); `tom` em lista fechada | itens sem título/valor somem; sem itens, o bloco some; `semantica` fora de `positivo/negativo/neutro` cai em `neutro` |
+| `okmigoCabecalhoDaTela` | título, subtítulo, variante `tela\|detalhe`, voltar/navegação, ação principal, favorito e menu | ordem e alvos de toque são do renderer; voltar e ação principal usam somente rota interna registrada; favorito é escrita declarada; menu continua limitado pelo `ActionSet` |
+| `okmigoMestreDetalhe` | `id`, `lista[]`, `detalhe[]`, estado vazio e `selecionado` | desktop/tablet mostra dois painéis; celular mostra lista **ou** detalhe. Conteúdo de ambos atravessa o crivo normalmente e conta no teto de nós |
+| `okmigoFluxo` | `id`, 2–12 etapas nomeadas, etapa atual, token de retomada, operação opcional de persistência e cancelamento | mostra progresso sem inventar avanço. Persistência/cancelamento só nomeiam escrita declarada; o renderer nunca pula uma etapa nem conclui sozinho |
 
 Chaves de TOPO: `type: "AdaptiveCard"`, `version`, `body`, `okmigoTema`,
 `okmigoNavegacao`. Qualquer outra é ignorada.
@@ -104,6 +107,66 @@ navegacao_agrupada=NavegacaoAgrupada((
 - No manifesto, o campo sai como `navegacao: {"tipo": "agrupada",
   "grupos": [...]}`. ⚠️ Um OkMigo sem suporte ignora o campo, e a barra volta
   ao modelo antigo com «Mais». É degradação, não erro.
+
+### Rotas, busca e estado do aplicativo (0.18.0)
+
+Navegação entre cartões não usa URL nem nome de superfície vindo do botão.
+`Rota` registra um destino e os únicos parâmetros aceitos; `Acao.navegar`
+nomeia essa rota. SDK, crivo, API e clientes conferem o mesmo catálogo:
+
+```python
+rotas=(Rota("cliente", "detalhe", (ParametroDaRota("id"),)),)
+
+Acao.navegar("Abrir cliente", "cliente", parametros={"id": "cli-42"})
+```
+
+- parâmetro extra, ausente ou de tipo diferente é recusado antes da tela;
+- trocar de área não enche a pilha; abrir uma rota ou ficha empilha e o voltar
+  do navegador/Android/iOS retorna ao contexto anterior;
+- `compartilhavel=True` autoriza o host a produzir um link profundo. Web,
+  Android e iOS revalidam a instalação, a rota e cada parâmetro antes de abrir;
+  `historico=True` e `favoritavel=True` são opt-ins separados;
+- autorização é conferida novamente no destino. A rota não é permissão;
+- ⛔ `credencial`, `tenant`, `hoje`, `grupos`, `grupos_nomes`, `rota` e
+  `parametros` são **reservados** e o nome do parâmetro é identificador simples
+  (`[A-Za-z][A-Za-z0-9_]*`, até 40): SDK, crivo e registro recusam. São os
+  campos que a PLATAFORMA afirma ao pedir a tela, e um botão não os escolhe.
+
+**Como o parâmetro chega ao serviço.** Ao abrir a superfície de uma rota, o
+OkMigo manda os parâmetros já conferidos **dentro de `parametros`**, nunca
+misturados aos campos da plataforma:
+
+```json
+{"credencial": "…", "tenant": "…", "hoje": "2026-09-24",
+ "grupos": ["…"], "grupos_nomes": "[…]", "parametros": {"id": "cli-42"}}
+```
+
+Pela ponte MCP, a fonte da tela os pede escrevendo o marcador **inteiro**
+`{rota.<nome>}` como valor no `pedido` — `{"pedido": {"cliente": "{rota.id}"}}`
+vira `{"cliente": "cli-42"}`. Só o valor que é o marcador inteiro é trocado
+(como `{hoje}` e `{grupos}`); parâmetro ausente vira texto vazio e nunca some
+do pedido; e nada disso vai em cabeçalho.
+
+`BuscaDoAplicativo` declara uma operação de leitura e tipos de resultado. O
+serviço responde `resultados[{tipo,titulo,subtitulo?,parametros}]`; o OkMigo
+deriva a rota pelo tipo declarado, poda campos extras e limita a resposta. O
+serviço não escolhe URL nem destino. A busca tem atraso curto, teclado,
+carregando, vazio, erro e recentes no renderer.
+
+`EstadoRestauravel` autoriza somente nomes fechados (`filtros`, `ordem`,
+`paginacao`, `rolagem`, `selecao`, `rascunho`). Sem declaração, nada é
+restaurado. Arquivos, credenciais e dados fora desses slots nunca entram no
+estado de UI. `versao` invalida estado incompatível e `expira_em_horas` limita
+a retenção. `PersistenciaDoEstado.SINCRONIZADA` acompanha a PESSOA dentro da conta
+aberta entre web, Android e iOS (numa conta de negócio, cada colega tem o seu),
+e é guardado por destino — rota e parâmetros —, então o rascunho do cliente 42
+nunca abre na ficha do cliente 43; somente ela pode habilitar `visoes_salvas`. O preview simula
+essas mesmas regras localmente. `HistoricoDeNavegacao` limita
+recentes/favoritos e retenção.
+
+`IndicadorDeNavegacao` é uma leitura pequena e independente por área. A
+operação precisa ser leitura declarada; `caminho` escolhe um escalar na
+resposta. Falha ou demora do indicador não bloqueia a tela nem a navegação.
 
 ## 3 · Escrita: o que um toque pode e não pode
 

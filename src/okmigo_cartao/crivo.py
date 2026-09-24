@@ -41,6 +41,8 @@ from dataclasses import dataclass
 from typing import Any
 from urllib.parse import urlsplit
 
+from .sdk import NOMES_RESERVADOS_DA_ROTA
+
 
 @dataclass(frozen=True)
 class Config:
@@ -248,6 +250,9 @@ _escrituras: ContextVar[frozenset[str] | None] = ContextVar(
 )
 _leituras: ContextVar[frozenset[str] | None] = ContextVar(
     "leituras_permitidas", default=None
+)
+_rotas: ContextVar[dict[str, dict[str, Any]] | None] = ContextVar(
+    "rotas_permitidas", default=None
 )
 _autorizacoes: ContextVar[list[int] | None] = ContextVar(
     "autorizacoes_do_cartao", default=None
@@ -493,6 +498,69 @@ def _consulta_de_acao(acao: Any) -> dict[str, Any] | None:
     if not isinstance(acao, dict) or acao.get("type") != "Action.Execute":
         return None
     dados = acao.get("data")
+    navegacao = dados.get("okmigoNavegar") if isinstance(dados, dict) else None
+    if isinstance(navegacao, dict):
+        titulo = _txt(acao.get("title"), "titulo")[:40]
+        rota = _txt(navegacao.get("rota"), "titulo")[:60]
+        parametros_brutos = navegacao.get("parametros") or {}
+        if not titulo or not rota or not isinstance(parametros_brutos, dict):
+            return None
+        contrato = _rotas.get()
+        if contrato is not None and rota not in contrato:
+            raise _Erro(f"o cartão tenta abrir a rota interna não declarada '{rota}'")
+        permitidos = contrato.get(rota, {}) if contrato is not None else None
+        if permitidos is not None and set(parametros_brutos) - set(permitidos):
+            raise _Erro(f"a rota '{rota}' recebeu parâmetro não declarado")
+        if permitidos is not None:
+            ausentes = {
+                nome for nome, regra in permitidos.items()
+                if isinstance(regra, dict)
+                and regra.get("obrigatorio") is not False
+                and nome not in parametros_brutos
+            }
+            if ausentes:
+                raise _Erro(f"a rota '{rota}' não recebeu parâmetro obrigatório")
+        parametros: dict[str, str | int | float | bool] = {}
+        for chave, valor in list(parametros_brutos.items())[:20]:
+            nome = _txt(chave, "titulo")[:60]
+            if not nome or isinstance(valor, (dict, list)) or valor is None:
+                continue
+            # ⛔⛔ Nome reservado RECUSA a tela, com ou sem catálogo de rotas:
+            # `tenant`, `credencial`, `hoje` e os grupos são o que a PLATAFORMA
+            # afirma no pedido de tela, e um botão não os escolhe. A mesma
+            # lista do SDK (`NOMES_RESERVADOS_DA_ROTA`).
+            if nome in NOMES_RESERVADOS_DA_ROTA:
+                raise _Erro(f"a rota '{rota}' usa o parâmetro reservado '{nome}'")
+            regra = permitidos.get(chave) if permitidos is not None else None
+            tipo_esperado = (
+                str(regra.get("tipo") or "texto")
+                if isinstance(regra, dict)
+                else str(regra or "texto")
+            )
+            # ⚠️ `{campo}` passa sem tipo porque é MOLDE: a ponte o troca pelo
+            # dado (`_encher`) antes deste crivo rodar no OkMigo, e o que sobrar
+            # sem trocar é conferido de novo, com tipo, ao abrir a rota.
+            molde = isinstance(valor, str) and bool(
+                re.fullmatch(r"\{[A-Za-z][A-Za-z0-9_.-]*\}", valor)
+            )
+            certo = molde or (
+                (tipo_esperado == "texto" and isinstance(valor, str))
+                or (tipo_esperado == "inteiro" and isinstance(valor, int) and not isinstance(valor, bool))
+                or (tipo_esperado == "decimal" and isinstance(valor, (int, float)) and not isinstance(valor, bool))
+                or (tipo_esperado == "booleano" and isinstance(valor, bool))
+            )
+            if not certo:
+                raise _Erro(f"a rota '{rota}' recebeu parâmetro de tipo inválido")
+            if isinstance(valor, str):
+                parametros[nome] = _txt(valor)[:200]
+            elif isinstance(valor, (int, float, bool)):
+                parametros[nome] = valor
+        saida: dict[str, Any] = {
+            "titulo": titulo,
+            "navegar": {"rota": rota, "parametros": parametros},
+            "enfase": _enfase(acao),
+        }
+        return saida
     operacao = (
         _txt(dados.get("operacao"), "titulo")[:60]
         if isinstance(dados, dict)
@@ -651,6 +719,102 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
             "discreto": bool(no.get("isSubtle")),
             "quebra": no.get("wrap") is not False,
         }
+
+    if tipo == "okmigoCabecalhoDaTela":
+        titulo = _txt(no.get("titulo"), "titulo")
+        if not titulo:
+            return None
+        variante = no.get("variante") if no.get("variante") in {"tela", "detalhe"} else "tela"
+        saida: dict[str, Any] = {
+            "tipo": "cabecalho_da_tela",
+            **comum,
+            "titulo": titulo,
+            "subtitulo": _txt(no.get("subtitulo"), "titulo"),
+            "variante": variante,
+            "favorito": bool(no.get("favorito")),
+        }
+        for origem, destino in (
+            ("voltar", "voltar"),
+            ("acaoPrincipal", "acao_principal"),
+            ("favoritar", "favoritar"),
+            ("desfavoritar", "desfavoritar"),
+        ):
+            acao = _consulta_de_acao(no.get(origem)) or _escrita_de_acao(no.get(origem))
+            # ⛔ `voltar` é SÓ navegação interna. A seta de voltar que grava
+            # (ou consulta) é um gesto de escrita com cara de «sair daqui»: a
+            # pessoa aperta para ir embora e muda dado. O SDK já recusa; o
+            # crivo recusa em silêncio (a seta some) para quem escreve o JSON
+            # à mão — e os clientes só sabem desenhar a seta que navega.
+            if destino == "voltar" and acao is not None and "navegar" not in acao:
+                acao = None
+            if acao:
+                saida[destino] = acao
+        menu = _um(no.get("menu"), contador)
+        if menu and menu.get("tipo") == "acoes":
+            saida["menu"] = menu
+        return saida
+
+    if tipo == "okmigoMestreDetalhe":
+        identificador = _txt(no.get("id"), "titulo")[:60]
+        lista = _muitos(no.get("lista"), contador)
+        detalhe = _muitos(no.get("detalhe"), contador)
+        if not identificador or not lista or not detalhe:
+            return None
+        return {
+            "tipo": "mestre_detalhe",
+            **comum,
+            "id": identificador,
+            "lista": lista,
+            "detalhe": detalhe,
+            "vazio": _txt(no.get("vazio")) or "Selecione um item para ver os detalhes.",
+            "selecionado": bool(no.get("selecionado")),
+        }
+
+    if tipo == "okmigoFluxo":
+        identificador = _txt(no.get("id"), "titulo")[:60]
+        atual = _txt(no.get("atual"), "titulo")[:60]
+        etapas = []
+        for etapa in (no.get("etapas") or [])[:12]:
+            if not isinstance(etapa, dict):
+                continue
+            nome = _txt(etapa.get("nome"), "titulo")[:60]
+            titulo = _txt(etapa.get("titulo"), "titulo")
+            componentes = _muitos(etapa.get("componentes"), contador)
+            if nome and titulo and componentes:
+                etapa_pronta = {
+                    "nome": nome,
+                    "titulo": titulo,
+                    "opcional": bool(etapa.get("opcional")),
+                    "componentes": componentes,
+                }
+                voltar = _escrita_de_acao(etapa.get("voltar"))
+                avancar = _escrita_de_acao(etapa.get("avancar"))
+                if voltar:
+                    etapa_pronta["voltar"] = voltar
+                if avancar:
+                    etapa_pronta["avancar"] = avancar
+                etapas.append(etapa_pronta)
+        if not identificador or len(etapas) < 2 or atual not in {e["nome"] for e in etapas}:
+            return None
+        persistir = _txt(no.get("persistir"), "titulo")[:60]
+        if persistir and _escrituras.get() is not None and persistir not in _escrituras.get():
+            raise _Erro(
+                f"o fluxo persiste em '{persistir}', que não é uma operação de escrita deste serviço"
+            )
+        saida = {
+            "tipo": "fluxo",
+            **comum,
+            "id": identificador,
+            "atual": atual,
+            "token_de_retomada": _txt(no.get("tokenDeRetomada"), "valor")[:200],
+            "etapas": etapas,
+        }
+        if persistir:
+            saida["persistir"] = persistir
+        cancelar = _escrita_de_acao(no.get("cancelar"))
+        if cancelar:
+            saida["cancelar"] = cancelar
+        return saida
 
     # ── okmigoCalendario: uma grade que não cabe em nó por célula ──────────
     # Vale 1 nó e carrega DADO (eventos); quem desenha o mês é o cliente. O
@@ -1980,6 +2144,7 @@ def validar(
     leituras: frozenset[str] | set[str] | None = None,
     *,
     config: Config | None = None,
+    rotas: dict[str, dict[str, Any]] | None = None,
 ) -> tuple[dict | None, str | None]:
     """`(tela, None)` ou `(None, motivo)` — reconstruído, nunca repassado.
 
@@ -1992,12 +2157,14 @@ def validar(
     ficha_c = _config.set(config if config is not None else Config())
     ficha = _escrituras.set(frozenset(escrituras) if escrituras is not None else None)
     ficha_l = _leituras.set(frozenset(leituras) if leituras is not None else None)
+    ficha_r = _rotas.set(rotas)
     # Zerado por CARTÃO, não por processo: o teto de autorizações é do cartão.
     ficha_a = _autorizacoes.set([0])
     try:
         return _validar(bruto)
     finally:
         _autorizacoes.reset(ficha_a)
+        _rotas.reset(ficha_r)
         _leituras.reset(ficha_l)
         _escrituras.reset(ficha)
         _config.reset(ficha_c)

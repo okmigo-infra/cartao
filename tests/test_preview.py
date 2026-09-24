@@ -115,7 +115,7 @@ class PreviewTest(unittest.TestCase):
 
         self.assertIn("baixar_extrato", leituras)
         self.assertIn("salvar_cadastro", escrituras)
-        self.assertEqual(5, len(aplicativo["superficies"]))
+        self.assertEqual(6, len(aplicativo["superficies"]))
         self.assertIn("detalhar_item", leituras)
         self.assertIn("remover_item", escrituras)
 
