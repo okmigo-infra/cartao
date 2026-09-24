@@ -84,11 +84,20 @@ final do cliente nativo continua sendo feita no emulador Flutter.
 O catálogo tipado cobre estrutura responsiva, cartões clicáveis, menus de
 ações, confirmação, abas, expansíveis, diálogos, tabelas flexíveis, campos
 semânticos, múltipla escolha, alternância, quantidade, galeria, linha do tempo,
-paginação, estados, calendário, gráficos e blocos financeiros. Padrões de
+paginação, estados, calendário, gráficos, blocos financeiros, cabeçalho
+universal, mestre–detalhe, fluxos retomáveis, rotas tipadas, busca global e
+navegação agrupada com indicadores. Padrões de
 produto como ficha, grade de métricas e estado vazio são composições dessas
 primitivas e não aumentam a superfície do contrato.
 Consulte [`docs/CATALOGO-SDK.md`](docs/CATALOGO-SDK.md) para a lista completa,
 exemplos e a regra para evoluir o vocabulário.
+
+O aplicativo é mais do que a soma dos cartões. `Rota` + `Acao.navegar`
+permitem abrir detalhes sem URL livre; `BuscaDoAplicativo` conecta uma busca
+transversal a essas rotas; `EstadoRestauravel` declara exatamente quais partes
+da UI podem sobreviver à troca de tela; e `HistoricoDeNavegacao` limita
+recentes e favoritos. Todas essas declarações saem no JSON do manifesto e são
+reconferidas pelo host — o Python nunca é executado no OkMigo.
 
 Para passear pelo catálogo em cinco superfícies navegáveis:
 

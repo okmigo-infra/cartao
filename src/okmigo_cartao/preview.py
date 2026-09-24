@@ -330,6 +330,19 @@ def construir_aplicativo(
 
     esc_final = frozenset(inferidas_escrita) if escrituras is None else escrituras
     lei_final = frozenset(inferidas_leitura) if leituras is None else leituras
+    rotas_do_manifesto: dict[str, dict[str, Any]] = {}
+    for rota in manifesto.get("rotas") or []:
+        if not isinstance(rota, dict) or not isinstance(rota.get("nome"), str):
+            continue
+        parametros = {
+            str(parametro.get("nome")): {
+                "tipo": str(parametro.get("tipo") or "texto"),
+                "obrigatorio": parametro.get("obrigatorio") is not False,
+            }
+            for parametro in rota.get("parametros") or []
+            if isinstance(parametro, dict) and parametro.get("nome")
+        }
+        rotas_do_manifesto[rota["nome"]] = parametros
     prontas = []
     for superficie, molde in brutos:
         nome = str(superficie.get("nome") or "")
@@ -343,7 +356,9 @@ def construir_aplicativo(
                 f"os dados de {nome!r} precisam ter resumo objeto e linhas lista"
             )
         bruto = expandir(molde, resumo, linhas)
-        tela, erro = validar(bruto, esc_final, lei_final, config=Config())
+        tela, erro = validar(
+            bruto, esc_final, lei_final, config=Config(), rotas=rotas_do_manifesto
+        )
         if erro and not dado and "nenhum elemento" in erro:
             # Algumas telas são integralmente dirigidas por dados (uma tabela
             # sem título, por exemplo). Sem fixture o preview não deve apagar
@@ -390,6 +405,74 @@ def construir_aplicativo(
     navegacao = manifesto.get("navegacao")
     if isinstance(navegacao, dict):
         aplicativo["navegacao"] = deepcopy(navegacao)
+    if isinstance(manifesto.get("rotas"), list):
+        aplicativo["rotas"] = deepcopy(manifesto["rotas"])
+    if isinstance(manifesto.get("busca"), dict):
+        aplicativo["busca"] = deepcopy(manifesto["busca"])
+    if isinstance(manifesto.get("estados_restauraveis"), list):
+        aplicativo["estados_restauraveis"] = deepcopy(
+            manifesto["estados_restauraveis"]
+        )
+    if isinstance(manifesto.get("historico_de_navegacao"), dict):
+        aplicativo["historico_de_navegacao"] = deepcopy(
+            manifesto["historico_de_navegacao"]
+        )
+    # Fixtures exclusivas do preview: deixam busca e indicadores visíveis sem
+    # ensinar o produto a embutir dados simulados no manifesto de produção.
+    # O renderer ainda confere as rotas/tipos abaixo; a fixture não abre uma
+    # porta lateral para destino arbitrário.
+    resultados = (
+        getattr(modulo, "RESULTADOS_DA_BUSCA_PARA_O_PREVIEW", None)
+        if modulo is not None
+        else None
+    )
+    if resultados is None:
+        resultados = dados_lidos.get("resultados_da_busca")
+    if isinstance(resultados, (list, tuple)) and isinstance(aplicativo.get("busca"), dict):
+        tipos = {
+            str(tipo.get("nome")): str(tipo.get("rota"))
+            for tipo in aplicativo["busca"].get("tipos") or []
+            if isinstance(tipo, dict) and tipo.get("nome") and tipo.get("rota")
+        }
+        rotas = {str(rota.get("nome")) for rota in aplicativo.get("rotas") or [] if isinstance(rota, dict)}
+        seguros = []
+        for item in resultados[:50]:
+            if not isinstance(item, dict):
+                continue
+            tipo = str(item.get("tipo") or "")
+            rota = str(item.get("rota") or tipos.get(tipo) or "")
+            if tipo not in tipos or rota != tipos[tipo] or rota not in rotas:
+                continue
+            seguros.append({
+                "titulo": str(item.get("titulo") or "")[:120],
+                "subtitulo": str(item.get("subtitulo") or "")[:160],
+                "tipo": tipo,
+                "rota": rota,
+                "parametros": deepcopy(item.get("parametros") or {}),
+            })
+        aplicativo["resultados_da_busca"] = seguros
+    indicadores = (
+        getattr(modulo, "INDICADORES_PARA_O_PREVIEW", None)
+        if modulo is not None
+        else None
+    )
+    if indicadores is None:
+        indicadores = dados_lidos.get("indicadores")
+    if isinstance(indicadores, dict):
+        grupos = {
+            str(grupo.get("nome")): grupo.get("indicador")
+            for grupo in (aplicativo.get("navegacao") or {}).get("grupos") or []
+            if isinstance(grupo, dict) and isinstance(grupo.get("indicador"), dict)
+        }
+        aplicativo["indicadores"] = {
+            nome: {
+                "estado": str(grupos[nome].get("estado") or "contagem"),
+                "rotulo": str(grupos[nome].get("rotulo") or nome)[:80],
+                "valor": valor if isinstance(valor, (bool, int, float)) else 0,
+            }
+            for nome, valor in indicadores.items()
+            if nome in grupos
+        }
     return (
         aplicativo,
         esc_final,
