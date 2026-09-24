@@ -21,6 +21,7 @@ from .sdk import (
     EnfaseDaAcao,
     Fato,
     Fatos,
+    DestinoDaRota,
     Painel,
     PapelDoTexto,
     Texto,
@@ -536,6 +537,7 @@ class VistaDoCalendario(StrEnum):
     MES = "mes"
     SEMANA = "semana"
     DIA = "dia"
+    AGENDA = "agenda"
 
 
 class TipoDeEvento(StrEnum):
@@ -639,23 +641,60 @@ class AcaoDoEvento:
 
 
 @dataclass(frozen=True, slots=True)
+class NavegacaoDoCalendario:
+    """Rota tipada usada pelo renderer para buscar outro período."""
+
+    destino: DestinoDaRota
+    parametro: str = "periodo"
+
+    def __post_init__(self) -> None:
+        _nome(self.parametro, "parametro da navegacao do calendario")
+
+    def compilar(self) -> Json:
+        return {
+            "rota": self.destino.rota,
+            "parametro": self.parametro,
+            "parametros": deepcopy(dict(self.destino.parametros)),
+        }
+
+
+@dataclass(frozen=True, slots=True)
 class Calendario:
     eventos: tuple[Evento, ...]
     vista: VistaDoCalendario = VistaDoCalendario.MES
     de: str = ""
+    ate: str = ""
+    vistas: tuple[VistaDoCalendario, ...] = ()
+    hora_inicial: int = 7
+    hora_final: int = 21
     ao_tocar_o_dia: AoTocarODia | None = None
     acoes_do_evento: tuple[AcaoDoEvento, ...] = ()
+    ao_navegar_periodo: NavegacaoDoCalendario | None = None
+
+    def __post_init__(self) -> None:
+        if not 0 <= self.hora_inicial < self.hora_final <= 24:
+            raise ContratoDoSdkInvalido(
+                "horas do calendario exigem 0 <= inicial < final <= 24"
+            )
+        if len(set(self.vistas)) != len(self.vistas):
+            raise ContratoDoSdkInvalido("vistas do calendario nao podem se repetir")
 
     def compilar(self) -> Json:
         no: Json = {
             "type": "okmigoCalendario",
             "vista": self.vista.value,
             "de": self.de,
+            "ate": self.ate,
+            "vistas": [vista.value for vista in self.vistas],
+            "horaInicial": self.hora_inicial,
+            "horaFinal": self.hora_final,
             "eventos": _compilar(self.eventos),
             "acoesDoEvento": _compilar(self.acoes_do_evento),
         }
         if self.ao_tocar_o_dia is not None:
             no["aoTocarODia"] = self.ao_tocar_o_dia.compilar()
+        if self.ao_navegar_periodo is not None:
+            no["aoNavegarPeriodo"] = self.ao_navegar_periodo.compilar()
         return no
 
 
