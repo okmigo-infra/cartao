@@ -26,6 +26,31 @@ class PreviewTest(unittest.TestCase):
             digest = hashlib.sha256((ativos / nome).read_bytes()).hexdigest()
             self.assertEqual(metadados[f"{nome.replace('.', '_')}_sha256"], digest)
 
+    def test_o_cta_de_rodape_reserva_espaco_no_quadro_de_celular(self):
+        """⛔ OMINFRA-617: no quadro de celular o CTA de rodapé (`okmigoRodape`)
+        grudava no pé da área que rola POR CIMA do formulário — cobria o título
+        e o primeiro rótulo —, enquanto o Android o desenha fixo, com o
+        formulário rolando acima. Medido no navegador em 24/09: antes, o botão
+        começava 98 px acima do fim da área visível; depois, exatamente nele.
+        ⚠️ O teste é do BUNDLE (o que o pacote entrega), e reprova se a reserva
+        sumir de qualquer uma das duas metades: a medida no JS ou a regra no CSS.
+        """
+        ativos = RAIZ / "src" / "okmigo_cartao" / "assets"
+        css = (ativos / "renderer.css").read_text(encoding="utf-8")
+        js = (ativos / "renderer.js").read_text(encoding="utf-8")
+        compacto = "".join(css.split())
+        # a área que rola termina em cima do botão…
+        self.assertIn(".preview-celular.preview-surface.preview-com-rodape>.superficie-tematica-miolo{margin-bottom:var(--preview-rodape", compacto)
+        # …o botão sai do fluxo, preso entre a área e a barra de baixo…
+        regra = compacto.split(".preview-celular.preview-surface.cartao-rodape.preview-rodape-fixo{", 1)
+        self.assertEqual(len(regra), 2, "a regra do rodapé fixo sumiu do CSS")
+        corpo = regra[1].split("}", 1)[0]
+        self.assertIn("position:absolute", corpo)
+        self.assertIn("bottom:var(--preview-barra", corpo)
+        # …e as duas alturas são MEDIDAS pelo renderer, não chutadas.
+        for trecho in ("--preview-rodape", "--preview-barra", "preview-com-rodape", "preview-rodape-fixo"):
+            self.assertIn(trecho, js)
+
     def test_app_mantem_tela_dirigida_por_dados_navegavel_sem_fixture(self):
         with tempfile.TemporaryDirectory() as pasta:
             modulo = Path(pasta) / "app.py"
