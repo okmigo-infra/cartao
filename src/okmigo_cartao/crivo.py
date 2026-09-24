@@ -41,6 +41,8 @@ from dataclasses import dataclass
 from typing import Any
 from urllib.parse import urlsplit
 
+from .sdk import NOMES_RESERVADOS_DA_ROTA
+
 
 @dataclass(frozen=True)
 class Config:
@@ -523,12 +525,21 @@ def _consulta_de_acao(acao: Any) -> dict[str, Any] | None:
             nome = _txt(chave, "titulo")[:60]
             if not nome or isinstance(valor, (dict, list)) or valor is None:
                 continue
+            # ⛔⛔ Nome reservado RECUSA a tela, com ou sem catálogo de rotas:
+            # `tenant`, `credencial`, `hoje` e os grupos são o que a PLATAFORMA
+            # afirma no pedido de tela, e um botão não os escolhe. A mesma
+            # lista do SDK (`NOMES_RESERVADOS_DA_ROTA`).
+            if nome in NOMES_RESERVADOS_DA_ROTA:
+                raise _Erro(f"a rota '{rota}' usa o parâmetro reservado '{nome}'")
             regra = permitidos.get(chave) if permitidos is not None else None
             tipo_esperado = (
                 str(regra.get("tipo") or "texto")
                 if isinstance(regra, dict)
                 else str(regra or "texto")
             )
+            # ⚠️ `{campo}` passa sem tipo porque é MOLDE: a ponte o troca pelo
+            # dado (`_encher`) antes deste crivo rodar no OkMigo, e o que sobrar
+            # sem trocar é conferido de novo, com tipo, ao abrir a rota.
             molde = isinstance(valor, str) and bool(
                 re.fullmatch(r"\{[A-Za-z][A-Za-z0-9_.-]*\}", valor)
             )
@@ -729,6 +740,13 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
             ("desfavoritar", "desfavoritar"),
         ):
             acao = _consulta_de_acao(no.get(origem)) or _escrita_de_acao(no.get(origem))
+            # ⛔ `voltar` é SÓ navegação interna. A seta de voltar que grava
+            # (ou consulta) é um gesto de escrita com cara de «sair daqui»: a
+            # pessoa aperta para ir embora e muda dado. O SDK já recusa; o
+            # crivo recusa em silêncio (a seta some) para quem escreve o JSON
+            # à mão — e os clientes só sabem desenhar a seta que navega.
+            if destino == "voltar" and acao is not None and "navegar" not in acao:
+                acao = None
             if acao:
                 saida[destino] = acao
         menu = _um(no.get("menu"), contador)

@@ -204,6 +204,14 @@ A operação de busca recebe `{"termo": "..."}` e devolve:
 }
 ```
 
+Nomes de parâmetro são identificadores simples e `credencial`, `tenant`,
+`hoje`, `grupos`, `grupos_nomes`, `rota` e `parametros` são reservados
+(`ParametroDaRota("tenant")` levanta `ContratoDoSdkInvalido`). Ao abrir a tela
+da rota, o serviço recebe os parâmetros conferidos em `parametros` no corpo do
+pedido da superfície; pela ponte MCP, a fonte os pede com o marcador inteiro
+`{rota.<nome>}` no `pedido` (`ConsultaDaFonte("detalhar", pedido={"cliente": "{rota.id}"})`).
+Parâmetro ausente chega como texto vazio.
+
 O serviço não devolve rota ou URL. O tipo escolhe uma rota que já estava no
 manifesto, e os parâmetros atravessam a mesma validação de nome, presença e
 tipo usada ao abrir a tela. Resultados desconhecidos ou com campo extra somem.
@@ -218,7 +226,9 @@ ação principal e menu nos dois renderers.
 `rascunho`, campos digitados não são guardados; sem `rolagem`, a posição não é
 restaurada. Arquivo selecionado nunca é persistido. Use `SESSAO` por padrão;
 `SINCRONIZADA` só para preferências não sensíveis que precisam acompanhar a
-conta. A versão e a validade descartam estado antigo; visualizações salvas só
+pessoa entre aparelhos (numa conta de negócio, cada colega tem o seu). O estado
+é guardado por destino — rota e parâmetros —, então o rascunho de um registro
+não abre no outro. A versão e a validade descartam estado antigo; visualizações salvas só
 existem no modo sincronizado e podem ser criadas, renomeadas, excluídas e
 marcadas como padrão nos dois renderers.
 

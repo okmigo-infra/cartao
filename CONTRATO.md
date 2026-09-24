@@ -126,7 +126,26 @@ Acao.navegar("Abrir cliente", "cliente", parametros={"id": "cli-42"})
 - `compartilhavel=True` autoriza o host a produzir um link profundo. Web,
   Android e iOS revalidam a instalação, a rota e cada parâmetro antes de abrir;
   `historico=True` e `favoritavel=True` são opt-ins separados;
-- autorização é conferida novamente no destino. A rota não é permissão.
+- autorização é conferida novamente no destino. A rota não é permissão;
+- ⛔ `credencial`, `tenant`, `hoje`, `grupos`, `grupos_nomes`, `rota` e
+  `parametros` são **reservados** e o nome do parâmetro é identificador simples
+  (`[A-Za-z][A-Za-z0-9_]*`, até 40): SDK, crivo e registro recusam. São os
+  campos que a PLATAFORMA afirma ao pedir a tela, e um botão não os escolhe.
+
+**Como o parâmetro chega ao serviço.** Ao abrir a superfície de uma rota, o
+OkMigo manda os parâmetros já conferidos **dentro de `parametros`**, nunca
+misturados aos campos da plataforma:
+
+```json
+{"credencial": "…", "tenant": "…", "hoje": "2026-09-24",
+ "grupos": ["…"], "grupos_nomes": "[…]", "parametros": {"id": "cli-42"}}
+```
+
+Pela ponte MCP, a fonte da tela os pede escrevendo o marcador **inteiro**
+`{rota.<nome>}` como valor no `pedido` — `{"pedido": {"cliente": "{rota.id}"}}`
+vira `{"cliente": "cli-42"}`. Só o valor que é o marcador inteiro é trocado
+(como `{hoje}` e `{grupos}`); parâmetro ausente vira texto vazio e nunca some
+do pedido; e nada disso vai em cabeçalho.
 
 `BuscaDoAplicativo` declara uma operação de leitura e tipos de resultado. O
 serviço responde `resultados[{tipo,titulo,subtitulo?,parametros}]`; o OkMigo
@@ -138,8 +157,10 @@ carregando, vazio, erro e recentes no renderer.
 `paginacao`, `rolagem`, `selecao`, `rascunho`). Sem declaração, nada é
 restaurado. Arquivos, credenciais e dados fora desses slots nunca entram no
 estado de UI. `versao` invalida estado incompatível e `expira_em_horas` limita
-a retenção. `PersistenciaDoEstado.SINCRONIZADA` acompanha a conta entre web,
-Android e iOS; somente ela pode habilitar `visoes_salvas`. O preview simula
+a retenção. `PersistenciaDoEstado.SINCRONIZADA` acompanha a PESSOA dentro da conta
+aberta entre web, Android e iOS (numa conta de negócio, cada colega tem o seu),
+e é guardado por destino — rota e parâmetros —, então o rascunho do cliente 42
+nunca abre na ficha do cliente 43; somente ela pode habilitar `visoes_salvas`. O preview simula
 essas mesmas regras localmente. `HistoricoDeNavegacao` limita
 recentes/favoritos e retenção.
 

@@ -25,6 +25,22 @@ _NOME = re.compile(
 )
 
 
+#: O nome de um parâmetro de rota: identificador simples, sem ponto, hífen nem
+#: chaves. ⚠️ Mais estreito que `_NOME` de propósito: o nome vira o marcador
+#: `{rota.<nome>}` no `pedido` de uma fonte da ponte, e um nome com chave ou
+#: ponto faria o marcador ambíguo. É a MESMA régua do registro no OkMigo.
+NOME_DE_PARAMETRO_DA_ROTA = re.compile(r"^[A-Za-z][A-Za-z0-9_]{0,39}$")
+
+#: ⛔⛔ Nomes que um parâmetro de rota NUNCA pode ter. São os campos que a
+#: PLATAFORMA afirma no pedido de tela (quem é o negócio, que dia é hoje, quais
+#: grupos a pessoa alcança) e os dois envelopes da navegação. Um parâmetro
+#: chamado `tenant` é o botão de um cartão tentando escolher de qual negócio a
+#: tela lê — e um parâmetro de rota é dado que atravessa o cliente.
+NOMES_RESERVADOS_DA_ROTA: frozenset[str] = frozenset({
+    "credencial", "tenant", "hoje", "grupos", "grupos_nomes", "rota", "parametros",
+})
+
+
 class ContratoDoSdkInvalido(ValueError):
     """O erro de autoria que o SDK consegue detectar antes do crivo."""
 
@@ -77,7 +93,15 @@ class ParametroDaRota:
     obrigatorio: bool = True
 
     def __post_init__(self) -> None:
-        _nome(self.nome, "parametro da rota")
+        if not NOME_DE_PARAMETRO_DA_ROTA.fullmatch(self.nome):
+            raise ContratoDoSdkInvalido(
+                "parametro da rota precisa ser um identificador simples "
+                f"(letras, números e _), recebi {self.nome!r}"
+            )
+        if self.nome in NOMES_RESERVADOS_DA_ROTA:
+            raise ContratoDoSdkInvalido(
+                f"parametro da rota {self.nome!r} é reservado pela plataforma"
+            )
 
     def compilar(self) -> Json:
         return {

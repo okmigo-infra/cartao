@@ -88,6 +88,55 @@ class SdkTest(unittest.TestCase):
                 superficies=(Superficie("lista", "Lista", "Lista", "clientes", "lista", Fonte("listar"), tela),),
             )
 
+    def test_parametro_da_rota_nao_pode_ter_nome_de_campo_da_plataforma(self):
+        # ⛔⛔ `tenant` num parâmetro de rota é o botão escolhendo de qual
+        # negócio a tela lê. Se esta guarda sair, este teste reprova.
+        for reservado in (
+            "credencial", "tenant", "hoje", "grupos", "grupos_nomes", "rota", "parametros",
+        ):
+            with self.subTest(reservado=reservado):
+                with self.assertRaisesRegex(ContratoDoSdkInvalido, "reservado"):
+                    ParametroDaRota(reservado)
+        # E o nome vira o marcador `{rota.<nome>}` da ponte: nada de chave,
+        # ponto ou hífen, que deixariam o marcador ambíguo.
+        for torto in ("{id}", "cliente.id", "cliente-id", "1id", ""):
+            with self.subTest(torto=torto):
+                with self.assertRaises(ContratoDoSdkInvalido):
+                    ParametroDaRota(torto)
+        self.assertEqual(ParametroDaRota("cliente_id").nome, "cliente_id")
+
+    def test_crivo_recusa_parametro_reservado_mesmo_sem_catalogo(self):
+        cartao = {
+            "type": "AdaptiveCard", "version": "1.5",
+            "body": [{"type": "ActionSet", "actions": [{
+                "type": "Action.Execute", "title": "Abrir",
+                "data": {"okmigoNavegar": {"rota": "cliente", "parametros": {"tenant": "outro"}}},
+            }]}],
+        }
+        tela, erro = validar(cartao)
+        self.assertIsNone(tela)
+        self.assertIn("reservado", erro or "")
+
+    def test_voltar_do_cabecalho_que_grava_nao_vira_seta(self):
+        cartao = {
+            "type": "AdaptiveCard", "version": "1.5",
+            "body": [{
+                "type": "okmigoCabecalhoDaTela", "titulo": "Cliente",
+                "voltar": {"type": "Action.Submit", "title": "Voltar",
+                           "data": {"operacao": "apagar"}},
+            }],
+        }
+        tela, erro = validar(cartao, frozenset({"apagar"}))
+        self.assertIsNone(erro)
+        self.assertNotIn("voltar", tela["corpo"][0])
+        cartao["body"][0]["voltar"] = {
+            "type": "Action.Execute", "title": "Voltar",
+            "data": {"okmigoNavegar": {"rota": "lista", "parametros": {}}},
+        }
+        tela, erro = validar(cartao, frozenset({"apagar"}))
+        self.assertIsNone(erro)
+        self.assertEqual(tela["corpo"][0]["voltar"]["navegar"]["rota"], "lista")
+
     def test_manifesto_compila_busca_estado_e_historico_sem_layout_livre(self):
         tela = Tela("Início", (Texto("Conteúdo"),))
         app = Aplicativo(
