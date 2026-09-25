@@ -40,6 +40,7 @@ from .crivo import (
     Config,
     validar,
 )
+from . import grupo  # ⭐ OMINFRA-806: ações e conteúdo com escopo de grupo
 from .sdk import (
     Acao,
     Acoes,
@@ -213,6 +214,7 @@ from .componentes_de_navegacao import (
 )
 
 __all__ = [
+    "grupo",
     "AgenteDeDominio",
     "AgenteInvalido",
     "Exemplo",
