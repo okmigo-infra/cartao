@@ -1471,6 +1471,9 @@ class Aplicativo:
     #: ⭐ O agente de domínio (contrato 1, ADR 001 do okmigo). Sem ele, o
     #: serviço segue só MCP — é a compatibilidade, não um modo degradado.
     agente: AgenteDeDominio | None = None
+    #: ⭐ OMINFRA-806: o que o serviço pede DENTRO de um grupo
+    #: (``okmigo_cartao.grupo.CapacidadesDeGrupo``). Declarar não ativa.
+    grupo: Any = None
     extras: Mapping[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -1599,7 +1602,7 @@ class Aplicativo:
             "convite", "quer_a_marca", "aceita_contato", "publico",
             "marca_horario", "recebe_documento", "so_por_convite",
             "em_breve", "tipo",
-            "tenant_sondagem", "credencial_sondagem", "vitrine_url", "agente",
+            "tenant_sondagem", "credencial_sondagem", "vitrine_url", "agente", "grupo",
         }
         conflito = reservadas.intersection(self.extras)
         if conflito:
@@ -1662,6 +1665,11 @@ class Aplicativo:
             aplicativo["em_breve"] = True
         if self.agente is not None:
             aplicativo["agente"] = self.agente.compilar()
+        if self.grupo is not None:
+            from .grupo import CapacidadesDeGrupo
+            if not isinstance(self.grupo, CapacidadesDeGrupo):
+                raise ContratoDoSdkInvalido("grupo é um CapacidadesDeGrupo")
+            aplicativo["grupo"] = self.grupo.compilar()
         return aplicativo
 
 

@@ -92,6 +92,11 @@ primitivas e não aumentam a superfície do contrato.
 Consulte [`docs/CATALOGO-SDK.md`](docs/CATALOGO-SDK.md) para a lista completa,
 exemplos e a regra para evoluir o vocabulário.
 
+Para agir **dentro de um grupo** do okmigo (responder a quem usou o serviço,
+mandar mensagem, sugerir atividade, enquete ou material) sem nunca ver o
+grupo, use `okmigo_cartao.grupo` — o contrato, a matriz de permissões e um
+exemplo completo estão em [`docs/GRUPOS.md`](docs/GRUPOS.md).
+
 O aplicativo é mais do que a soma dos cartões. `Rota` + `Acao.navegar`
 permitem abrir detalhes sem URL livre; `BuscaDoAplicativo` conecta uma busca
 transversal a essas rotas; `EstadoRestauravel` declara exatamente quais partes
