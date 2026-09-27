@@ -91,9 +91,11 @@ ALINHAMENTOS = {"left", "center", "right"}
 #: manter em dois clientes; entra uma por vez, com motivo.
 VISTAS = {"mes", "semana", "dia", "agenda"}
 
-#: O que o CLIENTE sabe sobre o dia tocado e pode entregar a um campo. O
-#: serviço nomeia o campo, nunca o valor.
-DADOS_DO_DIA = {"data"}
+#: O que o CLIENTE sabe sobre o ponto tocado no calendário e pode entregar a
+#: um campo. Na grade mensal ele conhece só a data; na régua diária conhece
+#: também a hora calculada pela posição vertical. O serviço nomeia o campo,
+#: nunca o valor.
+DADOS_DO_DIA = {"data", "hora"}
 #: Idem para o EVENTO tocado ou arrastado. `id` é o que separa «ver a agenda»
 #: de «mexer nela». Os três `nova_*` são o DESTINO de um arrasto e só existem
 #: nesse gesto: num toque chegariam vazios e a operação gravaria lixo.

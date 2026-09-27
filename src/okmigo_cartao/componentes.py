@@ -575,13 +575,19 @@ class Evento:
 class AoTocarODia:
     mostrar: str
     campo_da_data: str
+    campo_da_hora: str | None = None
 
     def __post_init__(self) -> None:
         _nome(self.mostrar, "id da secao do dia")
         _nome(self.campo_da_data, "campo da data")
+        if self.campo_da_hora is not None:
+            _nome(self.campo_da_hora, "campo da hora")
 
     def compilar(self) -> Json:
-        return {"mostrar": self.mostrar, "preencher": {self.campo_da_data: "data"}}
+        preencher = {self.campo_da_data: "data"}
+        if self.campo_da_hora is not None:
+            preencher[self.campo_da_hora] = "hora"
+        return {"mostrar": self.mostrar, "preencher": preencher}
 
 
 class GestoDoEvento(StrEnum):
