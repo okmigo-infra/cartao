@@ -98,6 +98,32 @@ class EstruturaTest(unittest.TestCase):
         self.assertNotIn("tema", tela)
         self.assertNotIn("navegacao", tela)
 
+    def test_variante_desktop_e_reconstruida_e_nao_repassada(self):
+        bruto = cartao(
+            {"type": "TextBlock", "text": "celular"},
+            okmigoTema="operacao-direta",
+            okmigoNavegacao="inferior",
+            okmigoDesktop=cartao(
+                {"type": "TextBlock", "text": "desktop", "cor": "nao passa"},
+                okmigoTema="operacao-direta",
+                okmigoNavegacao="inferior",
+                lixo="nao passa",
+            ),
+        )
+        tela, erro = validar(bruto)
+        self.assertIsNone(erro)
+        self.assertEqual(tela["corpo"][0]["texto"], "celular")
+        self.assertEqual(tela["desktop"]["corpo"][0]["texto"], "desktop")
+        self.assertNotIn("lixo", tela["desktop"])
+
+    def test_variante_desktop_invalida_recusa_a_tela_inteira(self):
+        tela, erro = validar(cartao(
+            {"type": "TextBlock", "text": "celular"},
+            okmigoDesktop={"type": "AdaptiveCard", "body": []},
+        ))
+        self.assertIsNone(tela)
+        self.assertIn("variante desktop inválida", erro)
+
 
 class EscritaTest(unittest.TestCase):
     def botao(self, depois=None, operacao="salvar", escrituras={"salvar"}):

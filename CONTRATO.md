@@ -74,7 +74,14 @@ dois é bug de um deles.
 | `okmigoFluxo` | `id`, 2–12 etapas nomeadas, etapa atual, token de retomada, operação opcional de persistência e cancelamento | mostra progresso sem inventar avanço. Persistência/cancelamento só nomeiam escrita declarada; o renderer nunca pula uma etapa nem conclui sozinho |
 
 Chaves de TOPO: `type: "AdaptiveCard"`, `version`, `body`, `okmigoTema`,
-`okmigoNavegacao`. Qualquer outra é ignorada.
+`okmigoNavegacao` e `okmigoDesktop`. Qualquer outra é ignorada.
+
+`okmigoDesktop` leva outro Adaptive Card completo para a mesma superfície. O
+cartão de topo é sempre a composição de celular e também o fallback para
+clientes antigos; quando há largura, clientes novos podem desenhar a árvore
+normalizada em `desktop`. O crivo reconstrói as duas árvores, usa as mesmas
+listas de leituras/escritas e recusa tema ou navegação divergentes. Não é um
+segundo serviço, fonte ou conjunto de permissões.
 
 `okmigoTema` declara a **natureza da experiência**, nunca uma paleta ou CSS.
 A lista fechada é `financeiro-violeta` (finanças pessoais), `jornada-ativa`

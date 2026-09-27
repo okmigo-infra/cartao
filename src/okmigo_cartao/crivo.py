@@ -2217,7 +2217,7 @@ def validar(
         _config.reset(ficha_c)
 
 
-def _validar(bruto: Any) -> tuple[dict | None, str | None]:
+def _validar(bruto: Any, *, permite_desktop: bool = True) -> tuple[dict | None, str | None]:
     if not isinstance(bruto, dict):
         return None, "o cartão precisa ser um objeto"
     if bruto.get("type") != "AdaptiveCard":
@@ -2243,4 +2243,14 @@ def _validar(bruto: Any) -> tuple[dict | None, str | None]:
         saida["tema"] = tema
     if navegacao in _NAVEGACOES_DO_CARTAO:
         saida["navegacao"] = navegacao
+    desktop_bruto = bruto.get("okmigoDesktop") if permite_desktop else None
+    if desktop_bruto is not None:
+        desktop, erro = _validar(desktop_bruto, permite_desktop=False)
+        if erro or desktop is None:
+            return None, f"variante desktop inválida: {erro or 'cartão recusado'}"
+        if desktop.get("tema") != saida.get("tema"):
+            return None, "variante desktop precisa usar o mesmo tema da tela de celular"
+        if desktop.get("navegacao") != saida.get("navegacao"):
+            return None, "variante desktop precisa usar a mesma navegação da tela de celular"
+        saida["desktop"] = desktop
     return saida, None

@@ -317,7 +317,7 @@ def relatorio(bruto: Any, tela: dict | None, erro: str | None) -> list[str]:
     # opcionais. As que ele NÃO conhece merecem aviso.
     if isinstance(bruto, dict):
         for chave in bruto:
-            if chave not in ("type", "version", "body", "okmigoTema", "okmigoNavegacao", "$schema"):
+            if chave not in ("type", "version", "body", "okmigoTema", "okmigoNavegacao", "okmigoDesktop", "$schema"):
                 linhas.append(f"ℹ️ chave de topo `{chave}` é ignorada")
     return linhas
 

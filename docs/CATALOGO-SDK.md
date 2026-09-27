@@ -38,6 +38,7 @@ mesmo lugar.
 |---|---|
 | texto e hierarquia | `Texto`, `PapelDoTexto`, `Fato`, `Fatos` |
 | agrupamento responsivo | `Painel`, `Secao`, `Area`, `Faixa`, `Tabela` |
+| composições próprias por dispositivo | `TelaResponsiva` |
 | listas vindas dos dados | `Repetir`, `Condicao` |
 | estados e degradação | `ComAlternativa`, `EstadoVazio` |
 | resumos | `Metrica`, `GradeDeMetricas`, `Ficha` |
@@ -394,3 +395,8 @@ python -m okmigo_cartao preview seu_modulo.py:APLICATIVO \
 Valide sempre o aplicativo inteiro, em desktop e celular, nos modos claro e
 escuro. Para listas, use pelo menos dois itens, texto longo, zero e estado
 vazio; validar apenas o molde cru não exercita `Repetir`.
+Para telas cuja hierarquia realmente muda, `TelaResponsiva` recebe uma `Tela`
+de celular e outra de desktop. Prefira reflow dos componentes comuns; use duas
+composições quando o desktop ganhar painel, tabela, ações persistentes ou maior
+densidade e o celular precisar de lista, etapas ou cartões. Tema e navegação
+devem ser iguais, e as duas árvores passam pelo mesmo crivo de operações.

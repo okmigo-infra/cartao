@@ -400,18 +400,25 @@ def _tela_resumida(no: dict[str, Any]) -> str:
 
 def _superficie(no: dict[str, Any]) -> str:
     cartao = no["cartao"]
-    tema = cartao.get("okmigoTema")
+    def tela(item: dict[str, Any]) -> str:
+        tema = item.get("okmigoTema")
+        return _chamada(
+            "Tela", repr(no["titulo"]),
+            _tupla([_componente(componente) for componente in item["body"]]),
+            tema=_enum("Tema", tema, TEMAS) if tema else None,
+            navegacao="Navegacao.INFERIOR" if item.get("okmigoNavegacao") == "inferior" else None,
+            versao=repr(item.get("version", "1.5")), mostrar_cabecalho="False",
+        )
+    tela_compilada = (
+        _chamada("TelaResponsiva", tela(cartao), tela(cartao["okmigoDesktop"]))
+        if "okmigoDesktop" in cartao else tela(cartao)
+    )
     return _chamada(
         "Superficie", repr(no["nome"]), repr(no["titulo"]),
         repr(no.get("rotulo")) if "rotulo" in no else "None",
         repr(no.get("icone")) if "icone" in no else "None",
         repr(no["hint"]), _fonte(no["fonte"]),
-        _chamada(
-            "Tela", repr(no["titulo"]), _tupla([_componente(item) for item in cartao["body"]]),
-            tema=_enum("Tema", tema, TEMAS) if tema else None,
-            navegacao="Navegacao.INFERIOR" if cartao.get("okmigoNavegacao") == "inferior" else None,
-            versao=repr(cartao.get("version", "1.5")), mostrar_cabecalho="False",
-        ),
+        tela_compilada,
         representacao=_tela_resumida(no["tela"]) if "tela" in no else None,
         visivel=repr(no["isVisible"]) if "isVisible" in no else None,
         rotulo_superficie=repr(no["rotulo_superficie"]) if "rotulo_superficie" in no else None,
@@ -470,7 +477,7 @@ IMPORTACOES = """from okmigo_cartao import (
     ItemDeDistribuicao, ItemResumido, LancamentoFinanceiro, LarguraDaArea,
     LinhaDeTabela, ListaFinanceira, MarcaHorario, MarcaSolicitada,
     Navegacao, Opcao, OperacaoParametrizada, PainelResumido, Ponto, Progresso,
-    Repetir, Secao, Serie, Superficie, TabelaFlexivel, Tela, TelaResumida, Tema, Texto,
+    Repetir, Secao, Serie, Superficie, TabelaFlexivel, Tela, TelaResponsiva, TelaResumida, Tema, Texto,
     TomDoGrafico, AlvoDeVisibilidade, Alternar, AlturaDaImagem,
 )
 """

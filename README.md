@@ -86,8 +86,15 @@ ações, confirmação, abas, expansíveis, diálogos, tabelas flexíveis, campo
 semânticos, múltipla escolha, alternância, quantidade, galeria, linha do tempo,
 paginação, estados, calendário, gráficos, blocos financeiros, cabeçalho
 universal, mestre–detalhe, fluxos retomáveis, rotas tipadas, busca global e
-navegação agrupada com indicadores. Padrões de
-produto como ficha, grade de métricas e estado vazio são composições dessas
+navegação agrupada com indicadores.
+
+Quando a mudança de largura exige mais do que reorganizar colunas, use
+`TelaResponsiva(celular=..., desktop=...)`. As duas composições compartilham a
+mesma `Superficie`, fonte, permissões, tema e navegação. A versão de celular é
+o fallback compatível; clientes novos escolhem a versão de desktop quando há
+espaço. Isso permite uma lista direta no telefone e um painel denso com menu
+lateral e abas no desktop, sem duplicar serviço nem regra de negócio. Padrões
+de produto como ficha, grade de métricas e estado vazio são composições dessas
 primitivas e não aumentam a superfície do contrato.
 Consulte [`docs/CATALOGO-SDK.md`](docs/CATALOGO-SDK.md) para a lista completa,
 exemplos e a regra para evoluir o vocabulário.

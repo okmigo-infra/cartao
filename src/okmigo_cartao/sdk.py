@@ -1016,6 +1016,56 @@ class Tela:
 
 
 @dataclass(frozen=True, slots=True)
+class TelaResponsiva:
+    """Duas composições da mesma tela, escolhidas pelo cliente.
+
+    A composição de celular é o cartão principal para que clientes antigos
+    recebam a versão mais segura para pouco espaço. Clientes que entendem
+    ``okmigoDesktop`` usam a composição de desktop quando houver largura.
+    Tema e navegação são identidade da superfície, portanto não podem divergir
+    entre as duas árvores. Dados, permissões e operações continuam sendo os da
+    mesma :class:`Superficie`.
+    """
+
+    celular: Tela
+    desktop: Tela
+
+    def __post_init__(self) -> None:
+        if self.celular.tema != self.desktop.tema:
+            raise ContratoDoSdkInvalido(
+                "tela responsiva precisa usar o mesmo tema no celular e no desktop"
+            )
+        if self.celular.navegacao != self.desktop.navegacao:
+            raise ContratoDoSdkInvalido(
+                "tela responsiva precisa usar a mesma navegacao no celular e no desktop"
+            )
+
+    def compilar(self) -> Json:
+        cartao = self.celular.compilar()
+        cartao["okmigoDesktop"] = self.desktop.compilar()
+        return cartao
+
+    def conferir(
+        self,
+        *,
+        leituras: set[str] | frozenset[str] = frozenset(),
+        escrituras: set[str] | frozenset[str] = frozenset(),
+        rotas: Mapping[str, Mapping[str, str]] | None = None,
+    ) -> Json:
+        """Confere as duas composições com o mesmo contrato de capacidades."""
+        from .crivo import validar
+
+        normalizada, erro = validar(
+            self.compilar(), leituras=leituras, escrituras=escrituras,
+            rotas={nome: dict(parametros) for nome, parametros in rotas.items()}
+            if rotas is not None else None,
+        )
+        if erro or normalizada is None:
+            raise ContratoDoSdkInvalido(erro or "o crivo recusou a tela responsiva")
+        return normalizada
+
+
+@dataclass(frozen=True, slots=True)
 class ConsultaDaFonte:
     """Uma chamada declarada para preencher resumo ou lista de uma superfície."""
 
@@ -1230,7 +1280,7 @@ class Superficie:
     icone: str | None
     hint: str
     fonte: Fonte
-    tela: Tela
+    tela: Tela | TelaResponsiva
     representacao: TelaResumida | None = None
     visivel: bool | None = None
     rotulo_superficie: str | None = None
