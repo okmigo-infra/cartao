@@ -204,7 +204,9 @@ class ComponentesDoSdkTest(unittest.TestCase):
             ate="2027-08-01",
             hora_inicial=8,
             hora_final=20,
-            ao_tocar_o_dia=AoTocarODia("novo_atendimento", "data"),
+            ao_tocar_o_dia=AoTocarODia(
+                "novo_atendimento", "data", "hora"
+            ),
             acoes_do_evento=(
                 AcaoDoEvento(
                     TipoDeEvento.ATENDIMENTO,
@@ -235,7 +237,10 @@ class ComponentesDoSdkTest(unittest.TestCase):
         self.assertEqual(saida["ate"], "2027-08-01")
         self.assertEqual(saida["hora_inicial"], 8)
         self.assertEqual(saida["hora_final"], 20)
-        self.assertEqual(saida["ao_tocar_o_dia"]["preencher"], {"data": "data"})
+        self.assertEqual(
+            saida["ao_tocar_o_dia"]["preencher"],
+            {"data": "data", "hora": "hora"},
+        )
         self.assertTrue(saida["acoes_do_evento"][1]["arrasta"])
         self.assertEqual(saida["navegar_periodo"], {
             "rota": "periodo", "parametro": "mes", "parametros": {}
@@ -244,6 +249,10 @@ class ComponentesDoSdkTest(unittest.TestCase):
     def test_calendario_recusa_intervalo_de_horas_invalido(self):
         with self.assertRaisesRegex(ContratoDoSdkInvalido, "horas do calendario"):
             Calendario((), hora_inicial=22, hora_final=8)
+
+    def test_toque_no_calendario_recusa_nome_de_campo_de_hora_invalido(self):
+        with self.assertRaisesRegex(ContratoDoSdkInvalido, "campo da hora"):
+            AoTocarODia("novo_atendimento", "data", "hora com espaco")
 
     def test_documentos_e_componentes_financeiros_passam_pelo_crivo(self):
         lancamento = LancamentoFinanceiro(

@@ -12,6 +12,28 @@ def cartao(*corpo, **topo):
 
 
 class EstruturaTest(unittest.TestCase):
+    def test_toque_na_regua_preserva_hora_e_descarta_dado_inventado(self):
+        tela, erro = validar(cartao({
+            "type": "okmigoCalendario",
+            "vista": "dia",
+            "de": "2026-09-27",
+            "eventos": [],
+            "aoTocarODia": {
+                "mostrar": "novo_compromisso",
+                "preencher": {
+                    "dia": "data",
+                    "hora": "hora",
+                    "campo_proibido": "coordenada_do_toque",
+                },
+            },
+        }))
+
+        self.assertIsNone(erro)
+        self.assertEqual(tela["corpo"][0]["ao_tocar_o_dia"]["preencher"], {
+            "dia": "data",
+            "hora": "hora",
+        })
+
     def test_caixas_clicaveis_aninhadas_nao_misturam_campos(self):
         def acao(nome):
             return {"type": "Action.Execute", "title": nome, "data": {"operacao": nome}}
