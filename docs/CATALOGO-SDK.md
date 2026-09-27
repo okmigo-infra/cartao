@@ -61,6 +61,7 @@ Use `Painel` para o caso simples e `Secao` quando uma dessas intenções existir
 | autocomplete remoto livre | `Busca` (com `ao_escolher=Acao.consultar(...)` a escolha JÁ abre a tela) |
 | upload | `Arquivo`, `FormatoDeArquivo` |
 | formulário completo | `Formulario` |
+| formulário com resumo, prévia ou contexto | `FormularioContextual` |
 | leitura e escrita | `Acao`, `Acoes` |
 | mostrar e esconder | `Alternar`, `AlvoDeVisibilidade` |
 | salvar e avançar uma etapa | `EnviarEAvancar` |
@@ -121,6 +122,15 @@ Cada `id` identifica o estado local do campo; `campo` é o nome enviado ao
 serviço. A ação recebe somente os campos da caixa onde está. Operações que o
 serviço não declarou recusam a tela inteira, evitando botões que parecem
 funcionar e não fazem nada.
+
+`FormularioContextual` é a composição para quando editar não é a tela inteira.
+O `resumo` identifica o registro e mostra seu estado antes dos campos; o
+`apoio` leva prévia, checklist, histórico curto ou impacto da mudança. No
+desktop formulário e apoio dividem a largura; no celular viram uma sequência
+vertical. Ele compila somente para `Container`, grade responsiva e ações já
+existentes — não acrescenta poder ao contrato. A ação não fica presa ao rodapé
+quando há painel de apoio, porque um rodapé dentro de grade disputaria a tela
+inteira; sem apoio, `rodape=True` continua disponível de forma explícita.
 
 ## Interações universais
 

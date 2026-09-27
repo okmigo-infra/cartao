@@ -937,3 +937,76 @@ class Formulario:
             itens += (Texto(self.explicacao, PapelDoTexto.AUXILIAR),)
         itens += (*self.campos, Acoes(self.acoes, rodape=self.rodape))
         return Painel(itens).compilar()
+
+
+@dataclass(frozen=True, slots=True)
+class FormularioContextual:
+    """Edição acompanhada de resumo e contexto, sem criar contrato novo.
+
+    Um formulário raramente é a tela inteira: antes de alterar um registro a
+    pessoa precisa reconhecer o que está editando e, em fluxos de negócio,
+    entender impacto, pendências ou uma prévia. Esta composição mantém o
+    formulário como região principal e põe o apoio numa grade responsiva. No
+    celular a grade vira uma coluna; nenhum campo é espremido para imitar o
+    desktop.
+
+    ``resumo`` fica antes da edição e serve para identidade, estado e alertas.
+    ``apoio`` fica ao lado no desktop e abaixo no celular; use-o para prévia,
+    checklist, histórico curto ou consequências da mudança. A composição só
+    produz primitivas que já existem no contrato.
+    """
+
+    titulo: str
+    campos: tuple[Componente, ...]
+    acoes: tuple[Componente, ...]
+    explicacao: str = ""
+    resumo: tuple[Componente, ...] = ()
+    apoio: tuple[Componente, ...] = ()
+    titulo_do_apoio: str = "Antes de salvar"
+    # A composição com apoio vive dentro de uma grade responsiva. Fixar uma
+    # ação ao rodapé dentro dessa grade faria uma coluna disputar o rodapé da
+    # tela inteira; quem realmente precisar do gesto preso pode optar por ele
+    # conscientemente quando usar o formulário sem apoio.
+    rodape: bool = False
+
+    def __post_init__(self) -> None:
+        if not self.titulo.strip():
+            raise ContratoDoSdkInvalido("formulario contextual precisa de titulo")
+        if not self.campos or not self.acoes:
+            raise ContratoDoSdkInvalido(
+                "formulario contextual precisa de campos e acoes"
+            )
+        if self.apoio and not self.titulo_do_apoio.strip():
+            raise ContratoDoSdkInvalido(
+                "apoio do formulario contextual precisa de titulo"
+            )
+
+    def compilar(self) -> Json:
+        formulario: Componente = Formulario(
+            self.titulo,
+            campos=self.campos,
+            acoes=self.acoes,
+            explicacao=self.explicacao,
+            rodape=self.rodape and not self.apoio,
+        )
+        itens: tuple[Componente, ...] = ()
+        if self.resumo:
+            itens += (Secao(self.resumo, tom=TomDaSecao.ENFASE),)
+        if self.apoio:
+            contexto = Painel(
+                (
+                    Texto(self.titulo_do_apoio, negrito=True),
+                    *self.apoio,
+                ),
+                neutro=True,
+            )
+            itens += (
+                Secao(
+                    (formulario, contexto),
+                    tom=None,
+                    grade="larga",
+                ),
+            )
+        else:
+            itens += (formulario,)
+        return Secao(itens, tom=None).compilar()
