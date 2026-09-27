@@ -91,9 +91,11 @@ ALINHAMENTOS = {"left", "center", "right"}
 #: manter em dois clientes; entra uma por vez, com motivo.
 VISTAS = {"mes", "semana", "dia", "agenda"}
 
-#: O que o CLIENTE sabe sobre o dia tocado e pode entregar a um campo. O
-#: serviço nomeia o campo, nunca o valor.
-DADOS_DO_DIA = {"data"}
+#: O que o CLIENTE sabe sobre o ponto tocado no calendário e pode entregar a
+#: um campo. Na grade mensal ele conhece só a data; na régua diária conhece
+#: também a hora calculada pela posição vertical. O serviço nomeia o campo,
+#: nunca o valor.
+DADOS_DO_DIA = {"data", "hora"}
 #: Idem para o EVENTO tocado ou arrastado. `id` é o que separa «ver a agenda»
 #: de «mexer nela». Os três `nova_*` são o DESTINO de um arrasto e só existem
 #: nesse gesto: num toque chegariam vazios e a operação gravaria lixo.
@@ -2217,7 +2219,7 @@ def validar(
         _config.reset(ficha_c)
 
 
-def _validar(bruto: Any) -> tuple[dict | None, str | None]:
+def _validar(bruto: Any, *, permite_desktop: bool = True) -> tuple[dict | None, str | None]:
     if not isinstance(bruto, dict):
         return None, "o cartão precisa ser um objeto"
     if bruto.get("type") != "AdaptiveCard":
@@ -2243,4 +2245,14 @@ def _validar(bruto: Any) -> tuple[dict | None, str | None]:
         saida["tema"] = tema
     if navegacao in _NAVEGACOES_DO_CARTAO:
         saida["navegacao"] = navegacao
+    desktop_bruto = bruto.get("okmigoDesktop") if permite_desktop else None
+    if desktop_bruto is not None:
+        desktop, erro = _validar(desktop_bruto, permite_desktop=False)
+        if erro or desktop is None:
+            return None, f"variante desktop inválida: {erro or 'cartão recusado'}"
+        if desktop.get("tema") != saida.get("tema"):
+            return None, "variante desktop precisa usar o mesmo tema da tela de celular"
+        if desktop.get("navegacao") != saida.get("navegacao"):
+            return None, "variante desktop precisa usar a mesma navegação da tela de celular"
+        saida["desktop"] = desktop
     return saida, None

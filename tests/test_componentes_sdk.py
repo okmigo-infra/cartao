@@ -33,6 +33,7 @@ from okmigo_cartao import (
     FormatoDeArquivo,
     FormaDaEscolha,
     Formulario,
+    FormularioContextual,
     GestoDoEvento,
     GradeDeMetricas,
     ItemDeDistribuicao,
@@ -46,6 +47,7 @@ from okmigo_cartao import (
     Secao,
     SemanticaFinanceira,
     Tela,
+    Texto,
     TipoDeEvento,
     TomDaSecao,
     TomFinanceiro,
@@ -56,6 +58,51 @@ from okmigo_cartao import (
 
 
 class ComponentesDoSdkTest(unittest.TestCase):
+    def test_formulario_contextual_compila_resumo_edicao_e_apoio_responsivo(self):
+        componente = FormularioContextual(
+            "Editar cobrança",
+            campos=(CampoTexto("descricao", "descricao", "Descrição"),),
+            acoes=(Acao.escrever("Salvar", "salvar_cobranca"),),
+            explicacao="Confira o impacto antes de salvar.",
+            resumo=(
+                Ficha(
+                    "Cobrança de setembro",
+                    "vence em 30/09",
+                    fatos=(Fato("Situação", "rascunho"),),
+                ),
+            ),
+            apoio=(
+                Texto("O saldo projetado permanece positivo."),
+                Ficha("Histórico", "Nenhuma alteração anterior."),
+            ),
+            titulo_do_apoio="Impacto e histórico",
+        )
+
+        compilado = componente.compilar()
+
+        self.assertEqual(compilado["type"], "Container")
+        self.assertEqual(compilado["items"][0]["style"], "emphasis")
+        grade = compilado["items"][1]
+        self.assertEqual(grade["okmigoGrade"], "larga")
+        self.assertEqual(len(grade["items"]), 2)
+        self.assertEqual(grade["items"][0]["items"][0]["text"], "Editar cobrança")
+        self.assertNotIn("okmigoRodape", grade["items"][0]["items"][-1])
+        self.assertEqual(
+            grade["items"][1]["items"][0]["text"], "Impacto e histórico"
+        )
+
+    def test_formulario_contextual_so_prende_acao_sem_grade_de_apoio(self):
+        componente = FormularioContextual(
+            "Editar cadastro",
+            campos=(CampoTexto("nome", "nome", "Nome"),),
+            acoes=(Acao.escrever("Salvar", "salvar"),),
+            rodape=True,
+        )
+
+        compilado = componente.compilar()
+
+        self.assertTrue(compilado["items"][0]["items"][-1]["okmigoRodape"])
+
     def test_formulario_tipado_chega_ao_crivo_com_campos_escopados(self):
         tela = Tela(
             "Perfil",
@@ -204,7 +251,9 @@ class ComponentesDoSdkTest(unittest.TestCase):
             ate="2027-08-01",
             hora_inicial=8,
             hora_final=20,
-            ao_tocar_o_dia=AoTocarODia("novo_atendimento", "data"),
+            ao_tocar_o_dia=AoTocarODia(
+                "novo_atendimento", "data", "hora"
+            ),
             acoes_do_evento=(
                 AcaoDoEvento(
                     TipoDeEvento.ATENDIMENTO,
@@ -235,7 +284,10 @@ class ComponentesDoSdkTest(unittest.TestCase):
         self.assertEqual(saida["ate"], "2027-08-01")
         self.assertEqual(saida["hora_inicial"], 8)
         self.assertEqual(saida["hora_final"], 20)
-        self.assertEqual(saida["ao_tocar_o_dia"]["preencher"], {"data": "data"})
+        self.assertEqual(
+            saida["ao_tocar_o_dia"]["preencher"],
+            {"data": "data", "hora": "hora"},
+        )
         self.assertTrue(saida["acoes_do_evento"][1]["arrasta"])
         self.assertEqual(saida["navegar_periodo"], {
             "rota": "periodo", "parametro": "mes", "parametros": {}
@@ -244,6 +296,10 @@ class ComponentesDoSdkTest(unittest.TestCase):
     def test_calendario_recusa_intervalo_de_horas_invalido(self):
         with self.assertRaisesRegex(ContratoDoSdkInvalido, "horas do calendario"):
             Calendario((), hora_inicial=22, hora_final=8)
+
+    def test_toque_no_calendario_recusa_nome_de_campo_de_hora_invalido(self):
+        with self.assertRaisesRegex(ContratoDoSdkInvalido, "campo da hora"):
+            AoTocarODia("novo_atendimento", "data", "hora com espaco")
 
     def test_documentos_e_componentes_financeiros_passam_pelo_crivo(self):
         lancamento = LancamentoFinanceiro(

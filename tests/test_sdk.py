@@ -324,6 +324,39 @@ class SdkTest(unittest.TestCase):
             tela.conferir(leituras={"buscar_ativos"})["navegacao"], "inferior"
         )
 
+    def test_tela_responsiva_mantem_celular_como_fallback_e_confere_desktop(self):
+        from okmigo_cartao import TelaResponsiva
+
+        celular = Tela(
+            "Resumo",
+            (Texto("Lista compacta"),),
+            tema=Tema.OPERACAO,
+            navegacao=Navegacao.INFERIOR,
+        )
+        desktop = Tela(
+            "Resumo",
+            (Texto("Painel amplo"),),
+            tema=Tema.OPERACAO,
+            navegacao=Navegacao.INFERIOR,
+        )
+        tela = TelaResponsiva(celular=celular, desktop=desktop)
+
+        bruto = tela.compilar()
+        self.assertEqual(bruto["body"][1]["text"], "Lista compacta")
+        self.assertEqual(bruto["okmigoDesktop"]["body"][1]["text"], "Painel amplo")
+        normalizada = tela.conferir()
+        self.assertEqual(normalizada["corpo"][1]["texto"], "Lista compacta")
+        self.assertEqual(normalizada["desktop"]["corpo"][1]["texto"], "Painel amplo")
+
+    def test_tela_responsiva_recusa_identidade_diferente(self):
+        from okmigo_cartao import ContratoDoSdkInvalido, TelaResponsiva
+
+        with self.assertRaisesRegex(ContratoDoSdkInvalido, "mesmo tema"):
+            TelaResponsiva(
+                celular=Tela("Resumo", (Texto("Celular"),), tema=Tema.OPERACAO),
+                desktop=Tela("Resumo", (Texto("Desktop"),), tema=Tema.MERCADO),
+            )
+
     def test_tabela_responsiva_tem_linha_consultavel_e_escrita_escopada(self):
         bruto = Tabela(
             colunas=(Coluna("Ativo", (Texto("{ticker}"),), largura=3),),

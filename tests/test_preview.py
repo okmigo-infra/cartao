@@ -113,6 +113,18 @@ class PreviewTest(unittest.TestCase):
         self.assertIn("superficie-top-tabs", html)
         self.assertIn("superficie-bottom-nav-agrupada", html)
 
+    def test_modo_desktop_nao_herda_a_coluna_estreita_do_celular(self):
+        """A composição desktop precisa usar o espaço restante após o trilho."""
+        css = (
+            RAIZ / "src" / "okmigo_cartao" / "assets" / "renderer.css"
+        ).read_text(encoding="utf-8")
+        compacto = "".join(css.split())
+
+        self.assertIn(
+            ".painel-modo-desktop{--superficie-max:980px}",
+            compacto,
+        )
+
     def test_compila_expande_e_confere_o_sdk(self):
         tela, escrituras, leituras = construir_tela(ALVO, None)
 
