@@ -1,0 +1,55 @@
+# Dependabot — a CADÊNCIA de cada dependência (OMINFRA-835).
+#
+# Toda segunda-feira às 06:00 (São Paulo) ele confere cada ecossistema abaixo e
+# abre UMA PR por grupo quando há versão nova. O dono de toda PR dele é o
+# Victor (`assignees`), e o gate é o mesmo de qualquer PR — ver `QUALIDADE.md`.
+#
+# ⚠️ Este arquivo NÃO é workflow: mudá-lo na `main` não esbarra na permissão
+# `workflows` da esteira. ⛔ Mas a PR que ele abre em `github-actions` MUDA
+# `.github/workflows/`, e essa mudança tem de ser levada também à `prod`, ou a
+# próxima promoção morre no push (o token da esteira não tem `workflows`).
+#
+# ⚠️ Os ALERTAS (a PR de segurança, fora da cadência) são outro interruptor, do
+# repositório, e não se ligam por arquivo.
+version: 2
+updates:
+
+  # As ações dos workflows, pinadas por SHA (27/09). ⛔ Ver o cabeçalho: a PR
+  # deste bloco precisa ir também à `prod`.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: America/Sao_Paulo
+    open-pull-requests-limit: 5
+    assignees:
+      - victorcmsantos
+    commit-message:
+      prefix: deps
+    groups:
+      github-actions-menores:
+        update-types:
+          - minor
+          - patch
+
+  # O Python. ⚠️ O crivo não tem dependência de execução (`dependencies = []`,
+  # de propósito: ele entra em doze consumidores); o que há aqui é o `dev`.
+  - package-ecosystem: pip
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: America/Sao_Paulo
+    open-pull-requests-limit: 5
+    assignees:
+      - victorcmsantos
+    commit-message:
+      prefix: deps
+    groups:
+      pip-menores:
+        update-types:
+          - minor
+          - patch
