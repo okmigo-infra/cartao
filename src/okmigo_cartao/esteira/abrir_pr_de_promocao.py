@@ -156,7 +156,7 @@ def pacotes_no_sha(sha: str, raiz: str = ".") -> set[str]:
     return achados
 
 
-def tem_imagem(pacote: str, tag: str, token: str) -> "bool | None":
+def tem_imagem(pacote: str, tag: str, token: str) -> bool | None:
     """O manifesto responde com camadas? `None` = não consegui perguntar.
 
     ⛔ HTTP 200 não basta: o GHCR devolve JSON de erro com status 200 em alguns

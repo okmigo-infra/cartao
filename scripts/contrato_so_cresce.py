@@ -19,6 +19,11 @@ MENOR (`0.6.x → 0.7.0`); de `1.0` em diante, o MAIOR. Encolher com bump de
 correção (`0.6.0 → 0.6.1`) é recusado — não porque tirar seja proibido, mas
 porque o consumidor precisa conseguir LER no número que vai doer.
 
+⭐ E o número não basta: o nome tem de ter AVISADO antes. Só sai do `__all__`
+o nome que a base já declarava em `depreciacao.DEPRECIACOES`, e só a partir da
+versão `sai_em` que aquela declaração prometeu — é a janela que deixa o
+consumidor ver o `DeprecationWarning` na suíte dele antes do `ImportError`.
+
 Uso:  python3 scripts/contrato_so_cresce.py [<commit-base>]
 """
 
@@ -29,6 +34,7 @@ import subprocess
 import sys
 
 FONTE = "src/okmigo_cartao/__init__.py"
+DEPRECIACOES = "src/okmigo_cartao/depreciacao.py"
 
 
 def rodar(*args: str) -> subprocess.CompletedProcess:
@@ -55,6 +61,41 @@ def nomes(texto: str) -> set[str] | None:
                 except ValueError:
                     return None
     return None
+
+
+def depreciacoes(texto: str | None) -> dict[str, str] | None:
+    """`{nome: sai_em}` de `DEPRECIACOES`, lido pela árvore sintática (a base
+    é outro commit: importá-la seria executá-la). Arquivo ausente = nenhuma
+    depreciação; arquivo ilegível = `None`, que é recusa, nunca aprovação."""
+    if texto is None:
+        return {}
+    try:
+        arvore = ast.parse(texto)
+    except SyntaxError:
+        return None
+    for no in arvore.body:
+        alvos = no.targets if isinstance(no, ast.Assign) else (
+            [no.target] if isinstance(no, ast.AnnAssign) else [])
+        if not any(isinstance(a, ast.Name) and a.id == "DEPRECIACOES" for a in alvos):
+            continue
+        if not isinstance(no.value, (ast.Tuple, ast.List)):
+            return None
+        saida = {}
+        for item in no.value.elts:
+            if not isinstance(item, ast.Call):
+                return None
+            campos = dict(zip(("nome", "desde", "sai_em", "alvo"), item.args, strict=False))
+            campos.update({k.arg: k.value for k in item.keywords if k.arg})
+            try:
+                saida[ast.literal_eval(campos["nome"])] = ast.literal_eval(campos["sai_em"])
+            except (KeyError, ValueError):
+                return None
+        return saida
+    return {}
+
+
+def como_tupla(v: str) -> tuple:
+    return tuple(int(m.group()) if (m := re.match(r"^\d+", p)) else -1 for p in v.split("."))
 
 
 def versao_de(texto: str) -> str | None:
@@ -113,6 +154,25 @@ def main() -> int:
     vb = versao_de(rodar("git", "show", f"{base}:pyproject.toml").stdout) or "0.0.0"
     with open("pyproject.toml", encoding="utf-8") as f:
         va = versao_de(f.read()) or "0.0.0"
+
+    r = rodar("git", "show", f"{base}:{DEPRECIACOES}")
+    avisados = depreciacoes(r.stdout if r.returncode == 0 else None)
+    if avisados is None:
+        print(f"✗ não consegui ler `DEPRECIACOES` na base ({DEPRECIACOES}).", file=sys.stderr)
+        return 1
+    sem_aviso = [n for n in sumiram if n not in avisados]
+    cedo = [n for n in sumiram if n in avisados and como_tupla(va) < como_tupla(avisados[n])]
+    if sem_aviso or cedo:
+        print(file=sys.stderr)
+        print(f"✗ {len(sem_aviso) + len(cedo)} nome(s) saíram do `__all__` sem cumprir a janela:",
+              file=sys.stderr)
+        for n in sem_aviso:
+            print(f"    · {n}: a base não o declarava depreciado", file=sys.stderr)
+        for n in cedo:
+            print(f"    · {n}: prometido para sair em {avisados[n]}, e a versão é {va}", file=sys.stderr)
+        print("  Deprecie primeiro (src/okmigo_cartao/depreciacao.py), publique, e só", file=sys.stderr)
+        print("  remova na versão `sai_em`. Um alias também serve.", file=sys.stderr)
+        return 1
 
     if slot_de_quebra(vb, va):
         print(f"  ⚠️ {len(sumiram)} nome(s) saíram do contrato: {', '.join(sumiram)}")

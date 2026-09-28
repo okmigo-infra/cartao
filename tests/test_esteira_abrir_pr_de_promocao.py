@@ -12,10 +12,8 @@ o caso da prosa e o do molde estão aqui como casos, não como comentário.
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
-import pytest
 
 from okmigo_cartao.esteira import abrir_pr_de_promocao as p
 
@@ -70,9 +68,9 @@ def test_IGNORA_o_kustomize_com_outra_etiqueta(tmp_path: Path):
 
 def test_so_olha_dentro_de_k8s_e_so_yaml(tmp_path: Path):
     _arvore(tmp_path, {
-        f"docker/compose.yml": f"image: ghcr.io/okmigo-infra/fora:{SHA}\n",
-        f"k8s/prod/notas.md": f"image: ghcr.io/okmigo-infra/markdown:{SHA}\n",
-        f"k8s/prod/10-api.yaml": f"image: ghcr.io/okmigo-infra/dentro:{SHA}\n",
+        "docker/compose.yml": f"image: ghcr.io/okmigo-infra/fora:{SHA}\n",
+        "k8s/prod/notas.md": f"image: ghcr.io/okmigo-infra/markdown:{SHA}\n",
+        "k8s/prod/10-api.yaml": f"image: ghcr.io/okmigo-infra/dentro:{SHA}\n",
     })
     assert p.pacotes_no_sha(SHA, str(tmp_path)) == {"dentro"}
 

@@ -9,7 +9,6 @@ from okmigo_cartao import (
     Aba,
     Abas,
     Agenda,
-    Acoes,
     AlvoDeVisibilidade,
     AoTocarODia,
     Alternancia,

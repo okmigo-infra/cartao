@@ -27,7 +27,7 @@ jobs:
       fail-fast: false
       # ⭐ Duas versões, cada uma provando uma coisa diferente:
       #   3.11 é o PISO que o `pyproject.toml` promete a quem está de fora;
-      #   3.12 é o que roda de verdade — os dez consumidores são `python:3.12-slim`.
+      #   3.12 é o que roda de verdade — os doze consumidores são `python:3.12-slim`.
       # ⛔ Testar só uma esconde metade: no piso quebra sintaxe nova, no 3.12
       # quebra o que a produção vai encontrar.
       matrix:
@@ -48,11 +48,18 @@ jobs:
       - name: instalar
         run: pip install -e '.[dev]'
 
+      # O mínimo de lint: erro, não estilo (a lista está no `pyproject.toml`).
+      # ⚠️ Com `target-version = "py311"` ele também pega sintaxe que só o 3.12
+      # entende — foi assim que duas f-strings de `scripts/` apareceram.
+      - name: lint
+        if: matrix.python == '3.12'
+        run: ruff check .
+
       - name: suíte
         run: pytest -q
 
       # ⛔⛔ **O jeito como o consumidor instala NÃO é `pip install -e .`.**
-      # Os dez repos pinam um TARBALL DO GIT:
+      # Os doze repos pinam um TARBALL DO GIT:
       #     okmigo-cartao @ https://github.com/okmigo-infra/cartao/archive/<sha>.tar.gz
       # É outro caminho de código: o pip desempacota o tarball e constrói. O
       # editável acima resolve `src/` pelo disco e por isso NUNCA vê o modo de
@@ -100,7 +107,44 @@ jobs:
       # Quem consome está pinado num SHA ANTIGO e um dia recebe a PR que troca
       # o pino. Se um nome sumiu no meio do caminho, o app não quebra no teste
       # de tela — quebra no `import`, e a esteira INTEIRA dele para. Este passo
-      # é a única coisa entre uma renomeação e dez esteiras vermelhas.
+      # é a única coisa entre uma renomeação e doze esteiras vermelhas.
       - name: o contrato só cresce
         if: matrix.python == '3.12'
         run: python3 scripts/contrato_so_cresce.py
+
+      # ⛔⛔ **A versão nova aceita e expande os cartões de hoje IGUAL à última tag?**
+      # Os consumidores só recebem esta árvore quando a PR de pino chega até
+      # eles — e aí quem descobre a quebra é o CI DELES, um por um. Este passo
+      # faz a pergunta aqui, antes da tag: roda a última tag e a árvore, cada
+      # uma no seu processo, sobre o corpus (`tests/compat/corpus/`, a FORMA
+      # anonimizada dos cartões reais) e os `exemplos/`, em cinco cenários de
+      # dados, e reprova se o que mudou pede um número que a versão não subiu.
+      # Ver docs/COMPATIBILIDADE.md.
+      - name: compatível com a última tag?
+        if: matrix.python == '3.12'
+        run: python scripts/compatibilidade.py
+
+  # ⭐ Os exemplos RENDERIZAM: o bundle Web oficial desenha cada superfície de
+  # `exemplos/` nos extremos, sem erro no console e sem texto passando da borda
+  # do celular. Job próprio porque o Chromium custa um minuto de instalação que
+  # a matriz não precisa pagar duas vezes.
+  navegador:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+
+      - name: instalar, com o navegador
+        run: |
+          pip install -e '.[dev]' playwright
+          python -m playwright install --with-deps chromium
+
+      - name: renderiza
+        # ⛔ Sem `EXIGIR_NAVEGADOR` o teste se PULA quando falta o Playwright —
+        # aqui o pulo tem de ser falha.
+        env:
+          EXIGIR_NAVEGADOR: "1"
+        run: pytest -q tests/test_renderiza_no_navegador.py

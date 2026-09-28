@@ -5,7 +5,7 @@ on:
     tags: ["v*"]
 
 # ⛔ Só o Release deste repositório. Nada aqui escreve em outro repo — o aviso
-# aos dez consumidores NÃO mora nesta esteira, e o porquê está no passo final.
+# aos doze consumidores NÃO mora nesta esteira, e o porquê está no passo final.
 permissions:
   contents: write
 
@@ -33,7 +33,7 @@ jobs:
           echo "  tag: $GITHUB_REF_NAME  ·  pyproject: $VER"
           [ "$TAG" = "$VER" ] || {
             echo "✗ a tag diz $TAG e o pyproject.toml diz $VER." >&2
-            echo "  Publicar assim faz o nome mentir para os dez consumidores." >&2
+            echo "  Publicar assim faz o nome mentir para os doze consumidores." >&2
             echo "  Apague a tag, acerte o pyproject.toml e marque de novo." >&2
             exit 1; }
           echo "  ✅ conferem"
@@ -45,6 +45,11 @@ jobs:
         run: |
           pip install -e '.[dev]'
           pytest -q
+
+      # ⛔ E a compatibilidade DE NOVO, pelo mesmo motivo: a tag pode cair num
+      # commit que nunca passou pela PR. A base é a tag ANTERIOR a esta.
+      - name: compatível com a tag anterior?
+        run: python scripts/compatibilidade.py
 
       - name: o tarball que o consumidor vai baixar
         run: |
@@ -94,11 +99,11 @@ jobs:
           gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file /tmp/notas.md
 
       # ⛔⛔ **E aqui a esteira PARA, de propósito.**
-      # O passo seguinte — abrir a PR de pino nos dez consumidores — exigiria
+      # O passo seguinte — abrir a PR de pino nos doze consumidores — exigiria
       # uma credencial com escrita nos repositórios PRIVADOS do okmigo. Este
       # repositório é PÚBLICO e existe para receber contribuição de fora:
       # guardar aqui um segredo que escreve no produto inteiro inverte a
-      # direção da confiança, e o raio de alcance não é este repo, são dez.
+      # direção da confiança, e o raio de alcance não é este repo, são doze.
       #
       # ⭐ Por isso quem avisa é o `sre` (privado), que compara de tempos em
       # tempos a tag mais nova daqui com o pino de cada consumidor. Além de não
@@ -107,4 +112,4 @@ jobs:
       - name: onde o aviso continua
         run: |
           echo "  Publicado. Quem abre a PR de pino nos consumidores é o \`sre\`:"
-          echo "  sre/.github/workflows/pino-do-cartao.yml (roda de 30 em 30 min)."
+          echo "  sre/.github/workflows/pino-do-cartao.yml (roda de 3 em 3 horas)."

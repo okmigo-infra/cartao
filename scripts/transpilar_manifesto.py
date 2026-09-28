@@ -23,13 +23,15 @@ def _chamada(nome: str, *args: str, **kwargs: str | None) -> str:
     partes = [*args, *(f"{chave}={valor}" for chave, valor in kwargs.items() if valor is not None)]
     if not partes:
         return f"{nome}()"
-    return f"{nome}(\n{_indentar(',\n'.join(partes))},\n)"
+    corpo = _indentar(",\n".join(partes))
+    return f"{nome}(\n{corpo},\n)"
 
 
 def _tupla(itens: list[str]) -> str:
     if not itens:
         return "()"
-    return f"(\n{_indentar(',\n'.join(itens))},\n)"
+    corpo = _indentar(",\n".join(itens))
+    return f"(\n{corpo},\n)"
 
 
 def _enum(nome: str, valor: str, mapa: dict[str, str]) -> str:
