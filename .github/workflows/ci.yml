@@ -48,6 +48,14 @@ jobs:
       - name: instalar
         run: pip install -e '.[dev]'
 
+      # OMINFRA-832: o README não contradiz o que o próprio repo declara (a
+      # versão, as superfícies do corpus e do catálogo, datas no retrato,
+      # links). Sem rede; o catálogo se conta importando o crivo instalado
+      # acima. O que ele confere está em `conferir/readme.json`.
+      - name: o README não contradiz o repo (deriva documental)
+        if: matrix.python == '3.12'
+        run: python conferir/conferir_readme.py
+
       # O mínimo de lint: erro, não estilo (a lista está no `pyproject.toml`).
       # ⚠️ Com `target-version = "py311"` ele também pega sintaxe que só o 3.12
       # entende — foi assim que duas f-strings de `scripts/` apareceram.
