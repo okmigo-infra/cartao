@@ -246,7 +246,8 @@ ENFASES = ("primaria", "padrao", "discreta", "destrutiva")
 # vários construtores até chegar num `ActionSet`: repetir a trava em cada
 # assinatura é trava que alguém esquece numa delas. `None` = «não confira», que
 # é o que vale para quem valida um cartão sem serviço por trás.
-_config: ContextVar[Config] = ContextVar("config_do_crivo", default=Config())
+# `Config` é `frozen`: o padrão compartilhado não pode ser alterado por ninguém.
+_config: ContextVar[Config] = ContextVar("config_do_crivo", default=Config())  # noqa: B039
 _escrituras: ContextVar[frozenset[str] | None] = ContextVar(
     "escrituras_permitidas", default=None
 )

@@ -1,6 +1,6 @@
 [project]
 name = "okmigo-cartao"
-version = "0.21.0"
+version = "0.22.0"
 description = "O crivo do cartão declarado do okmigo: valida e normaliza um Adaptive Card (subconjunto) do jeito que o produto faz — para quem escreve um app testar antes de registrar."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -9,7 +9,7 @@ classifiers = ["License :: OSI Approved :: Apache Software License"]
 dependencies = []
 
 [project.optional-dependencies]
-dev = ["pytest>=8"]
+dev = ["pytest>=8", "ruff>=0.6"]
 
 [project.scripts]
 okmigo-cartao = "okmigo_cartao.__main__:main"
@@ -32,3 +32,16 @@ okmigo_cartao = ["assets/*.js", "assets/*.css", "assets/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+# O mínimo de lint: o que é ERRO (sintaxe, nome indefinido, import morto,
+# armadilha do bugbear) e o que o piso 3.11 não entende. Estilo não entra.
+[tool.ruff]
+target-version = "py311"
+extend-exclude = ["src/okmigo_cartao/assets"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "B", "UP"]
+ignore = [
+  # `l` é «linha» em todo o crivo e na casca; trocar agora é ruído de diff.
+  "E741",
+]

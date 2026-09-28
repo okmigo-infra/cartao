@@ -547,9 +547,20 @@ def _no(n: dict, s: list[str]) -> None:
                 s.append(f'<li><button type="submit" name="operacao" value="{_e(b["enviar"])}">{_e(b["titulo"])}</button>{enf}{campos}{depois}</li>')
             elif "consultar" in b:
                 s.append(f'<li><button type="button">{_e(b["titulo"])}</button>{enf} <small>consulta: {_e(b["consultar"])}</small></li>')
-            else:
+            elif "navegar" in b:
+                # A rota interna: nomeia o destino, nunca um endereço.
+                destino = b["navegar"]
+                parametros = ", ".join(f"{_e(k)}={_e(v)}" for k, v in (destino.get("parametros") or {}).items())
+                s.append(f'<li><button type="button">{_e(b["titulo"])}</button>{enf} '
+                         f'<small>abre: {_e(destino.get("rota"))}({parametros})</small></li>')
+            elif "alvos" in b:
                 alvos = ", ".join(f"{a['id']}" + ("" if a["mostrar"] is None else ("=mostra" if a["mostrar"] else "=esconde")) for a in b["alvos"])
                 s.append(f'<li><button type="button">{_e(b["titulo"])}</button>{enf} <small>alterna: {alvos}</small></li>')
+            else:
+                # ⛔ Um gesto que a casca ainda não conhece NÃO derruba a casca
+                # inteira: aparece como botão, e o comentário diz o que faltou.
+                s.append(f'<li><button type="button">{_e(b.get("titulo"))}</button>{enf} '
+                         f'<!-- gesto sem casca: {_e(", ".join(sorted(b)))} --></li>')
         s.append("</menu>")
     else:
         s.append(f"<!-- tipo de saída sem casca: {_e(tipo)} -->")

@@ -410,3 +410,14 @@ __all__ = [
     "manifesto_confere",
     "materializar_manifesto",
 ]
+
+
+def __getattr__(nome: str):
+    """Nomes depreciados: ainda funcionam, e avisam (ver `depreciacao.py`).
+
+    Só é chamado para o que NÃO está no módulo — um nome depreciado sai daqui
+    e fica em `depreciacao.DEPRECIACOES`, que diz onde ele mora e o que dizer.
+    """
+    from .depreciacao import entregar
+
+    return entregar(nome)

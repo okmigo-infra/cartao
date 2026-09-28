@@ -148,7 +148,7 @@ class EstruturaTest(unittest.TestCase):
 
 
 class EscritaTest(unittest.TestCase):
-    def botao(self, depois=None, operacao="salvar", escrituras={"salvar"}):
+    def botao(self, depois=None, operacao="salvar", escrituras=frozenset({"salvar"})):
         acao = {
             "type": "Action.Submit",
             "title": "Continuar",

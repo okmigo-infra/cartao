@@ -27,7 +27,6 @@ from okmigo_cartao import (
     Minigrafico,
     Ranking,
     Tela,
-    Texto,
     TomDaEtiqueta,
     validar,
 )

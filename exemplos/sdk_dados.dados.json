@@ -1,0 +1,29 @@
+{
+  "lista": {
+    "resumo": {
+      "resumo_do_dia": "3 tarefas · 1 em atraso",
+      "etiquetas": [
+        {"rotulo": "Casa", "quantas": 2},
+        {"rotulo": "Rua", "quantas": 1}
+      ]
+    },
+    "linhas": [
+      {"id": "t1", "nome": "Regar as plantas", "prazo": "hoje", "estado": "aberta"},
+      {"id": "t2", "nome": "Devolver o livro à biblioteca", "prazo": "ontem", "estado": "atrasada", "motivo": "O prazo venceu ontem."},
+      {"id": "t3", "nome": "Uma tarefa com um nome bem mais comprido que o normal, para ver como a tabela se comporta quando o texto não cabe numa linha só", "prazo": "sexta", "estado": "aberta"}
+    ]
+  },
+  "detalhe": {
+    "resumo": {
+      "nome": "Devolver o livro à biblioteca",
+      "foto": "https://example.invalid/capa.png",
+      "foto_descricao": "Capa do livro",
+      "descricao": "Levar o livro emprestado de volta antes das 18h.",
+      "historico": [
+        {"quando": "segunda", "texto": "Emprestado"},
+        {"quando": "ontem", "texto": "Prazo venceu"}
+      ]
+    },
+    "linhas": []
+  }
+}
