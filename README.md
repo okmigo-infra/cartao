@@ -1,5 +1,20 @@
 # okmigo-cartao — o crivo do cartão declarado
 
+## Retrato (28/09/2026)
+
+| | |
+|---|---|
+| **Publicada** | **v0.21.0**, SHA `9c07ae7`, tag de 27/09. |
+| **Na `main`** | 0.22.0, **sem tag**: a régua de compatibilidade (`scripts/compatibilidade.py`), a depreciação com janela e a correção da casca, que levantava `KeyError` em todo botão que navega (desde a 0.18.0). Os dois commits que a `main` tinha além da v0.21.0 (#25, ações do GitHub fixadas por SHA) só tocam `.github/` e não pedem versão. |
+| **Quem consome** | **12 repositórios**: os onze aplicativos do ecossistema e o próprio produto. Os doze pinam `9c07ae7` (v0.21.0), na `main` e na `prod`. Medido em 28/09 no `pyproject.toml` de cada um. |
+| **Ambientes** | Nenhum: é um pacote. Publicar é **tag**, e quem roda o crivo é o produto e a suíte de cada consumidor. |
+| **Compatibilidade** | A 0.22.0 aceita e expande as 101 superfícies do corpus e as dos `exemplos/` **igual** à v0.21.0 nos cinco cenários (`scripts/compatibilidade.py`, 28/09). Nos cartões reais, lidos da `origin/main` de cada consumidor (24 fontes entre manifestos JSON e geradores do SDK, 173 superfícies, mais 108 conferências com os dados de exemplo deles), o resultado também foi igual. |
+| **Riscos** | 1. **O pino é mudo.** Quando o crivo anda, nada nos consumidores acusa; quem avisa é um processo do lado de lá, de 3 em 3 horas. 2. **O teto de 2.000 nós recusa a tela INTEIRA.** Medido em 28/09 nos cartões reais, com os dados de exemplo do próprio aplicativo: há tela que é recusada a partir de 13 linhas. 3. **O quadro de 390 px do preview, numa janela larga, não aplica as regras `@media` do renderer**: o mestre–detalhe aparece lado a lado e cortado, o que nenhum celular vê. Para a conferência fiel, abra o preview numa janela estreita. 4. **A régua só conhece o que o corpus contém.** Tela que nasceu depois da última geração não está nele. |
+| **Próximos passos** | Marcar `v0.22.0` quando convier (nada nos consumidores muda). Regenerar o corpus a cada aplicativo novo. Rodar `--consumidores` antes de cada tag. |
+
+A política de versão, a matriz do que exige cada número e a depreciação estão
+em [`docs/COMPATIBILIDADE.md`](docs/COMPATIBILIDADE.md).
+
 Este repositório existe para quem escreve um **app para o okmigo** testar a tela
 **antes** de registrá-la — e para propor um elemento novo do vocabulário sem
 precisar de acesso ao produto.
@@ -48,10 +63,20 @@ tela.conferir(leituras={"buscar_ativos"})  # o mesmo crivo de produção
 O aplicativo neutro em
 [`exemplos/sdk_catalogo.py`](exemplos/sdk_catalogo.py) reúne formulários,
 métricas, agenda, documentos, componentes financeiros e o catálogo universal
-em cinco superfícies:
+em seis superfícies:
 
 ```bash
 python -m okmigo_cartao preview exemplos/sdk_catalogo.py:APLICATIVO
+```
+
+As telas dele são estáticas. Quando a tela depende da lista que o serviço
+devolve (tabela que repete por linha, sublista, filtro, rota com parâmetro),
+o exemplo é [`exemplos/sdk_dados.py`](exemplos/sdk_dados.py), com dados em
+[`exemplos/sdk_dados.dados.json`](exemplos/sdk_dados.dados.json):
+
+```bash
+python -m okmigo_cartao preview exemplos/sdk_dados.py:APLICATIVO \
+  --dados exemplos/sdk_dados.dados.json
 ```
 
 Para testar o **aplicativo inteiro direto do Python**, exponha um `Aplicativo`
@@ -78,8 +103,14 @@ bundle compilado viaja dentro do wheel Python: quem desenvolve um app não
 precisa clonar nem executar o produto. Navegação, responsividade, claro/escuro e
 respostas declaradas em `_preview.respostas` funcionam localmente, inclusive
 ida ao detalhe e volta à lista. Escritas são simuladas e nenhuma ação faz
-requisição externa. O quadro de 390 px reproduz o Web responsivo; a conferência
-final do cliente nativo continua sendo feita no emulador Flutter.
+requisição externa. A conferência final do cliente nativo continua sendo feita
+no emulador Flutter.
+
+⚠️ O quadro de 390 px reproduz o Web responsivo **só numa janela estreita**.
+O renderer adapta por `@media (max-width: …)`, que olha a janela e não o
+quadro: numa janela larga, o mestre–detalhe aparece lado a lado e cortado
+dentro do quadro de celular. Para conferir o celular, estreite a janela (ou
+use o modo de dispositivo do navegador) e escolha «Celular».
 
 O catálogo tipado cobre estrutura responsiva, cartões clicáveis, menus de
 ações, confirmação, abas, expansíveis, diálogos, tabelas flexíveis, campos
@@ -111,7 +142,7 @@ da UI podem sobreviver à troca de tela; e `HistoricoDeNavegacao` limita
 recentes e favoritos. Todas essas declarações saem no JSON do manifesto e são
 reconferidas pelo host — o Python nunca é executado no OkMigo.
 
-Para passear pelo catálogo em cinco superfícies navegáveis:
+Para passear pelo catálogo em seis superfícies navegáveis:
 
 ```bash
 python -m okmigo_cartao preview exemplos/sdk_catalogo.py:APLICATIVO
@@ -247,16 +278,19 @@ Duas regras que não se negociam, e estão escritas no próprio crivo:
 
 ## O que a esteira cobra
 
-Toda PR aqui passa por quatro travas. Elas existem porque **este pacote é
-dependência pinada por SHA em dez repositórios**, e um SHA não tem nome: a única
+Toda PR aqui passa por estas travas. Elas existem porque **este pacote é
+dependência pinada por SHA em doze repositórios**, e um SHA não tem nome: a única
 coisa que diz o que está instalado num pod é o `version` que o pacote declara.
 
 | passo | o que ele impede |
 |---|---|
-| suíte em **3.11 e 3.12** | 3.11 é o piso que o `pyproject` promete a quem está de fora; 3.12 é o que roda em produção nos dez. Testar só um esconde metade |
+| suíte em **3.11 e 3.12** | 3.11 é o piso que o `pyproject` promete a quem está de fora; 3.12 é o que roda em produção nos doze. Testar só um esconde metade |
+| `ruff check .` | erro, não estilo: sintaxe, nome indefinido, import morto, armadilha do bugbear. Com `target-version = "py311"`, também a sintaxe que só o 3.12 entende |
 | **instala pelo tarball do git** | é como o consumidor instala. O `pip install -e .` resolve `src/` pelo disco e por isso nunca vê um `assets/*.js` ficando fora do `package-data` |
 | `scripts/versao_subiu.py` | mexeu em `src/` ⇒ a `version` sobe. E ela não regride |
-| `scripts/contrato_so_cresce.py` | nome não sai do `__all__` sem a versão dizer — em `0.x`, o slot de quebra é o MENOR |
+| `scripts/contrato_so_cresce.py` | nome não sai do `__all__` sem a versão dizer (em `0.x`, o slot de quebra é o MENOR) e sem ter cumprido a janela de depreciação |
+| `scripts/compatibilidade.py` | a árvore aceita e expande os cartões do corpus e dos `exemplos/` **igual** à última tag, em cinco cenários de dados; se não, a versão tem de dizer no número o que dói |
+| job `navegador` | os `exemplos/` renderizam no bundle Web oficial, nos extremos, sem erro no console e sem texto passando da borda do celular |
 
 ⛔ **O `__all__` não encolhe de graça.** Quem consome está pinado num SHA antigo e
 um dia recebe a PR que troca o pino. Se um nome sumiu no meio do caminho, o app
@@ -276,6 +310,13 @@ para colar:
 
 ⛔ **O pino é SHA, nunca tag nem `main`.** Tag se move; SHA não. A tag serve para
 o humano saber o que é aquele SHA — não para resolver o download.
+
+⭐ **Antes de marcar**, quem tem os consumidores clonados ao lado roda a mesma
+comparação contra os cartões reais deles, e não só contra o corpus:
+
+```bash
+python3 scripts/compatibilidade.py --consumidores ..
+```
 
 ⚠️ A esteira **para** na publicação, de propósito: avisar os consumidores exigiria
 uma credencial com escrita nos repositórios deles, e este repositório é público.
