@@ -274,6 +274,12 @@ class SdkTest(unittest.TestCase):
                 )),
             )
 
+    def test_escrita_pode_pedir_ator_confiavel_sem_colocar_no_payload(self):
+        acao = Acao.escrever("Distribuir", "atribuir", injetar_ator=True).compilar()
+
+        self.assertTrue(acao["okmigoInjetarAtor"])
+        self.assertEqual(acao["data"], {"operacao": "atribuir"})
+
     def test_navegacao_nao_entra_por_extras_nem_com_icone_que_ninguem_desenha(self):
         tela = Tela("Tela", (Texto("Conteúdo"),))
         superficies = (

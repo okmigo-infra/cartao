@@ -551,6 +551,7 @@ class Acao:
     alvos_apos_enviar: tuple[Componente, ...] = ()
     transicao_tipada: bool = True
     destino: DestinoDaRota | None = None
+    injetar_ator: bool = False
 
     def __post_init__(self) -> None:
         if self.tipo == TipoDeAcao.NAVEGACAO:
@@ -603,11 +604,12 @@ class Acao:
         modo_secundario: bool = False,
         alvos_apos_enviar: tuple[Componente, ...] = (),
         transicao_tipada: bool = True,
+        injetar_ator: bool = False,
     ) -> Self:
         return cls(
             titulo, operacao, TipoDeAcao.ESCRITA, enfase, icone,
             confirmacao, dados or {}, modo_secundario,
-            alvos_apos_enviar, transicao_tipada, None,
+            alvos_apos_enviar, transicao_tipada, None, injetar_ator,
         )
 
     @classmethod
@@ -662,6 +664,14 @@ class Acao:
             no["okmigoIcone"] = "delete"
         if self.confirmacao is not None:
             no["okmigoConfirmacao"] = self.confirmacao.compilar()
+        if self.injetar_ator:
+            if self.tipo != TipoDeAcao.ESCRITA:
+                raise ContratoDoSdkInvalido(
+                    "ator confiável só existe em gesto de escrita"
+                )
+            # Metadado do molde, não dado submetido pelo aparelho. O servidor
+            # do OkMigo consulta o molde congelado e sobrescreve ator/papel.
+            no["okmigoInjetarAtor"] = True
         if self.alvos_apos_enviar:
             alvos = _compilar(self.alvos_apos_enviar)
             no["okmigoAposEnviar"] = (
