@@ -1,0 +1,7 @@
+{
+  "valores": {
+    "versao_pacote": {"regex": "^version = \"([^\"]+)\"", "em": ["pyproject.toml"]},
+    "superficies_do_corpus": {"comando": ["python3", "-c", "import glob, json; print(sum(len(json.load(open(f)).get('superficies', [])) for f in sorted(glob.glob('tests/compat/corpus/*.json'))))"]},
+    "superficies_do_catalogo": {"comando": ["python3", "-c", "import sys; sys.path.insert(0, 'exemplos'); import sdk_catalogo; print(len(sdk_catalogo.APLICATIVO.compilar()['superficies']))"]}
+  }
+}

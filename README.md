@@ -4,13 +4,13 @@
 
 | | |
 |---|---|
-| **Publicada** | **v0.21.0**, SHA `9c07ae7`, tag de 27/09. |
-| **Na `main`** | 0.22.0, **sem tag**: a régua de compatibilidade (`scripts/compatibilidade.py`), a depreciação com janela e a correção da casca, que levantava `KeyError` em todo botão que navega (desde a 0.18.0). Os dois commits que a `main` tinha além da v0.21.0 (#25, ações do GitHub fixadas por SHA) só tocam `.github/` e não pedem versão. |
-| **Quem consome** | **12 repositórios**: os onze aplicativos do ecossistema e o próprio produto. Os doze pinam `9c07ae7` (v0.21.0), na `main` e na `prod`. Medido em 28/09 no `pyproject.toml` de cada um. |
+| **Publicada** | **v0.22.1**, SHA `828e4cb`, tag de 29/09. |
+| **Na `main`** | <!-- conferir: versao_pacote -->0.22.1<!-- /conferir -->: além da régua de compatibilidade, da depreciação com janela e da correção da casca da 0.22.0, declara rotas internas fora da navegação e a injeção confiável do ator local. |
+| **Quem consome** | **12 repositórios** do ecossistema pinam `828e4cb` na `main`; cada produção avança pelo próprio fluxo de promoção. Medido em 29/09 depois da rodada de atualização dos consumidores. |
 | **Ambientes** | Nenhum: é um pacote. Publicar é **tag**, e quem roda o crivo é o produto e a suíte de cada consumidor. |
-| **Compatibilidade** | A 0.22.0 aceita e expande as 101 superfícies do corpus e as dos `exemplos/` **igual** à v0.21.0 nos cinco cenários (`scripts/compatibilidade.py`, 28/09). Nos cartões reais, lidos da `origin/main` de cada consumidor (24 fontes entre manifestos JSON e geradores do SDK, 173 superfícies, mais 108 conferências com os dados de exemplo deles), o resultado também foi igual. |
+| **Compatibilidade** | A 0.22.1 mantém a compatibilidade de expansão comprovada na 0.22.0: as <!-- conferir: superficies_do_corpus -->101<!-- /conferir --> superfícies do corpus e as dos `exemplos/` produzem o mesmo resultado nos cinco cenários da régua. Nos cartões reais, a prova lê cada consumidor antes da publicação. |
 | **Riscos** | 1. **O pino é mudo.** Quando o crivo anda, nada nos consumidores acusa; quem avisa é um processo do lado de lá, de 3 em 3 horas. 2. **O teto de 2.000 nós recusa a tela INTEIRA.** Medido em 28/09 nos cartões reais, com os dados de exemplo do próprio aplicativo: há tela que é recusada a partir de 13 linhas. 3. **O quadro de 390 px do preview, numa janela larga, não aplica as regras `@media` do renderer**: o mestre–detalhe aparece lado a lado e cortado, o que nenhum celular vê. Para a conferência fiel, abra o preview numa janela estreita. 4. **A régua só conhece o que o corpus contém.** Tela que nasceu depois da última geração não está nele. |
-| **Próximos passos** | Marcar `v0.22.0` quando convier (nada nos consumidores muda). Regenerar o corpus a cada aplicativo novo. Rodar `--consumidores` antes de cada tag. |
+| **Próximos passos** | Regenerar o corpus a cada aplicativo novo e rodar `--consumidores` antes de cada próxima tag. |
 
 A política de versão, a matriz do que exige cada número e a depreciação estão
 em [`docs/COMPATIBILIDADE.md`](docs/COMPATIBILIDADE.md).
@@ -63,7 +63,7 @@ tela.conferir(leituras={"buscar_ativos"})  # o mesmo crivo de produção
 O aplicativo neutro em
 [`exemplos/sdk_catalogo.py`](exemplos/sdk_catalogo.py) reúne formulários,
 métricas, agenda, documentos, componentes financeiros e o catálogo universal
-em seis superfícies:
+em <!-- conferir: superficies_do_catalogo -->seis<!-- /conferir --> superfícies:
 
 ```bash
 python -m okmigo_cartao preview exemplos/sdk_catalogo.py:APLICATIVO
@@ -142,7 +142,7 @@ da UI podem sobreviver à troca de tela; e `HistoricoDeNavegacao` limita
 recentes e favoritos. Todas essas declarações saem no JSON do manifesto e são
 reconferidas pelo host — o Python nunca é executado no OkMigo.
 
-Para passear pelo catálogo em seis superfícies navegáveis:
+Para passear pelo catálogo em <!-- conferir: superficies_do_catalogo -->seis<!-- /conferir --> superfícies navegáveis:
 
 ```bash
 python -m okmigo_cartao preview exemplos/sdk_catalogo.py:APLICATIVO
