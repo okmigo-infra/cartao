@@ -1540,7 +1540,16 @@ class Aplicativo:
         if len(set(nomes_das_superficies)) != len(nomes_das_superficies):
             raise ContratoDoSdkInvalido("aplicativo repete superficies")
         if self.navegacao_agrupada is not None:
-            self.navegacao_agrupada.conferir(nomes_das_superficies)
+            # Superfícies ocultas existem para fluxos internos abertos por rota
+            # (por exemplo, detalhe de um registro). Elas não são destinos da
+            # navegação principal e, portanto, não podem virar abas só para
+            # satisfazer a cobertura do contrato.
+            nomes_navegaveis = tuple(
+                superficie.nome
+                for superficie in self.superficies
+                if superficie.visivel is not False
+            )
+            self.navegacao_agrupada.conferir(nomes_navegaveis)
         nomes_das_rotas = [rota.nome for rota in self.rotas]
         if len(nomes_das_rotas) != len(set(nomes_das_rotas)):
             raise ContratoDoSdkInvalido("aplicativo repete rotas")

@@ -224,6 +224,56 @@ class SdkTest(unittest.TestCase):
                 )),
             )
 
+    def test_navegacao_agrupada_ignora_superficie_interna_oculta(self):
+        tela = Tela("Tela", (Texto("Conteúdo"),))
+        superficies = (
+            Superficie(
+                "inicio", "Início", "Início", "inicio", "resumo",
+                Fonte("inicio"), tela,
+            ),
+            Superficie(
+                "lista", "Lista", "Lista", "contas", "lista",
+                Fonte("lista"), tela,
+            ),
+            Superficie(
+                "detalhe", "Detalhe", None, None, "detalhe interno",
+                Fonte("detalhe"), tela, visivel=False,
+            ),
+        )
+        app = Aplicativo(
+            slug="financeiro", endpoint="https://financeiro.example/mcp/",
+            para_tipo="socio", descricao="Financeiro", descricao_humana=None,
+            nome_visivel="Financeiro", versao="1.0.0", conversa=(),
+            superficies=superficies,
+            navegacao_agrupada=NavegacaoAgrupada((
+                GrupoDeNavegacao("inicio", "Início", "inicio", ("inicio",)),
+                GrupoDeNavegacao("operacao", "Operação", "contas", ("lista",)),
+            )),
+            rotas=(Rota("detalhe", "detalhe", historico=True),),
+        )
+
+        compilado = app.compilar()
+        grupos = compilado["navegacao"]["grupos"]
+        self.assertEqual(
+            [nome for grupo in grupos for nome in grupo["superficies"]],
+            ["inicio", "lista"],
+        )
+        self.assertFalse(compilado["superficies"][2]["isVisible"])
+
+        with self.assertRaisesRegex(ContratoDoSdkInvalido, "desconhecidas: detalhe"):
+            Aplicativo(
+                slug="financeiro", endpoint="https://financeiro.example/mcp/",
+                para_tipo="socio", descricao="Financeiro", descricao_humana=None,
+                nome_visivel="Financeiro", versao="1.0.0", conversa=(),
+                superficies=superficies,
+                navegacao_agrupada=NavegacaoAgrupada((
+                    GrupoDeNavegacao(
+                        "inicio", "Início", "inicio", ("inicio", "detalhe"),
+                    ),
+                    GrupoDeNavegacao("operacao", "Operação", "contas", ("lista",)),
+                )),
+            )
+
     def test_navegacao_nao_entra_por_extras_nem_com_icone_que_ninguem_desenha(self):
         tela = Tela("Tela", (Texto("Conteúdo"),))
         superficies = (
