@@ -38,6 +38,7 @@ from __future__ import annotations
 import re
 from contextvars import ContextVar
 from dataclasses import dataclass
+from datetime import date
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -114,6 +115,11 @@ _DADOS_SO_DE_ARRASTO = {"novo_inicio", "nova_data", "nova_hora"}
 #: A que evento uma ação se aplica. Fechada porque as operações são outras:
 #: uma ação sem `para` apareceria nos dois tipos e chamaria a errada.
 EVENTOS_PARA = {"atendimento", "compromisso"}
+#: A forma do `inicio` e do `fim` de um evento de DIA INTEIRO (OMINFRA-937):
+#: só `AAAA-MM-DD`. Sem hora e sem fuso de propósito — um feriado não tem
+#: hora, e carimbá-lo às 00:00 de um fuso o faria cair na véspera em outro.
+#: A regex confere a FORMA; o calendário (`2026-02-30`) é conferido ao lado.
+_DATA_DE_DIA = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 #: Teto de LEITURA, não de tela: um menu com dez itens em cima de um
 #: compromisso é um labirinto.
 _MAX_ACOES_DO_EVENTO = 6
@@ -268,6 +274,24 @@ class _Erro(Exception):
 
 def _txt(v: Any, papel: str = "texto") -> str:
     return " ".join(str(v or "").split())[: _MAX[papel]]
+
+
+def _data_de_dia_inteiro(v: Any) -> str:
+    """`AAAA-MM-DD` de um dia que existe, ou `""`.
+
+    É a régua de `inicio` e `fim` quando `dia_inteiro: true`, e mora AQUI
+    para a casca e o SDK a importarem em vez de terem a sua: a regra em dois
+    lugares é o que a memória deste repo chama de «só um grita».
+    `2026-10-05T10:00` é recusado pela forma; `2026-02-30` pelo calendário.
+    """
+    t = str(v or "").strip()
+    if not _DATA_DE_DIA.match(t):
+        return ""
+    try:
+        date.fromisoformat(t)
+    except ValueError:
+        return ""
+    return t
 
 
 def _numero_do_ponto(v: Any) -> float | None:
@@ -833,10 +857,34 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
             titulo = _txt(e.get("titulo"), "titulo")
             if not inicio or not titulo:  # sem início não há onde; sem título, o quê
                 continue
+            fim = _txt(e.get("fim"), "titulo")
+            # Dia inteiro (OMINFRA-937): `inicio` e `fim` são SÓ a data, e o
+            # `fim` é inclusivo (vários dias). Hora em qualquer um dos dois é
+            # erro de FORMA e o evento cai — o crivo não tem como saber se o
+            # autor queria a faixa do dia ou a hora que escreveu, e um evento
+            # desenhado no lugar errado é a agenda mentindo. ⛔ `is True`,
+            # como todo booleano do vocabulário: num molde o campo é literal
+            # (a expansão entrega TEXTO, nunca booleano), e quem precisa
+            # separar por dado repete a lista duas vezes com `_quando`.
+            dia_inteiro = e.get("dia_inteiro") is True
+            if dia_inteiro:
+                inicio = _data_de_dia_inteiro(inicio)
+                if not inicio:
+                    continue
+                if fim:
+                    fim = _data_de_dia_inteiro(fim)
+                    if not fim:
+                        continue
+                    # `fim` antes do `inicio` é forma certa com VALOR errado:
+                    # cai no padrão (um dia), como a hora fora da faixa cai
+                    # em 7–21. O evento continua no dia em que começa.
+                    if fim < inicio:
+                        fim = ""
             eventos.append(
                 {
                     "inicio": inicio,
-                    "fim": _txt(e.get("fim"), "titulo"),
+                    "fim": fim,
+                    "dia_inteiro": dia_inteiro,
                     "titulo": titulo,
                     "detalhe": _txt(e.get("detalhe")),
                     # Evento SEM id continua desenhando — só não aceita ação.

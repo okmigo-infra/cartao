@@ -7,12 +7,14 @@ O JSON continua sem HTML, JavaScript, CSS ou URL de ação.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
 from copy import deepcopy
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
+from .crivo import _data_de_dia_inteiro
 from .sdk import (
     Acao,
     Acoes,
@@ -31,6 +33,11 @@ from .sdk import (
 
 Json = dict[str, Any]
 Escalar = str | int | float | bool
+
+#: Um marcador de molde (`{campo}`) só ganha valor depois de a ponte
+#: expandi-lo; na autoria só o literal se confere — a mesma régua que o
+#: `sdk.py` usa para o parâmetro de rota.
+_MARCADOR = re.compile(r"\{[A-Za-z][A-Za-z0-9_.-]*\}")
 
 
 def _obrigatorio(valor: str, papel: str) -> str:
@@ -553,10 +560,22 @@ class Evento:
     detalhe: str = ""
     id: str = ""
     tipo: TipoDeEvento | None = None
+    #: Só com data (OMINFRA-937): `inicio` e `fim` em `AAAA-MM-DD`, e o `fim`
+    #: inclusivo. O crivo DESCARTA o evento de dia inteiro que traga hora; o
+    #: SDK recusa na autoria, antes — exceto o marcador `{campo}`, que só
+    #: ganha valor na expansão.
+    dia_inteiro: bool = False
 
     def __post_init__(self) -> None:
         _obrigatorio(self.inicio, "inicio do evento")
         _obrigatorio(self.titulo, "titulo do evento")
+        if self.dia_inteiro:
+            for papel, valor in (("inicio", self.inicio), ("fim", self.fim)):
+                if valor and not _MARCADOR.fullmatch(valor) and not _data_de_dia_inteiro(valor):
+                    raise ContratoDoSdkInvalido(
+                        f"{papel} de evento de dia inteiro leva so a data "
+                        f"(AAAA-MM-DD), recebi {valor!r}"
+                    )
 
     def compilar(self) -> Json:
         no: Json = {
@@ -568,6 +587,10 @@ class Evento:
         }
         if self.tipo is not None:
             no["tipo"] = self.tipo.value
+        # Só quando é: o evento de sempre compila o MESMO JSON de antes, e o
+        # manifesto gerado dos consumidores não muda por esta versão.
+        if self.dia_inteiro:
+            no["dia_inteiro"] = True
         return no
 
 
