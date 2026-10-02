@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
-from .crivo import _data_de_dia_inteiro
+from .crivo import _MAX_OPCOES, _data_de_dia_inteiro, _nome_de_recurso
 from .sdk import (
     Acao,
     Acoes,
@@ -565,10 +565,19 @@ class Evento:
     #: SDK recusa na autoria, antes — exceto o marcador `{campo}`, que só
     #: ganha valor na expansão.
     dia_inteiro: bool = False
+    #: A cadeira, a sala, o profissional (OMINFRA-942): rótulo e chave de
+    #: filtro, até 60 caracteres. O crivo descarta o campo (não o evento) se
+    #: passar; o SDK recusa na autoria, menos o marcador `{campo}`.
+    recurso: str = ""
 
     def __post_init__(self) -> None:
         _obrigatorio(self.inicio, "inicio do evento")
         _obrigatorio(self.titulo, "titulo do evento")
+        if self.recurso.strip() and not _MARCADOR.fullmatch(self.recurso.strip()) \
+                and not _nome_de_recurso(self.recurso):
+            raise ContratoDoSdkInvalido(
+                f"recurso do evento passa de 60 caracteres, recebi {self.recurso!r}"
+            )
         if self.dia_inteiro:
             for papel, valor in (("inicio", self.inicio), ("fim", self.fim)):
                 if valor and not _MARCADOR.fullmatch(valor) and not _data_de_dia_inteiro(valor):
@@ -591,6 +600,8 @@ class Evento:
         # manifesto gerado dos consumidores não muda por esta versão.
         if self.dia_inteiro:
             no["dia_inteiro"] = True
+        if self.recurso.strip():
+            no["recurso"] = self.recurso
         return no
 
 
@@ -699,6 +710,9 @@ class Calendario:
     ao_tocar_o_dia: AoTocarODia | None = None
     acoes_do_evento: tuple[AcaoDoEvento, ...] = ()
     ao_navegar_periodo: NavegacaoDoCalendario | None = None
+    #: A lista que o filtro «por cadeira» oferece (OMINFRA-942), separada dos
+    #: eventos: a cadeira sem atendimento hoje continua existindo.
+    recursos: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if not 0 <= self.hora_inicial < self.hora_final <= 24:
@@ -707,6 +721,17 @@ class Calendario:
             )
         if len(set(self.vistas)) != len(self.vistas):
             raise ContratoDoSdkInvalido("vistas do calendario nao podem se repetir")
+        if len(self.recursos) > _MAX_OPCOES:
+            raise ContratoDoSdkInvalido(
+                f"recursos do calendario passam do teto de {_MAX_OPCOES}"
+            )
+        nomes = [_nome_de_recurso(r) for r in self.recursos]
+        if not all(nomes):
+            raise ContratoDoSdkInvalido(
+                "recurso do calendario nao pode ser vazio nem passar de 60 caracteres"
+            )
+        if len(set(nomes)) != len(nomes):
+            raise ContratoDoSdkInvalido("recursos do calendario nao podem se repetir")
 
     def compilar(self) -> Json:
         no: Json = {
@@ -724,6 +749,9 @@ class Calendario:
             no["aoTocarODia"] = self.ao_tocar_o_dia.compilar()
         if self.ao_navegar_periodo is not None:
             no["aoNavegarPeriodo"] = self.ao_navegar_periodo.compilar()
+        # Só quando há: o calendário de sempre compila o MESMO JSON de antes.
+        if self.recursos:
+            no["recursos"] = list(self.recursos)
         return no
 
 

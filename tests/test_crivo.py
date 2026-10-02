@@ -1069,7 +1069,7 @@ class DiaInteiroNoCalendarioTest(unittest.TestCase):
         self.assertEqual(ev, {
             "inicio": "2026-10-13T09:00:00-03:00", "fim": "2026-10-13T09:30:00-03:00",
             "dia_inteiro": False, "titulo": "Consulta", "detalhe": "Sala 2",
-            "id": "c1", "tipo": "atendimento",
+            "recurso": "", "id": "c1", "tipo": "atendimento",
         })
 
     def test_dia_inteiro_e_booleano_literal_nunca_texto(self):
@@ -1129,4 +1129,79 @@ class DiaInteiroNoCalendarioTest(unittest.TestCase):
         self.assertIn("some", comido[0])
         self.assertTrue(any("eventos[3]" in l and "um dia" in l for l in linhas), linhas)
         # O que sobreviveu não é acusado.
+        self.assertFalse(any("eventos[0]" in l or "eventos[2]" in l for l in linhas), linhas)
+
+
+class RecursoNoEventoTest(unittest.TestCase):
+    """OMINFRA-942: a cadeira, a sala, o profissional — o evento diz a que
+    recurso pertence, e o elemento lista os recursos que o filtro oferece.
+    O negativo ao lado: recurso vazio ou longo SOME, e o evento FICA."""
+
+    def _calendario(self, eventos, **extra):
+        tela, erro = validar(cartao({
+            "type": "okmigoCalendario", "vista": "dia", "de": "2026-10-13",
+            "eventos": eventos, **extra,
+        }))
+        self.assertIsNone(erro)
+        return tela["corpo"][0]
+
+    def test_evento_com_recurso_passa_e_sai_com_o_nome(self):
+        [ev] = self._calendario([{
+            "inicio": "2026-10-13T09:00", "titulo": "Corte", "recurso": "  Cadeira   2 ", "id": "a7",
+        }])["eventos"]
+        self.assertEqual(ev["recurso"], "Cadeira 2")
+        self.assertEqual((ev["titulo"], ev["id"]), ("Corte", "a7"))
+
+    def test_evento_sem_recurso_segue_igual_e_sai_vazio(self):
+        [ev] = self._calendario([{"inicio": "2026-10-13T09:00", "titulo": "Corte"}])["eventos"]
+        self.assertEqual(ev["recurso"], "")
+        self.assertEqual(ev["titulo"], "Corte")
+
+    def test_recurso_vazio_ou_longo_some_e_o_evento_fica(self):
+        no_teto, acima = "x" * 60, "x" * 61
+        eventos = self._calendario([
+            {"inicio": "2026-10-13T09:00", "titulo": "Vazio", "recurso": "   "},
+            {"inicio": "2026-10-13T10:00", "titulo": "Longo", "recurso": acima},
+            {"inicio": "2026-10-13T11:00", "titulo": "No teto", "recurso": no_teto},
+        ])["eventos"]
+        # Os três ficam — o que some é o CAMPO, e sem cortar.
+        self.assertEqual([(e["titulo"], e["recurso"]) for e in eventos],
+                         [("Vazio", ""), ("Longo", ""), ("No teto", no_teto)])
+
+    def test_recursos_do_elemento_lista_sem_repetir_e_sem_o_que_nao_e_nome(self):
+        calendario = self._calendario([], recursos=[
+            "Cadeira 1", " Cadeira  1", "", "x" * 61, None, "Cadeira 2", 3,
+        ])
+        self.assertEqual(calendario["recursos"], ["Cadeira 1", "Cadeira 2", "3"])
+        # Sem o campo: lista vazia, e o resto do elemento como antes.
+        self.assertEqual(self._calendario([])["recursos"], [])
+        # Texto no lugar da lista NÃO vira uma letra por recurso.
+        self.assertEqual(self._calendario([], recursos="Cadeira 1")["recursos"], [])
+
+    def test_recursos_respeita_o_teto_de_uma_escolha(self):
+        calendario = self._calendario([], recursos=[f"Sala {i}" for i in range(70)])
+        self.assertEqual(len(calendario["recursos"]), 60)
+        self.assertEqual(calendario["recursos"][-1], "Sala 59")
+
+    def test_casca_descreve_o_recurso_e_o_relatorio_diz_o_que_sumiu(self):
+        from okmigo_cartao import casca, relatorio
+
+        bruto = cartao({"type": "okmigoCalendario", "vista": "dia", "de": "2026-10-13",
+                        "recursos": ["Cadeira 1", "Cadeira 2", "Cadeira 1", ""],
+                        "eventos": [
+            {"inicio": "2026-10-13T09:00", "titulo": "Corte", "recurso": "Cadeira 2"},
+            {"inicio": "2026-10-13T10:00", "titulo": "Barba", "recurso": "y" * 61},
+            {"inicio": "2026-10-13T11:00", "titulo": "Solto"},
+        ]})
+        tela, erro = validar(bruto)
+        documento = casca(tela)
+        self.assertIn("Corte <small>recurso: Cadeira 2</small>", documento)
+        self.assertIn("<small>recursos: Cadeira 1, Cadeira 2</small>", documento)
+        self.assertIn("Barba</li>", documento)       # o evento ficou, sem o rótulo
+        self.assertNotIn("y" * 61, documento)
+
+        linhas = relatorio(bruto, tela, erro)
+        self.assertTrue(any("eventos[1]" in l and "61 caracteres" in l and "o evento fica" in l for l in linhas), linhas)
+        self.assertTrue(any("recursos[2]" in l and "repetido" in l for l in linhas), linhas)
+        self.assertTrue(any("recursos[3]" in l and "vazio" in l for l in linhas), linhas)
         self.assertFalse(any("eventos[0]" in l or "eventos[2]" in l for l in linhas), linhas)

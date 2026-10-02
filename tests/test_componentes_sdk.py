@@ -327,6 +327,31 @@ class ComponentesDoSdkTest(unittest.TestCase):
         # O marcador só ganha valor na expansão: a autoria não tem o que conferir.
         self.assertIs(Evento("{dia}", "{titulo}", fim="{fim}", dia_inteiro=True).compilar()["dia_inteiro"], True)
 
+    def test_recurso_do_evento_e_recursos_do_calendario_compilam_so_quando_ha_e_atravessam_o_crivo(self):
+        corte = Evento("2026-10-13T09:00:00-03:00", "Corte", id="a7", recurso="Cadeira 2")
+        solto = Evento("2026-10-13T10:00:00-03:00", "Barba")
+        self.assertEqual(corte.compilar()["recurso"], "Cadeira 2")
+        self.assertNotIn("recurso", solto.compilar())          # o JSON de antes
+        calendario = Calendario((corte, solto), recursos=("Cadeira 1", "Cadeira 2"))
+        self.assertEqual(calendario.compilar()["recursos"], ["Cadeira 1", "Cadeira 2"])
+        self.assertNotIn("recursos", Calendario((corte,)).compilar())
+
+        saida = Tela("Agenda", (calendario,)).conferir()["corpo"][1]
+        self.assertEqual(saida["recursos"], ["Cadeira 1", "Cadeira 2"])
+        self.assertEqual([e["recurso"] for e in saida["eventos"]], ["Cadeira 2", ""])
+
+    def test_recurso_longo_e_recursos_vazios_ou_repetidos_sao_recusados_na_autoria(self):
+        with self.assertRaisesRegex(ContratoDoSdkInvalido, "recurso do evento"):
+            Evento("2026-10-13T09:00", "Corte", recurso="x" * 61)
+        Evento("2026-10-13T09:00", "Corte", recurso="x" * 60)
+        Evento("2026-10-13T09:00", "Corte", recurso="{recurso}")   # molde: só a expansão sabe
+        with self.assertRaisesRegex(ContratoDoSdkInvalido, "nao podem se repetir"):
+            Calendario((), recursos=("Cadeira 1", "Cadeira 1"))
+        with self.assertRaisesRegex(ContratoDoSdkInvalido, "vazio nem passar"):
+            Calendario((), recursos=("Cadeira 1", "  "))
+        with self.assertRaisesRegex(ContratoDoSdkInvalido, "teto de 60"):
+            Calendario((), recursos=tuple(f"Sala {i}" for i in range(61)))
+
     def test_toque_no_calendario_recusa_nome_de_campo_de_hora_invalido(self):
         with self.assertRaisesRegex(ContratoDoSdkInvalido, "campo da hora"):
             AoTocarODia("novo_atendimento", "data", "hora com espaco")

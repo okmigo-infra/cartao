@@ -26,7 +26,7 @@ from typing import Any
 
 # A MESMA régua do crivo para a data de um evento de dia inteiro — importada,
 # e não copiada, para o relatório nunca discordar do que o crivo faz.
-from .crivo import _data_de_dia_inteiro
+from .crivo import _MAX_RECURSO, _data_de_dia_inteiro, _nome_de_recurso
 
 # ── A expansão do molde ─────────────────────────────────────────────────────
 
@@ -243,6 +243,7 @@ def _contar_entrada(no: Any, contagem: dict[str, int], avisos: list[str], caminh
                 avisos.append(f"{caminho}: `{tipo}.{chave}` é descartado — {motivo}")
         if tipo == "okmigoCalendario":
             _avisar_eventos(no.get("eventos"), avisos, caminho)
+            _avisar_recursos(no.get("recursos"), avisos, caminho)
         if tipo == "Container" and no.get("selectAction", {}).get("type") not in (
             None,
             "Action.ToggleVisibility",
@@ -279,6 +280,13 @@ def _avisar_eventos(eventos: Any, avisos: list[str], caminho: str) -> None:
             avisos.append(f"{onde}: evento sem `inicio` ou sem `titulo` — some "
                           "(sem início não há onde; sem título, o quê)")
             continue
+        if "recurso" in e:
+            nome = " ".join(str(e.get("recurso") or "").split())
+            if not nome:
+                avisos.append(f"ℹ️ {onde}: `recurso` vazio — fica sem rótulo de recurso (o evento fica)")
+            elif len(nome) > _MAX_RECURSO:
+                avisos.append(f"{onde}: `recurso` com {len(nome)} caracteres passa de {_MAX_RECURSO} — "
+                              "some, sem cortar: cortado não casaria com `recursos` (o evento fica)")
         if e.get("dia_inteiro") is not True:
             continue
         fora = [c for c in ("inicio", "fim") if e.get(c) and not _data_de_dia_inteiro(e[c])]
@@ -287,6 +295,27 @@ def _avisar_eventos(eventos: Any, avisos: list[str], caminho: str) -> None:
                           "— some: dia inteiro não leva hora, e o dia tem de existir")
         elif e.get("fim") and str(e["fim"]).strip() < str(e["inicio"]).strip():
             avisos.append(f"{onde}: `fim` antes do `inicio` — cai para um dia só")
+
+
+def _avisar_recursos(recursos: Any, avisos: list[str], caminho: str) -> None:
+    """A lista do filtro (`recursos`): o que não é lista some inteiro, e o
+    item vazio, longo ou repetido some sem o autor ver — a não ser aqui."""
+    if recursos is None:
+        return
+    if not isinstance(recursos, list):
+        avisos.append(f"{caminho}: `recursos` não é lista — some inteiro "
+                      "(um texto aqui viraria uma letra por recurso)")
+        return
+    vistos: list[str] = []
+    for i, r in enumerate(recursos):
+        nome = _nome_de_recurso(r)
+        onde = f"{caminho}.recursos[{i}]"
+        if not nome:
+            avisos.append(f"{onde}: vazio ou acima de {_MAX_RECURSO} caracteres — some, sem cortar")
+        elif nome in vistos:
+            avisos.append(f"{onde}: `{nome}` repetido — fica só o primeiro")
+        else:
+            vistos.append(nome)
 
 
 def _contar_saida(no: Any, contagem: dict[str, int]) -> None:
@@ -526,9 +555,12 @@ def _no(n: dict, s: list[str]) -> None:
         for ev in n["eventos"]:
             # `.get`: a casca também recebe telas montadas à mão, de antes do campo.
             dia_inteiro = " (dia inteiro)" if ev.get("dia_inteiro") else ""
+            recurso = f" <small>recurso: {_e(ev['recurso'])}</small>" if ev.get("recurso") else ""
             s.append(f"<li><time>{_e(ev['inicio'])}</time>{(' – ' + _e(ev['fim'])) if ev['fim'] else ''}{dia_inteiro} {_e(ev['titulo'])}"
-                     f"{(' <small>' + _e(ev['detalhe']) + '</small>') if ev['detalhe'] else ''}</li>")
+                     f"{(' <small>' + _e(ev['detalhe']) + '</small>') if ev['detalhe'] else ''}{recurso}</li>")
         s.append("</ul>")
+        if n.get("recursos"):
+            s.append("<p><small>recursos: " + ", ".join(_e(r) for r in n["recursos"]) + "</small></p>")
         if n.get("acoes_do_evento"):
             s.append("<p><small>ações por evento: " + ", ".join(
                 f"{a.get('titulo') or '(arrastar)'}→{a.get('enviar') or a.get('mostrar')}" for a in n["acoes_do_evento"]) + "</small></p>")

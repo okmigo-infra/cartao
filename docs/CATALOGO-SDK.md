@@ -362,6 +362,21 @@ Evento("{dia}", "{titulo}", dia_inteiro=True)
 Evento("2026-10-05", "Férias", fim="2026-10-07", dia_inteiro=True)
 ```
 
+`Evento(..., recurso="Cadeira 2")` diz a que cadeira, sala ou profissional o
+evento pertence (≤ 60 caracteres; o SDK recusa mais, e o marcador `{campo}`
+passa). `Calendario(..., recursos=("Cadeira 1", "Cadeira 2"))` é a lista que
+o filtro «por recurso» oferece — separada dos eventos, porque a cadeira sem
+atendimento hoje continua existindo; sem repetição, até 60 nomes. O que o
+cliente desenha está no [`CONTRATO.md`](../CONTRATO.md), § «O recurso do
+evento».
+
+```python
+Calendario(
+    (Evento("{inicio}", "{titulo}", id="{id}", recurso="{cadeira}"),),
+    recursos=("Cadeira 1", "Cadeira 2", "Cadeira 3"),
+)
+```
+
 ## Financeiro
 
 Os componentes financeiros existentes no renderer também têm autoria tipada:
