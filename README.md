@@ -5,7 +5,7 @@
 | | |
 |---|---|
 | **Publicada** | **v0.22.1**, SHA `828e4cb`, tag de 29/09. |
-| **Na `main`** | <!-- conferir: versao_pacote -->0.22.1<!-- /conferir -->: além da régua de compatibilidade, da depreciação com janela e da correção da casca da 0.22.0, declara rotas internas fora da navegação e a injeção confiável do ator local; e (OMINFRA-937) o evento de **dia inteiro** no calendário — só com data, na faixa acima da régua. |
+| **Na `main`** | <!-- conferir: versao_pacote -->0.22.1<!-- /conferir -->: além da régua de compatibilidade, da depreciação com janela e da correção da casca da 0.22.0, declara rotas internas fora da navegação e a injeção confiável do ator local; e (OMINFRA-937) o evento de **dia inteiro** no calendário — só com data, na faixa acima da régua — e (OMINFRA-942) o **recurso** do evento (a cadeira, a sala, o profissional) com a lista `recursos` para o filtro. |
 | **Quem consome** | **12 repositórios** do ecossistema pinam `828e4cb` na `main`; cada produção avança pelo próprio fluxo de promoção. Medido em 29/09 depois da rodada de atualização dos consumidores. |
 | **Ambientes** | Nenhum: é um pacote. Publicar é **tag**, e quem roda o crivo é o produto e a suíte de cada consumidor. |
 | **Compatibilidade** | A 0.22.1 mantém a compatibilidade de expansão comprovada na 0.22.0: as <!-- conferir: superficies_do_corpus -->101<!-- /conferir --> superfícies do corpus e as dos `exemplos/` produzem o mesmo resultado nos cinco cenários da régua. Nos cartões reais, a prova lê cada consumidor antes da publicação. |

@@ -120,6 +120,13 @@ EVENTOS_PARA = {"atendimento", "compromisso"}
 #: hora, e carimbá-lo às 00:00 de um fuso o faria cair na véspera em outro.
 #: A regex confere a FORMA; o calendário (`2026-02-30`) é conferido ao lado.
 _DATA_DE_DIA = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+#: O nome do RECURSO de um evento (OMINFRA-942): a cadeira, a sala, o
+#: profissional. Texto curto — é rótulo e CHAVE de filtro ao mesmo tempo, e
+#: por isso não se corta: «Cadeira 1 · Unidade Centro…» cortado em 60 não
+#: casa mais com o nome da lista `recursos`, e o filtro deixaria o evento de
+#: fora em silêncio. Acima do teto o campo some; o evento fica. A lista do
+#: filtro tem o teto de uma escolha (`_MAX_OPCOES`): é o que ela é.
+_MAX_RECURSO = 60
 #: Teto de LEITURA, não de tela: um menu com dez itens em cima de um
 #: compromisso é um labirinto.
 _MAX_ACOES_DO_EVENTO = 6
@@ -292,6 +299,14 @@ def _data_de_dia_inteiro(v: Any) -> str:
     except ValueError:
         return ""
     return t
+
+
+def _nome_de_recurso(v: Any) -> str:
+    """O `recurso` de um evento (ou um item de `recursos`), ou `""`: espaços
+    colapsados, e acima de `_MAX_RECURSO` SOME em vez de ser cortado — ver o
+    porquê no teto. Mora aqui para a casca e o SDK importarem a mesma régua."""
+    t = " ".join(str(v or "").split())
+    return t if len(t) <= _MAX_RECURSO else ""
 
 
 def _numero_do_ponto(v: Any) -> float | None:
@@ -887,6 +902,9 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
                     "dia_inteiro": dia_inteiro,
                     "titulo": titulo,
                     "detalhe": _txt(e.get("detalhe")),
+                    # A cadeira/sala/profissional (OMINFRA-942). Vazio é «sem
+                    # recurso»; acima do teto some sem cortar, e o evento fica.
+                    "recurso": _nome_de_recurso(e.get("recurso")),
                     # Evento SEM id continua desenhando — só não aceita ação.
                     # Descartá-lo faria a agenda mentir sobre estar livre.
                     "id": _txt(e.get("id"), "titulo")[:64],
@@ -986,6 +1004,20 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
         elif vista not in vistas:
             vistas.insert(0, vista)
 
+        # A lista que o filtro «por cadeira» oferece (OMINFRA-942). Separada
+        # dos eventos de propósito: a cadeira sem atendimento hoje continua
+        # existindo, e derivar a lista dos eventos a esconderia. Sem repetir,
+        # na ordem dada, com o teto de uma escolha. ⛔ Só LISTA: um texto no
+        # lugar dela viraria uma letra por recurso.
+        recursos: list[str] = []
+        bruto_recursos = no.get("recursos")
+        for r in (bruto_recursos if isinstance(bruto_recursos, list) else []):
+            nome = _nome_de_recurso(r)
+            if nome and nome not in recursos:
+                recursos.append(nome)
+                if len(recursos) == _MAX_OPCOES:
+                    break
+
         hora_inicial = _tamanho(no.get("horaInicial"))
         hora_final = _tamanho(no.get("horaFinal"))
         hora_inicial = 7 if hora_inicial is None else hora_inicial
@@ -1030,6 +1062,7 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
             "ate": _txt(no.get("ate"), "titulo"),
             "hora_inicial": hora_inicial,
             "hora_final": hora_final,
+            "recursos": recursos,
             "eventos": eventos,
         }
 

@@ -51,7 +51,7 @@ dois é bug de um deles.
 | `Input.ChoiceSet` | `choices[{title, value}]` (⛔ os dois obrigatórios: `value` viaja, `title` se lê) · `isMultiSelect` para múltipla escolha · `okmigoControle: "alternancia"` para booleano · `okmigoAoAlterar` para visibilidade local explícita · `okmigoNota` (linha de apoio) e `okmigoIcone` (um glifo, ≤ 12 caracteres) por opção · três formas: sem `style` = lista suspensa; `style: "expanded"` = **fichas tocáveis**; `style: "filtered"` = typeahead LIVRE; com `okmigoEstrito: true` = busca estrita · `okmigoBuscar: "operacao"` pede sugestões remotas declaradas · `okmigoAoEscolher: {Action.Execute}` **consulta ao escolher uma sugestão**, sem segundo toque | corta em 60 opções; múltiplos valores continuam limitados às opções; alteração condicional só aceita alvos com booleano explícito e não alcança rede; lista estrita vazia derruba o campo e os botões da caixa; ⛔ `okmigoAoEscolher` só aceita **leitura declarada** — um `Action.Submit` ali não vira nada, porque escrever ao escolher seria gravar por engano de toque, sem confirmação |
 | `ActionSet` | `Action.ToggleVisibility` · `Action.Submit` para escrita · `Action.Execute` para leitura (⛔ operação fora do contrato recusa a tela INTEIRA) · ênfase semântica · `okmigoIcone: "delete"` · `okmigoConfirmacao` com título, mensagem e rótulos · `okmigoRodape` · `okmigoAposEnviar` · `okmigoMenu` para menu contextual · `okmigoSegmentado` para abas/filtros · `okmigoExpansivel` para acordeão | `OpenUrl` evapora; menu é limitado a 10 itens; cada operação ganha os campos da própria caixa; confirmação não contém código nem endereço; dicas de apresentação não ampliam a fronteira |
 | `okmigoGrafico` | `forma: barras\|linha` · `series[{rotulo, cor}]` com cor SEMÂNTICA (`positivo/negativo/neutro/atencao/principal/suave`) · `pontos[{rotulo, valores[]}]` · teto 4 séries × 24 pontos | valores casam com séries por ÍNDICE; ponto faltando é buraco honesto, nunca série deslocada; aceita `1234.5` e `"1.234,50"`; NaN/infinito somem; gráfico sem ponto some; ⛔ não existe pizza (posição e comprimento se julgam melhor que ângulo e área) |
-| `okmigoCalendario` | `vista: mes\|semana\|dia` · `de` · `eventos[{inicio, fim, titulo, detalhe, id, tipo, dia_inteiro}]` (teto 500; vale 1 nó) · `aoTocarODia {mostrar, preencher}` · `acoesDoEvento[{para, titulo, gesto, enviar+campos \| mostrar+preencher}]` (teto 6) | o serviço nomeia o CAMPO, nunca o VALOR (`preencher: {"dia": "data", "hora": "hora"}`); a grade mensal fornece só `data`, a régua diária fornece também `hora`; evento sem `id` desenha mas não aceita ação; `nova_*` só existem no gesto `arrastar`; um toque abre formulário, nunca escreve. ⭐ `dia_inteiro: true` = `inicio`/`fim` SÓ com data (`AAAA-MM-DD`, `fim` inclusivo), desenhado na **faixa acima da régua** e em **todos os dias cobertos** no mês; ⛔ dia inteiro com hora é erro de forma e o evento é DESCARTADO (§ «O evento de dia inteiro») |
+| `okmigoCalendario` | `vista: mes\|semana\|dia` · `de` · `eventos[{inicio, fim, titulo, detalhe, id, tipo, dia_inteiro, recurso}]` (teto 500; vale 1 nó) · `recursos[]` (teto 60) · `aoTocarODia {mostrar, preencher}` · `acoesDoEvento[{para, titulo, gesto, enviar+campos \| mostrar+preencher}]` (teto 6) | o serviço nomeia o CAMPO, nunca o VALOR (`preencher: {"dia": "data", "hora": "hora"}`); a grade mensal fornece só `data`, a régua diária fornece também `hora`; evento sem `id` desenha mas não aceita ação; `nova_*` só existem no gesto `arrastar`; um toque abre formulário, nunca escreve. ⭐ `dia_inteiro: true` = `inicio`/`fim` SÓ com data (`AAAA-MM-DD`, `fim` inclusivo), desenhado na **faixa acima da régua** e em **todos os dias cobertos** no mês; ⛔ dia inteiro com hora é erro de forma e o evento é DESCARTADO (§ «O evento de dia inteiro»). ⭐ `recurso` (≤ 60) é a cadeira/sala/profissional: rótulo e chave do filtro; acima do teto o CAMPO some sem cortar e o evento fica; `recursos` é a lista que o filtro oferece, separada dos eventos (§ «O recurso do evento») |
 | `okmigoArquivo` | `id`, `campo`, `label`, `aceita` (`pdf/imagem/xml/planilha/texto`), `maxBytes` (só aperta o teto do produto), `isRequired` | palavra desconhecida em `aceita` some; sem nenhuma, aceita tudo |
 | `okmigoDocumento` | `titulo`/`nome`, `tipo` (MIME), `tamanho`, `ler: {operacao, pedido}` — a operação tem de ser LEITURA declarada (⛔ fora dela recusa a tela) | `formato` sai derivado do MIME (`pdf`, `imagem` só raster, `outro`); `pedido` só com escalares |
 | `okmigoCopiar` | `{rotulo, valor}` → área de transferência | sem valor, some |
@@ -235,6 +235,54 @@ evento sem hora; a casca o descrevia como `<time>inicio – fim</time>`).
   `hora`, `duracao_minutos` e `nova_hora` chegam **vazios**, e `novo_inicio` é
   só a data — arrastar um dia inteiro muda o DIA, nunca lhe inventa uma hora.
 - **A casca** o descreve como `<time>2026-10-12</time> (dia inteiro) Feriado`.
+
+### O recurso do evento (OMINFRA-942)
+
+A cadeira, a sala, o profissional: num salão, numa clínica ou num coworking o
+evento pertence a um RECURSO, e a tela precisa rotulá-lo e filtrar por ele
+(«só a cadeira 2»). Até aqui o evento não tinha onde dizer isso (medido em
+02/10/2026), e o serviço escondia o nome no `titulo` — que não filtra.
+
+```json
+{"inicio": "2026-10-13T09:00:00-03:00", "titulo": "Corte", "recurso": "Cadeira 2", "id": "a7"}
+```
+```json
+{"type": "okmigoCalendario", "recursos": ["Cadeira 1", "Cadeira 2", "Cadeira 3"], "eventos": [...]}
+```
+
+- **`recurso`** é texto curto (≤ 60) e opcional no evento. Evento sem ele
+  segue igual e sai com `recurso: ""`.
+- ⛔ **Acima do teto o CAMPO some, sem cortar — e o evento fica.** É rótulo e
+  chave de filtro ao mesmo tempo: «Cadeira 1 · Unidade Centro…» cortado em 60
+  não casa mais com o nome em `recursos`, e o filtro deixaria o evento de fora
+  em silêncio. Vazio é «sem recurso». O `relatorio()` nomeia os dois casos
+  pelo índice do evento.
+- **`recursos`** (no elemento; ≤ 60 nomes, sem repetição, na ordem dada) é a
+  lista que o filtro oferece. Existe **separada dos eventos** de propósito: a
+  cadeira sem atendimento hoje continua existindo, e o filtro tem de a
+  mostrar vazia — derivar a lista dos eventos a esconderia. ⛔ Só lista: um
+  texto no lugar dela some inteiro (viraria uma letra por recurso). O crivo
+  **não cruza** as duas: evento com `recurso` fora de `recursos` desenha com
+  o rótulo que trouxe; o que se cadastra é decisão do serviço.
+- `recurso` **não** entrou em `DADOS_DO_EVENTO` nem em `DADOS_DO_DIA`: trocar
+  um evento de cadeira é operação do serviço pelo `id`, não um dado que o
+  cliente inventa num toque. Preencher a cadeira ao tocar o dia numa vista por
+  coluna fica para quando essa vista existir, com motivo.
+
+**Como o cliente desenha** — web e app, a mesma regra:
+
+- **O rótulo**: junto do título, discreto, em todas as vistas. Sem `recurso`,
+  nada muda.
+- **O filtro «por recurso»**: oferecido quando `recursos` veio; «todos» é o
+  padrão. Filtrar **esconde** os eventos dos outros recursos sem os apagar, e
+  a navegação de período mantém o filtro escolhido. Evento sem `recurso`
+  aparece em «todos» e some ao filtrar por um recurso. Recurso que está na
+  lista e sem evento no período aparece no filtro mesmo assim — é para isso
+  que a lista existe.
+- **Não é agrupamento**: uma coluna por recurso (a vista de dia por cadeira)
+  é desenho que pode vir depois; este campo só nomeia.
+- **A casca** descreve `Corte <small>recurso: Cadeira 2</small>` e, no fim do
+  elemento, `recursos: Cadeira 1, Cadeira 2`.
 
 ## 3 · Escrita: o que um toque pode e não pode
 
