@@ -1,0 +1,4546 @@
+{
+ "slug": "estoufit-aluno",
+ "endpoint": "http://SEU-HOST:8000/mcp/",
+ "forma": "do_operador",
+ "descricao": "O treino e a nutrição de quem está falando: os exercícios prescritos pelo personal dele, a carga, a demonstração de cada movimento, o registro do que executou — e o que comeu, contra a meta estimada ou a assinada pelo nutricionista. O histórico é DELE. Nada aqui prescreve treino nem dieta.",
+ "versao": "0.55.18",
+ "superficies": [
+  {
+   "nome": "inicio",
+   "titulo": "Início",
+   "hint": "o que tem para hoje, e como a coisa vem indo",
+   "fonte": {
+    "resumo": {
+     "operacao": "meu_dia"
+    }
+   },
+   "cartao": {
+    "type": "AdaptiveCard",
+    "version": "1.5",
+    "body": [
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "MEU FITNESS",
+        "wrap": true,
+        "size": "small",
+        "weight": "bolder",
+        "isSubtle": true
+       },
+       {
+        "type": "TextBlock",
+        "text": "Hoje",
+        "wrap": true,
+        "size": "extraLarge",
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "{hoje_frase}",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       }
+      ],
+      "spacing": "medium"
+     },
+     {
+      "_repetir_lista": {
+       "type": "Container",
+       "items": [
+        {
+         "type": "TextBlock",
+         "text": "TREINO",
+         "wrap": true,
+         "size": "small",
+         "weight": "bolder",
+         "isSubtle": true
+        },
+        {
+         "type": "TextBlock",
+         "text": "{titulo}",
+         "wrap": true,
+         "size": "large",
+         "weight": "bolder"
+        },
+        {
+         "type": "TextBlock",
+         "text": "{frase}",
+         "wrap": true,
+         "size": "small",
+         "isSubtle": true
+        },
+        {
+         "type": "okmigoProgresso",
+         "feito": "{feitos_n}",
+         "de": "{de_quantos_n}",
+         "fallback": {
+          "type": "TextBlock",
+          "text": "{feitos_n} de {de_quantos_n}",
+          "wrap": true
+         }
+        }
+       ],
+       "style": "emphasis",
+       "spacing": "medium"
+      },
+      "_de": "treino_hoje"
+     },
+     {
+      "_repetir_lista": {
+       "type": "Container",
+       "items": [
+        {
+         "type": "TextBlock",
+         "text": "NUTRIÇÃO",
+         "wrap": true,
+         "size": "small",
+         "weight": "bolder",
+         "isSubtle": true
+        },
+        {
+         "type": "TextBlock",
+         "text": "{resumo}",
+         "wrap": true,
+         "size": "large",
+         "weight": "bolder"
+        },
+        {
+         "type": "TextBlock",
+         "text": "{frase}",
+         "wrap": true,
+         "size": "small",
+         "isSubtle": true
+        }
+       ],
+       "spacing": "medium"
+      },
+      "_de": "nutricao_hoje"
+     },
+     {
+      "_repetir_lista": {
+       "type": "Container",
+       "items": [
+        {
+         "type": "okmigoProgresso",
+         "feito": "{hoje_n}",
+         "de": "{meta_n}",
+         "fallback": {
+          "type": "TextBlock",
+          "text": "{hoje_n} de {meta_n}",
+          "wrap": true
+         }
+        }
+       ],
+       "spacing": "small"
+      },
+      "_de": "meta_hoje"
+     },
+     {
+      "_repetir_lista": {
+       "type": "Container",
+       "items": [
+        {
+         "type": "TextBlock",
+         "text": "{frase}",
+         "wrap": true,
+         "size": "small",
+         "weight": "bolder"
+        }
+       ],
+       "style": "emphasis",
+       "spacing": "small"
+      },
+      "_de": "proxima"
+     },
+     {
+      "_repetir_lista": {
+       "type": "Container",
+       "items": [
+        {
+         "type": "TextBlock",
+         "text": "{titulo}",
+         "wrap": true,
+         "size": "medium",
+         "weight": "bolder"
+        },
+        {
+         "type": "TextBlock",
+         "text": "{frase}",
+         "wrap": true,
+         "size": "small"
+        }
+       ],
+       "style": "attention",
+       "spacing": "medium"
+      },
+      "_de": "ausencia"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "COMO VEM INDO",
+        "wrap": true,
+        "size": "small",
+        "weight": "bolder",
+        "isSubtle": true
+       },
+       {
+        "type": "okmigoGrafico",
+        "forma": "barras",
+        "titulo": "Treinos por semana",
+        "series": [
+         {
+          "rotulo": "sessões",
+          "cor": "positivo"
+         }
+        ],
+        "pontos": [
+         {
+          "rotulo": "{c1}",
+          "valores": [
+           "{cv1}"
+          ]
+         },
+         {
+          "rotulo": "{c2}",
+          "valores": [
+           "{cv2}"
+          ]
+         },
+         {
+          "rotulo": "{c3}",
+          "valores": [
+           "{cv3}"
+          ]
+         },
+         {
+          "rotulo": "{c4}",
+          "valores": [
+           "{cv4}"
+          ]
+         },
+         {
+          "rotulo": "{c5}",
+          "valores": [
+           "{cv5}"
+          ]
+         },
+         {
+          "rotulo": "{c6}",
+          "valores": [
+           "{cv6}"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "okmigoGrafico",
+        "forma": "barras",
+        "titulo": "Calorias por dia",
+        "series": [
+         {
+          "rotulo": "kcal",
+          "cor": "neutro"
+         }
+        ],
+        "pontos": [
+         {
+          "rotulo": "{k1}",
+          "valores": [
+           "{kv1}"
+          ]
+         },
+         {
+          "rotulo": "{k2}",
+          "valores": [
+           "{kv2}"
+          ]
+         },
+         {
+          "rotulo": "{k3}",
+          "valores": [
+           "{kv3}"
+          ]
+         },
+         {
+          "rotulo": "{k4}",
+          "valores": [
+           "{kv4}"
+          ]
+         },
+         {
+          "rotulo": "{k5}",
+          "valores": [
+           "{kv5}"
+          ]
+         },
+         {
+          "rotulo": "{k6}",
+          "valores": [
+           "{kv6}"
+          ]
+         },
+         {
+          "rotulo": "{k7}",
+          "valores": [
+           "{kv7}"
+          ]
+         }
+        ]
+       }
+      ],
+      "spacing": "medium"
+     },
+     {
+      "_repetir_lista": {
+       "type": "Container",
+       "items": [
+        {
+         "type": "TextBlock",
+         "text": "{titulo}",
+         "wrap": true,
+         "size": "small",
+         "weight": "bolder",
+         "isSubtle": true
+        },
+        {
+         "type": "TextBlock",
+         "text": "{atual}",
+         "wrap": true,
+         "size": "large",
+         "weight": "bolder"
+        },
+        {
+         "type": "TextBlock",
+         "text": "{variacao}",
+         "wrap": true,
+         "size": "small",
+         "isSubtle": true
+        }
+       ],
+       "spacing": "small"
+      },
+      "_de": "peso"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "{limite}",
+        "wrap": true,
+        "size": "small",
+        "weight": "bolder"
+       }
+      ],
+      "style": "attention",
+      "spacing": "medium"
+     }
+    ],
+    "okmigoTema": "jornada-ativa",
+    "okmigoNavegacao": "inferior"
+   },
+   "icone": "inicio",
+   "rotulo_superficie": "Início"
+  },
+  {
+   "nome": "treino",
+   "titulo": "Meu treino",
+   "hint": "os exercícios de hoje, a carga e como se faz cada um",
+   "fonte": {
+    "resumo": {
+     "operacao": "meu_treino"
+    },
+    "lista": {
+     "operacao": "meu_treino",
+     "caminho": "itens"
+    }
+   },
+   "cartao": {
+    "type": "AdaptiveCard",
+    "version": "1.5",
+    "body": [
+     {
+      "_repetir_lista": {
+       "type": "Container",
+       "items": [
+        {
+         "type": "Container",
+         "items": [
+          {
+           "type": "TextBlock",
+           "text": "BEM-VINDO",
+           "wrap": true,
+           "size": "small",
+           "weight": "bolder",
+           "isSubtle": true
+          },
+          {
+           "type": "TextBlock",
+           "text": "Como você quer treinar hoje?",
+           "wrap": true,
+           "size": "extraLarge",
+           "weight": "bolder"
+          },
+          {
+           "type": "Container",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{selo_personal}",
+             "wrap": true,
+             "size": "small",
+             "weight": "bolder",
+             "isSubtle": true
+            },
+            {
+             "type": "TextBlock",
+             "text": "{titulo_personal}",
+             "wrap": true,
+             "size": "large",
+             "weight": "bolder"
+            },
+            {
+             "type": "TextBlock",
+             "text": "{frase_personal}",
+             "wrap": true,
+             "size": "small",
+             "isSubtle": true
+            }
+           ],
+           "style": "accent",
+           "selectAction": {
+            "type": "Action.ToggleVisibility",
+            "targetElements": [
+             {
+              "elementId": "porta_com",
+              "isVisible": true
+             },
+             {
+              "elementId": "porta_caixas",
+              "isVisible": false
+             }
+            ]
+           },
+           "spacing": "medium"
+          },
+          {
+           "type": "Container",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{selo_sozinho}",
+             "wrap": true,
+             "size": "small",
+             "weight": "bolder",
+             "isSubtle": true
+            },
+            {
+             "type": "TextBlock",
+             "text": "{titulo_sozinho}",
+             "wrap": true,
+             "size": "large",
+             "weight": "bolder"
+            },
+            {
+             "type": "TextBlock",
+             "text": "{frase_sozinho}",
+             "wrap": true,
+             "size": "small",
+             "isSubtle": true
+            }
+           ],
+           "style": "emphasis",
+           "selectAction": {
+            "type": "Action.ToggleVisibility",
+            "targetElements": [
+             {
+              "elementId": "perfil",
+              "isVisible": true
+             },
+             {
+              "elementId": "porta_caixas",
+              "isVisible": false
+             }
+            ]
+           },
+           "spacing": "medium"
+          },
+          {
+           "type": "Container",
+           "items": [
+            {
+             "type": "ColumnSet",
+             "columns": [
+              {
+               "type": "Column",
+               "width": "auto",
+               "items": [
+                {
+                 "type": "TextBlock",
+                 "text": "💡",
+                 "wrap": true,
+                 "size": "medium"
+                }
+               ]
+              },
+              {
+               "type": "Column",
+               "width": "stretch",
+               "items": [
+                {
+                 "type": "TextBlock",
+                 "text": "{dica}",
+                 "wrap": true,
+                 "size": "small"
+                }
+               ]
+              }
+             ]
+            }
+           ],
+           "style": "emphasis",
+           "spacing": "large"
+          }
+         ],
+         "id": "porta_caixas"
+        },
+        {
+         "type": "Container",
+         "items": [
+          {
+           "type": "ActionSet",
+           "actions": [
+            {
+             "type": "Action.ToggleVisibility",
+             "title": "‹ voltar",
+             "targetElements": [
+              {
+               "elementId": "porta_caixas",
+               "isVisible": true
+              },
+              {
+               "elementId": "porta_com",
+               "isVisible": false
+              }
+             ],
+             "mode": "secondary"
+            }
+           ]
+          },
+          {
+           "type": "TextBlock",
+           "text": "Treinar com personal",
+           "wrap": true,
+           "size": "extraLarge",
+           "weight": "bolder"
+          },
+          {
+           "type": "TextBlock",
+           "text": "{como_personal}",
+           "wrap": true,
+           "size": "small"
+          },
+          {
+           "_repetir_lista": {
+            "type": "Container",
+            "items": [
+             {
+              "type": "ColumnSet",
+              "columns": [
+               {
+                "type": "Column",
+                "width": "auto",
+                "items": [
+                 {
+                  "type": "Container",
+                  "items": [
+                   {
+                    "type": "TextBlock",
+                    "text": "{n}",
+                    "wrap": true,
+                    "weight": "bolder"
+                   }
+                  ],
+                  "okmigoGrade": "etiquetas",
+                  "spacing": "small"
+                 }
+                ]
+               },
+               {
+                "type": "Column",
+                "width": "stretch",
+                "items": [
+                 {
+                  "type": "TextBlock",
+                  "text": "{titulo}",
+                  "wrap": true,
+                  "weight": "bolder"
+                 },
+                 {
+                  "type": "TextBlock",
+                  "text": "{texto}",
+                  "wrap": true,
+                  "size": "small",
+                  "isSubtle": true
+                 }
+                ]
+               }
+              ]
+             }
+            ],
+            "style": "emphasis",
+            "spacing": "small"
+           },
+           "_de": "passos_personal"
+          },
+          {
+           "type": "TextBlock",
+           "text": "Personais disponíveis",
+           "wrap": true,
+           "size": "medium",
+           "weight": "bolder"
+          },
+          {
+           "type": "TextBlock",
+           "text": "{diretorio_personais}",
+           "wrap": true,
+           "size": "small",
+           "isSubtle": true
+          },
+          {
+           "_repetir_lista": {
+            "type": "Container",
+            "items": [
+             {
+              "type": "TextBlock",
+              "text": "PERSONAL",
+              "wrap": true,
+              "size": "small",
+              "weight": "bolder",
+              "isSubtle": true
+             },
+             {
+              "type": "TextBlock",
+              "text": "{nome}",
+              "wrap": true,
+              "size": "large",
+              "weight": "bolder"
+             },
+             {
+              "type": "TextBlock",
+              "text": "Atende em: {onde_atende}",
+              "wrap": true,
+              "size": "small",
+              "isSubtle": true
+             },
+             {
+              "type": "Input.Text",
+              "id": "personal_handle_porta_{handle}",
+              "label": "",
+              "campo": "handle",
+              "value": "{handle}",
+              "isVisible": false
+             },
+             {
+              "type": "ActionSet",
+              "actions": [
+               {
+                "type": "Action.Submit",
+                "title": "Ver perfil",
+                "data": {
+                 "operacao": "falar_com_personal"
+                },
+                "style": "positive"
+               }
+              ]
+             }
+            ],
+            "style": "emphasis",
+            "spacing": "medium"
+           },
+           "_de": "personais_publicos"
+          },
+          {
+           "type": "TextBlock",
+           "text": "Ainda não tem um personal? Enquanto isso a sugestão te acompanha — volte e toque em «Treinar sozinho».",
+           "wrap": true,
+           "size": "small",
+           "isSubtle": true
+          }
+         ],
+         "id": "porta_com",
+         "isVisible": false,
+         "spacing": "medium"
+        }
+       ],
+       "style": "default",
+       "spacing": "medium"
+      },
+      "_de": "porta"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.ToggleVisibility",
+          "title": "‹ voltar",
+          "targetElements": [
+           {
+            "elementId": "porta_caixas",
+            "isVisible": true
+           },
+           {
+            "elementId": "escolher_corpo",
+            "isVisible": true
+           },
+           {
+            "elementId": "treino_corpo",
+            "isVisible": true
+           },
+           {
+            "elementId": "perfil",
+            "isVisible": false
+           }
+          ],
+          "mode": "secondary"
+         }
+        ]
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.ToggleVisibility",
+          "title": "mudar como treino",
+          "targetElements": [
+           {
+            "elementId": "modo_treino",
+            "isVisible": true
+           },
+           {
+            "elementId": "perfil",
+            "isVisible": false
+           }
+          ],
+          "mode": "secondary"
+         }
+        ]
+       },
+       {
+        "type": "TextBlock",
+        "text": "Seu perfil",
+        "wrap": true,
+        "size": "extraLarge",
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "Conte um pouco sobre você para montarmos o plano ideal.",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "nivel",
+        "choices": [
+         {
+          "title": "iniciante",
+          "value": "iniciante",
+          "okmigoNota": "começando agora ou voltando"
+         },
+         {
+          "title": "intermediário",
+          "value": "intermediário",
+          "okmigoNota": "treina há alguns meses"
+         },
+         {
+          "title": "avançado",
+          "value": "avançado",
+          "okmigoNota": "treina há anos, sem pausa"
+         },
+         {
+          "title": "rato de academia",
+          "value": "rato de academia",
+          "okmigoNota": "vive na academia — mais série por treino"
+         }
+        ],
+        "label": "Nível de experiência",
+        "campo": "nivel",
+        "isRequired": true,
+        "style": "expanded",
+        "value": "{nivel_atual}"
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "dias",
+        "choices": [
+         {
+          "title": "2",
+          "value": "2"
+         },
+         {
+          "title": "3",
+          "value": "3"
+         },
+         {
+          "title": "4",
+          "value": "4"
+         },
+         {
+          "title": "5",
+          "value": "5"
+         },
+         {
+          "title": "6",
+          "value": "6"
+         }
+        ],
+        "label": "Dias por semana",
+        "campo": "dias_por_semana",
+        "isRequired": true,
+        "style": "expanded",
+        "value": "{dias_atual}"
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "equip",
+        "choices": [
+         {
+          "title": "só peso do corpo",
+          "value": "só peso do corpo",
+          "okmigoNota": "em casa, sem nada"
+         },
+         {
+          "title": "halteres",
+          "value": "halteres",
+          "okmigoNota": "um par de halteres"
+         },
+         {
+          "title": "academia",
+          "value": "academia",
+          "okmigoNota": "máquinas e barra"
+         }
+        ],
+        "label": "Com o que você treina",
+        "campo": "equipamento",
+        "isRequired": true,
+        "style": "expanded",
+        "value": "{equipamento_atual}"
+       },
+       {
+        "type": "TextBlock",
+        "text": "{aviso_equipamento}",
+        "wrap": true,
+        "size": "small",
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "Idade, altura e peso são opcionais e ficam para depois — a sugestão não precisa deles.",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.Submit",
+          "title": "Escolher grupos musculares →",
+          "data": {
+           "operacao": "guardar_perfil"
+          },
+          "style": "positive",
+          "okmigoAposEnviar": {
+           "type": "Action.ToggleVisibility",
+           "targetElements": [
+            {
+             "elementId": "escolher_corpo",
+             "isVisible": true
+            },
+            {
+             "elementId": "perfil",
+             "isVisible": false
+            },
+            {
+             "elementId": "porta_caixas",
+             "isVisible": false
+            },
+            {
+             "elementId": "treino_corpo",
+             "isVisible": false
+            }
+           ]
+          }
+         }
+        ],
+        "okmigoRodape": true
+       }
+      ],
+      "id": "perfil",
+      "isVisible": false,
+      "spacing": "medium"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.ToggleVisibility",
+          "title": "‹ meu perfil",
+          "targetElements": [
+           {
+            "elementId": "perfil",
+            "isVisible": true
+           },
+           {
+            "elementId": "modo_treino",
+            "isVisible": false
+           }
+          ],
+          "mode": "secondary"
+         }
+        ]
+       },
+       {
+        "type": "TextBlock",
+        "text": "Como você quer treinar?",
+        "wrap": true,
+        "size": "extraLarge",
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "Você pode mudar de caminho quando quiser. Seu perfil continua salvo.",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "Container",
+        "items": [
+         {
+          "type": "TextBlock",
+          "text": "COM PERSONAL",
+          "wrap": true,
+          "size": "small",
+          "weight": "bolder",
+          "isSubtle": true
+         },
+         {
+          "type": "TextBlock",
+          "text": "Treinar com personal",
+          "wrap": true,
+          "size": "large",
+          "weight": "bolder"
+         },
+         {
+          "type": "TextBlock",
+          "text": "Um profissional monta, acompanha e assina o seu treino.",
+          "wrap": true,
+          "size": "small",
+          "isSubtle": true
+         },
+         {
+          "type": "TextBlock",
+          "text": "toque para ver orientações →",
+          "wrap": true,
+          "size": "small",
+          "weight": "bolder"
+         }
+        ],
+        "style": "accent",
+        "selectAction": {
+         "type": "Action.ToggleVisibility",
+         "targetElements": [
+          {
+           "elementId": "modo_personal",
+           "isVisible": true
+          },
+          {
+           "elementId": "modo_treino",
+           "isVisible": false
+          }
+         ]
+        },
+        "spacing": "medium"
+       },
+       {
+        "type": "Container",
+        "items": [
+         {
+          "type": "TextBlock",
+          "text": "INDEPENDENTE",
+          "wrap": true,
+          "size": "small",
+          "weight": "bolder",
+          "isSubtle": true
+         },
+         {
+          "type": "TextBlock",
+          "text": "Treinar sozinho",
+          "wrap": true,
+          "size": "large",
+          "weight": "bolder"
+         },
+         {
+          "type": "TextBlock",
+          "text": "Use a sugestão com base no seu nível e nos dias disponíveis.",
+          "wrap": true,
+          "size": "small",
+          "isSubtle": true
+         },
+         {
+          "type": "TextBlock",
+          "text": "toque para continuar com meu perfil →",
+          "wrap": true,
+          "size": "small",
+          "weight": "bolder"
+         }
+        ],
+        "style": "emphasis",
+        "selectAction": {
+         "type": "Action.ToggleVisibility",
+         "targetElements": [
+          {
+           "elementId": "perfil",
+           "isVisible": true
+          },
+          {
+           "elementId": "modo_treino",
+           "isVisible": false
+          }
+         ]
+        },
+        "spacing": "medium"
+       }
+      ],
+      "id": "modo_treino",
+      "isVisible": false,
+      "spacing": "medium"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.ToggleVisibility",
+          "title": "‹ como quero treinar",
+          "targetElements": [
+           {
+            "elementId": "modo_treino",
+            "isVisible": true
+           },
+           {
+            "elementId": "modo_personal",
+            "isVisible": false
+           }
+          ],
+          "mode": "secondary"
+         }
+        ]
+       },
+       {
+        "type": "TextBlock",
+        "text": "Treinar com personal",
+        "wrap": true,
+        "size": "extraLarge",
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "Peça um convite ao seu personal. Ao aceitar no okmigo, o treino dele aparece aqui e o seu perfil continua sendo seu.",
+        "wrap": true,
+        "size": "small"
+       },
+       {
+        "type": "TextBlock",
+        "text": "Ainda não tem um personal? Você pode seguir com a sugestão independente enquanto isso.",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "TextBlock",
+        "text": "Personais disponíveis",
+        "wrap": true,
+        "size": "medium",
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "{diretorio_personais}",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "_repetir_lista": {
+         "type": "Container",
+         "items": [
+          {
+           "type": "TextBlock",
+           "text": "SEU PERSONAL",
+           "wrap": true,
+           "size": "small",
+           "weight": "bolder",
+           "isSubtle": true
+          },
+          {
+           "type": "TextBlock",
+           "text": "{nome}",
+           "wrap": true,
+           "size": "large",
+           "weight": "bolder"
+          },
+          {
+           "type": "TextBlock",
+           "text": "Atende em: {onde_atende}",
+           "wrap": true,
+           "size": "small",
+           "isSubtle": true
+          },
+          {
+           "type": "Input.Text",
+           "id": "personal_handle_{handle}",
+           "label": "",
+           "campo": "handle",
+           "value": "{handle}",
+           "isVisible": false
+          },
+          {
+           "type": "ActionSet",
+           "actions": [
+            {
+             "type": "Action.Submit",
+             "title": "Ver perfil",
+             "data": {
+              "operacao": "falar_com_personal"
+             },
+             "style": "positive"
+            }
+           ]
+          }
+         ],
+         "style": "emphasis",
+         "spacing": "medium"
+        },
+        "_de": "personais_publicos"
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.ToggleVisibility",
+          "title": "continuar com meu perfil",
+          "targetElements": [
+           {
+            "elementId": "perfil",
+            "isVisible": true
+           },
+           {
+            "elementId": "modo_personal",
+            "isVisible": false
+           }
+          ],
+          "mode": "secondary"
+         }
+        ]
+       }
+      ],
+      "id": "modo_personal",
+      "isVisible": false,
+      "spacing": "medium"
+     },
+     {
+      "_repetir_lista": {
+       "type": "Container",
+       "items": [
+        {
+         "type": "Container",
+         "items": [
+          {
+           "type": "ActionSet",
+           "actions": [
+            {
+             "type": "Action.ToggleVisibility",
+             "title": "‹ voltar",
+             "targetElements": [
+              {
+               "elementId": "perfil",
+               "isVisible": true
+              },
+              {
+               "elementId": "escolher_corpo",
+               "isVisible": false
+              }
+             ],
+             "mode": "secondary"
+            }
+           ]
+          },
+          {
+           "type": "TextBlock",
+           "text": "{titulo}",
+           "wrap": true,
+           "size": "extraLarge",
+           "weight": "bolder"
+          },
+          {
+           "type": "TextBlock",
+           "text": "{pergunta}",
+           "wrap": true,
+           "size": "small",
+           "isSubtle": true
+          },
+          {
+           "type": "Container",
+           "items": [
+            {
+             "_repetir_lista": {
+              "type": "TextBlock",
+              "text": "{t}",
+              "wrap": true,
+              "size": "small"
+             },
+             "_de": "chips"
+            }
+           ],
+           "okmigoGrade": "etiquetas",
+           "spacing": "small"
+          },
+          {
+           "type": "TextBlock",
+           "text": "{aviso_equipamento}",
+           "wrap": true,
+           "size": "small",
+           "weight": "bolder"
+          },
+          {
+           "type": "Input.ChoiceSet",
+           "id": "foco_esc",
+           "choices": [
+            {
+             "_repetir_lista": {
+              "title": "{area}",
+              "value": "{area}",
+              "okmigoNota": "{nota}",
+              "okmigoIcone": "{icone}",
+              "okmigoImagem": "{capa}"
+             },
+             "_de": "areas"
+            }
+           ],
+           "label": "",
+           "campo": "foco",
+           "isRequired": true,
+           "style": "expanded",
+           "value": ""
+          },
+          {
+           "type": "ActionSet",
+           "actions": [
+            {
+             "type": "Action.Submit",
+             "title": "Criar Treino A →",
+             "data": {
+              "operacao": "sugerir_treino"
+             },
+             "style": "positive",
+             "okmigoAposEnviar": {
+              "type": "Action.ToggleVisibility",
+              "targetElements": [
+               {
+                "elementId": "treino_corpo",
+                "isVisible": true
+               },
+               {
+                "elementId": "perfil",
+                "isVisible": false
+               },
+               {
+                "elementId": "escolher_corpo",
+                "isVisible": false
+               }
+              ]
+             }
+            }
+           ],
+           "okmigoRodape": true
+          }
+         ],
+         "id": "escolher_corpo"
+        }
+       ],
+       "style": "default",
+       "spacing": "medium"
+      },
+      "_de": "escolher"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "_repetir_lista": {
+         "type": "Container",
+         "items": [
+          {
+           "type": "Container",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "SEU PERSONAL",
+             "wrap": true,
+             "size": "small",
+             "weight": "bolder",
+             "isSubtle": true
+            },
+            {
+             "type": "TextBlock",
+             "text": "{nome}",
+             "wrap": true,
+             "size": "large",
+             "weight": "bolder"
+            },
+            {
+             "type": "TextBlock",
+             "text": "Atende em: {onde_atende}",
+             "wrap": true,
+             "size": "small",
+             "isSubtle": true
+            },
+            {
+             "type": "TextBlock",
+             "text": "toque para ver as opções",
+             "wrap": true,
+             "size": "small",
+             "weight": "bolder"
+            },
+            {
+             "type": "Container",
+             "items": [
+              {
+               "type": "Input.Text",
+               "id": "personal_handle_ativo_{handle}",
+               "label": "",
+               "campo": "handle",
+               "value": "{handle}",
+               "isVisible": false
+              },
+              {
+               "type": "ActionSet",
+               "actions": [
+                {
+                 "type": "Action.Submit",
+                 "title": "Ver perfil e falar",
+                 "data": {
+                  "operacao": "falar_com_personal"
+                 },
+                 "style": "positive"
+                }
+               ]
+              },
+              {
+               "type": "ActionSet",
+               "actions": [
+                {
+                 "type": "Action.Submit",
+                 "title": "Parar de treinar com este personal",
+                 "data": {
+                  "operacao": "sair_do_personal"
+                 },
+                 "style": "destructive"
+                }
+               ]
+              }
+             ],
+             "id": "acoes_do_personal",
+             "isVisible": false,
+             "spacing": "small"
+            }
+           ],
+           "style": "emphasis",
+           "selectAction": {
+            "type": "Action.ToggleVisibility",
+            "targetElements": [
+             {
+              "elementId": "acoes_do_personal",
+              "isVisible": true
+             }
+            ]
+           },
+           "spacing": "medium"
+          }
+         ],
+         "style": "default",
+         "spacing": "medium"
+        },
+        "_de": "personal"
+       },
+       {
+        "_repetir_lista": {
+         "type": "Container",
+         "items": [
+          {
+           "type": "ColumnSet",
+           "columns": [
+            {
+             "type": "Column",
+             "width": "stretch",
+             "items": [
+              {
+               "type": "TextBlock",
+               "text": "{sobrelinha}",
+               "wrap": true,
+               "size": "small",
+               "weight": "bolder",
+               "isSubtle": true
+              },
+              {
+               "type": "TextBlock",
+               "text": "{titulo_tela}",
+               "wrap": true,
+               "size": "extraLarge",
+               "weight": "bolder"
+              },
+              {
+               "type": "TextBlock",
+               "text": "{subtitulo_curto}",
+               "wrap": true,
+               "size": "small",
+               "isSubtle": true
+              }
+             ]
+            },
+            {
+             "type": "Column",
+             "width": "auto",
+             "items": [
+              {
+               "type": "TextBlock",
+               "text": "{pct_frase}",
+               "wrap": true,
+               "horizontalAlignment": "right",
+               "size": "extraLarge",
+               "weight": "bolder"
+              },
+              {
+               "type": "TextBlock",
+               "text": "{feitos_de_frase}",
+               "wrap": true,
+               "horizontalAlignment": "right",
+               "size": "small",
+               "isSubtle": true
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "type": "okmigoProgresso",
+           "feito": "{feitos_n}",
+           "de": "{de_quantos_n}",
+           "rotulo": ""
+          }
+         ],
+         "style": "default",
+         "spacing": "medium"
+        },
+        "_de": "cabecalho"
+       },
+       {
+        "type": "TextBlock",
+        "text": "{subtitulo}",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "_repetir_lista": {
+         "type": "Container",
+         "items": [
+          {
+           "type": "TextBlock",
+           "text": "{frase}",
+           "wrap": true,
+           "size": "small",
+           "isSubtle": true
+          },
+          {
+           "type": "ActionSet",
+           "actions": [
+            {
+             "type": "Action.ToggleVisibility",
+             "title": "{rotulo}",
+             "targetElements": [
+              {
+               "elementId": "{primeiro}",
+               "isVisible": true
+              }
+             ],
+             "style": "positive"
+            }
+           ]
+          }
+         ],
+         "style": "emphasis",
+         "spacing": "medium"
+        },
+        "_de": "guiar"
+       },
+       {
+        "_repetir_lista": {
+         "type": "Container",
+         "items": [
+          {
+           "type": "ColumnSet",
+           "columns": [
+            {
+             "type": "Column",
+             "width": "auto",
+             "items": [
+              {
+               "type": "Container",
+               "items": [
+                {
+                 "type": "TextBlock",
+                 "text": "{passo}",
+                 "wrap": true,
+                 "weight": "bolder"
+                }
+               ],
+               "okmigoGrade": "etiquetas",
+               "spacing": "small"
+              }
+             ]
+            },
+            {
+             "type": "Column",
+             "width": "stretch",
+             "items": [
+              {
+               "type": "TextBlock",
+               "text": "{exercicio}",
+               "wrap": true,
+               "weight": "bolder"
+              },
+              {
+               "type": "TextBlock",
+               "text": "{musculo}",
+               "wrap": true,
+               "size": "small",
+               "isSubtle": true
+              },
+              {
+               "type": "Container",
+               "items": [
+                {
+                 "type": "TextBlock",
+                 "text": "{series_frase}",
+                 "wrap": true,
+                 "size": "small"
+                },
+                {
+                 "type": "TextBlock",
+                 "text": "{reps_frase}",
+                 "wrap": true,
+                 "size": "small"
+                },
+                {
+                 "type": "TextBlock",
+                 "text": "{descanso_frase}",
+                 "wrap": true,
+                 "size": "small"
+                }
+               ],
+               "okmigoGrade": "etiquetas",
+               "spacing": "small"
+              },
+              {
+               "type": "TextBlock",
+               "text": "{feito_frase}",
+               "wrap": true,
+               "size": "small",
+               "isSubtle": true
+              },
+              {
+               "type": "TextBlock",
+               "text": "{marca}",
+               "wrap": true,
+               "size": "small",
+               "weight": "bolder"
+              },
+              {
+               "type": "TextBlock",
+               "text": "{estado_acao}",
+               "wrap": true,
+               "horizontalAlignment": "right",
+               "size": "small",
+               "weight": "bolder"
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Container",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{equipamento}",
+             "wrap": true,
+             "size": "small",
+             "isSubtle": true
+            },
+            {
+             "type": "Image",
+             "url": "{demo}",
+             "altText": "{exercicio}",
+             "height": "large"
+            },
+            {
+             "type": "Container",
+             "items": [
+              {
+               "type": "Input.Text",
+               "id": "item_{ordem}",
+               "label": "",
+               "campo": "item_par",
+               "value": "{item_par}",
+               "isVisible": false
+              },
+              {
+               "type": "Input.Number",
+               "id": "carga_{ordem}",
+               "label": "Carga que você usou (kg)",
+               "campo": "carga_kg",
+               "placeholder": "{carga}"
+              },
+              {
+               "type": "Input.Text",
+               "id": "reps_{ordem}",
+               "label": "Repetições",
+               "campo": "repeticoes_feitas",
+               "placeholder": "{repeticoes}"
+              },
+              {
+               "type": "TextBlock",
+               "text": "Deixe em branco se fez igual ao prescrito.",
+               "wrap": true,
+               "size": "small",
+               "isSubtle": true
+              },
+              {
+               "type": "Input.ChoiceSet",
+               "id": "esf_{ordem}",
+               "choices": [
+                {
+                 "title": "leve",
+                 "value": "leve"
+                },
+                {
+                 "title": "ok",
+                 "value": "ok"
+                },
+                {
+                 "title": "pesado",
+                 "value": "pesado"
+                }
+               ],
+               "label": "Como foi? (opcional)",
+               "campo": "esforco",
+               "isRequired": false,
+               "style": "expanded"
+              },
+              {
+               "type": "ActionSet",
+               "actions": [
+                {
+                 "type": "Action.Submit",
+                 "title": "marcar como feito",
+                 "data": {
+                  "operacao": "registrar_execucao"
+                 }
+                }
+               ]
+              },
+              {
+               "type": "okmigoCronometro",
+               "rotulo": "Descanso",
+               "segundos": "{descanso}"
+              }
+             ],
+             "style": "emphasis",
+             "id": "formf_{ordem}",
+             "spacing": "medium"
+            }
+           ],
+           "id": "form_{ordem}",
+           "isVisible": false,
+           "spacing": "small"
+          }
+         ],
+         "style": "emphasis",
+         "selectAction": {
+          "type": "Action.ToggleVisibility",
+          "targetElements": [
+           "form_{ordem}"
+          ]
+         },
+         "spacing": "small"
+        },
+        "_quando": {
+         "campo": "forma",
+         "em": [
+          "cheio"
+         ]
+        }
+       },
+       {
+        "type": "TextBlock",
+        "text": "{feitos_frase}",
+        "wrap": true,
+        "spacing": "medium",
+        "size": "small",
+        "weight": "bolder",
+        "isSubtle": true
+       },
+       {
+        "_repetir_lista": {
+         "type": "Container",
+         "items": [
+          {
+           "type": "ColumnSet",
+           "columns": [
+            {
+             "type": "Column",
+             "width": "auto",
+             "items": [
+              {
+               "type": "Container",
+               "items": [
+                {
+                 "type": "TextBlock",
+                 "text": "{passo}",
+                 "wrap": true,
+                 "weight": "bolder"
+                }
+               ],
+               "okmigoGrade": "etiquetas",
+               "spacing": "small"
+              }
+             ]
+            },
+            {
+             "type": "Column",
+             "width": "stretch",
+             "items": [
+              {
+               "type": "TextBlock",
+               "text": "{exercicio}",
+               "wrap": true,
+               "weight": "bolder"
+              },
+              {
+               "type": "TextBlock",
+               "text": "{musculo}",
+               "wrap": true,
+               "size": "small",
+               "isSubtle": true
+              },
+              {
+               "type": "Container",
+               "items": [
+                {
+                 "type": "TextBlock",
+                 "text": "{series_frase}",
+                 "wrap": true,
+                 "size": "small"
+                },
+                {
+                 "type": "TextBlock",
+                 "text": "{reps_frase}",
+                 "wrap": true,
+                 "size": "small"
+                },
+                {
+                 "type": "TextBlock",
+                 "text": "{descanso_frase}",
+                 "wrap": true,
+                 "size": "small"
+                }
+               ],
+               "okmigoGrade": "etiquetas",
+               "spacing": "small"
+              },
+              {
+               "type": "TextBlock",
+               "text": "{feito_frase}",
+               "wrap": true,
+               "size": "small",
+               "isSubtle": true
+              },
+              {
+               "type": "TextBlock",
+               "text": "{marca}",
+               "wrap": true,
+               "size": "small",
+               "weight": "bolder"
+              },
+              {
+               "type": "TextBlock",
+               "text": "{estado_acao}",
+               "wrap": true,
+               "horizontalAlignment": "right",
+               "size": "small",
+               "weight": "bolder"
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Container",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{equipamento}",
+             "wrap": true,
+             "size": "small",
+             "isSubtle": true
+            },
+            {
+             "type": "Image",
+             "url": "{demo}",
+             "altText": "{exercicio}",
+             "height": "large"
+            },
+            {
+             "type": "Container",
+             "items": [
+              {
+               "type": "Input.Text",
+               "id": "item_{ordem}",
+               "label": "",
+               "campo": "item_par",
+               "value": "{item_par}",
+               "isVisible": false
+              },
+              {
+               "type": "Input.Number",
+               "id": "carga_{ordem}",
+               "label": "Carga que você usou (kg)",
+               "campo": "carga_kg",
+               "placeholder": "{carga}"
+              },
+              {
+               "type": "Input.Text",
+               "id": "reps_{ordem}",
+               "label": "Repetições",
+               "campo": "repeticoes_feitas",
+               "placeholder": "{repeticoes}"
+              },
+              {
+               "type": "TextBlock",
+               "text": "Deixe em branco se fez igual ao prescrito.",
+               "wrap": true,
+               "size": "small",
+               "isSubtle": true
+              },
+              {
+               "type": "Input.ChoiceSet",
+               "id": "esf_{ordem}",
+               "choices": [
+                {
+                 "title": "leve",
+                 "value": "leve"
+                },
+                {
+                 "title": "ok",
+                 "value": "ok"
+                },
+                {
+                 "title": "pesado",
+                 "value": "pesado"
+                }
+               ],
+               "label": "Como foi? (opcional)",
+               "campo": "esforco",
+               "isRequired": false,
+               "style": "expanded"
+              },
+              {
+               "type": "ActionSet",
+               "actions": [
+                {
+                 "type": "Action.Submit",
+                 "title": "marcar como feito",
+                 "data": {
+                  "operacao": "registrar_execucao"
+                 }
+                }
+               ]
+              },
+              {
+               "type": "okmigoCronometro",
+               "rotulo": "Descanso",
+               "segundos": "{descanso}"
+              }
+             ],
+             "style": "emphasis",
+             "id": "reformf_{ordem}",
+             "spacing": "medium"
+            }
+           ],
+           "id": "reform_{ordem}",
+           "isVisible": false,
+           "spacing": "small"
+          }
+         ],
+         "style": "emphasis",
+         "selectAction": {
+          "type": "Action.ToggleVisibility",
+          "targetElements": [
+           "reform_{ordem}"
+          ]
+         },
+         "spacing": "small"
+        },
+        "_quando": {
+         "campo": "forma",
+         "em": [
+          "compacto"
+         ]
+        }
+       },
+       {
+        "_repetir_lista": {
+         "type": "Container",
+         "items": [
+          {
+           "type": "TextBlock",
+           "text": "{frase}",
+           "wrap": true,
+           "size": "small",
+           "isSubtle": true
+          },
+          {
+           "type": "ActionSet",
+           "actions": [
+            {
+             "type": "Action.Submit",
+             "title": "finalizar o treino de hoje",
+             "data": {
+              "operacao": "finalizar_sessao"
+             }
+            }
+           ]
+          }
+         ],
+         "style": "default",
+         "spacing": "medium"
+        },
+        "_de": "fechar"
+       },
+       {
+        "_repetir_lista": {
+         "type": "Container",
+         "items": [
+          {
+           "type": "ColumnSet",
+           "columns": [
+            {
+             "type": "Column",
+             "width": "stretch",
+             "items": [
+              {
+               "type": "TextBlock",
+               "text": "{posicao}",
+               "wrap": true,
+               "size": "small",
+               "weight": "bolder",
+               "isSubtle": true
+              }
+             ]
+            },
+            {
+             "type": "Column",
+             "width": "auto",
+             "items": [
+              {
+               "type": "TextBlock",
+               "text": "{estado}",
+               "wrap": true,
+               "horizontalAlignment": "right",
+               "size": "small",
+               "isSubtle": true
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "type": "TextBlock",
+           "text": "{exercicio}",
+           "wrap": true,
+           "size": "large",
+           "weight": "bolder"
+          },
+          {
+           "type": "TextBlock",
+           "text": "{musculo}",
+           "wrap": true,
+           "size": "small",
+           "isSubtle": true
+          },
+          {
+           "type": "Container",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{series_frase}",
+             "wrap": true,
+             "weight": "bolder"
+            },
+            {
+             "type": "TextBlock",
+             "text": "{reps_frase}",
+             "wrap": true,
+             "weight": "bolder"
+            },
+            {
+             "type": "TextBlock",
+             "text": "{carga}",
+             "wrap": true,
+             "weight": "bolder"
+            },
+            {
+             "type": "TextBlock",
+             "text": "{descanso_frase}",
+             "wrap": true,
+             "weight": "bolder"
+            }
+           ],
+           "okmigoGrade": "etiquetas",
+           "spacing": "small"
+          },
+          {
+           "type": "okmigoCronometro",
+           "rotulo": "Descanso",
+           "segundos": "{descanso}"
+          },
+          {
+           "_repetir_lista": {
+            "type": "Image",
+            "url": "{demo}",
+            "altText": "{exercicio}",
+            "height": "large"
+           },
+           "_de": "tem_demo"
+          },
+          {
+           "type": "TextBlock",
+           "text": "{feito_frase}",
+           "wrap": true,
+           "size": "small",
+           "isSubtle": true
+          },
+          {
+           "type": "Container",
+           "items": [
+            {
+             "type": "Input.Text",
+             "id": "gitem_{ordem}",
+             "label": "",
+             "campo": "item_par",
+             "value": "{item_par}",
+             "isVisible": false
+            },
+            {
+             "type": "Input.Number",
+             "id": "gcarga_{ordem}",
+             "label": "Carga que você usou (kg)",
+             "campo": "carga_kg",
+             "placeholder": "{carga}"
+            },
+            {
+             "type": "Input.Text",
+             "id": "greps_{ordem}",
+             "label": "Repetições",
+             "campo": "repeticoes_feitas",
+             "placeholder": "{repeticoes}"
+            },
+            {
+             "type": "Input.ChoiceSet",
+             "id": "gesf_{ordem}",
+             "choices": [
+              {
+               "title": "leve",
+               "value": "leve"
+              },
+              {
+               "title": "ok",
+               "value": "ok"
+              },
+              {
+               "title": "pesado",
+               "value": "pesado"
+              }
+             ],
+             "label": "Como foi? (opcional)",
+             "campo": "esforco",
+             "isRequired": false,
+             "style": "expanded"
+            },
+            {
+             "type": "ActionSet",
+             "actions": [
+              {
+               "type": "Action.Submit",
+               "title": "✓ feito · próximo",
+               "data": {
+                "operacao": "registrar_execucao"
+               },
+               "style": "positive",
+               "okmigoAposEnviar": {
+                "type": "Action.ToggleVisibility",
+                "targetElements": [
+                 {
+                  "elementId": "guia_{ordem}",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "{proximo}",
+                  "isVisible": true
+                 }
+                ]
+               }
+              }
+             ]
+            }
+           ],
+           "style": "emphasis",
+           "id": "gform_{ordem}",
+           "spacing": "medium"
+          },
+          {
+           "_repetir_lista": {
+            "type": "ActionSet",
+            "actions": [
+             {
+              "type": "Action.ToggleVisibility",
+              "title": "{rotulo}",
+              "targetElements": [
+               {
+                "elementId": "{daqui}",
+                "isVisible": false
+               },
+               {
+                "elementId": "{alvo}",
+                "isVisible": true
+               }
+              ],
+              "mode": "secondary"
+             }
+            ]
+           },
+           "_de": "tem_anterior"
+          },
+          {
+           "_repetir_lista": {
+            "type": "ActionSet",
+            "actions": [
+             {
+              "type": "Action.ToggleVisibility",
+              "title": "{rotulo}",
+              "targetElements": [
+               {
+                "elementId": "{daqui}",
+                "isVisible": false
+               },
+               {
+                "elementId": "{alvo}",
+                "isVisible": true
+               }
+              ]
+             }
+            ]
+           },
+           "_de": "tem_proximo"
+          },
+          {
+           "_repetir_lista": {
+            "type": "Container",
+            "items": [
+             {
+              "type": "TextBlock",
+              "text": "{frase}",
+              "wrap": true,
+              "size": "small",
+              "isSubtle": true
+             },
+             {
+              "type": "ActionSet",
+              "actions": [
+               {
+                "type": "Action.Submit",
+                "title": "finalizar o treino de hoje",
+                "data": {
+                 "operacao": "finalizar_sessao"
+                }
+               }
+              ]
+             }
+            ],
+            "spacing": "medium"
+           },
+           "_de": "tem_fim"
+          }
+         ],
+         "style": "default",
+         "id": "guia_{ordem}",
+         "isVisible": false,
+         "okmigoSobreposto": true,
+         "spacing": "medium"
+        },
+        "_quando": {
+         "campo": "guiado",
+         "em": [
+          "sim"
+         ]
+        }
+       }
+      ],
+      "id": "treino_corpo",
+      "spacing": "medium"
+     },
+     {
+      "_repetir_lista": {
+       "type": "Container",
+       "items": [
+        {
+         "type": "ColumnSet",
+         "columns": [
+          {
+           "type": "Column",
+           "width": "stretch",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{nome}",
+             "wrap": true,
+             "weight": "bolder"
+            }
+           ]
+          },
+          {
+           "type": "Column",
+           "width": "auto",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{status}",
+             "wrap": true,
+             "horizontalAlignment": "right",
+             "size": "small",
+             "isSubtle": true
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "type": "TextBlock",
+         "text": "{autoria}",
+         "wrap": true,
+         "size": "small",
+         "weight": "bolder"
+        },
+        {
+         "type": "TextBlock",
+         "text": "{vigencia}",
+         "wrap": true,
+         "size": "small",
+         "isSubtle": true
+        },
+        {
+         "type": "TextBlock",
+         "text": "{mudou}",
+         "wrap": true,
+         "size": "small"
+        }
+       ],
+       "style": "emphasis",
+       "spacing": "small"
+      },
+      "_de": "versoes"
+     },
+     {
+      "_repetir_lista": {
+       "type": "Container",
+       "items": [
+        {
+         "type": "TextBlock",
+         "text": "Quer acompanhar a sua evolução? Peso e medidas ficam em Progresso › Saúde.",
+         "wrap": true,
+         "size": "small",
+         "isSubtle": true
+        }
+       ],
+       "spacing": "small"
+      },
+      "_de": "saude"
+     }
+    ],
+    "okmigoTema": "jornada-ativa",
+    "okmigoNavegacao": "inferior"
+   },
+   "icone": "treino",
+   "rotulo_superficie": "Treino"
+  },
+  {
+   "nome": "nutricao",
+   "titulo": "Nutrição",
+   "hint": "o que você comeu hoje, a sua meta e quem assina por ela",
+   "fonte": {
+    "resumo": {
+     "operacao": "minha_nutricao"
+    },
+    "lista": {
+     "operacao": "minha_nutricao",
+     "caminho": "refeicoes"
+    }
+   },
+   "cartao": {
+    "type": "AdaptiveCard",
+    "version": "1.5",
+    "body": [
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "MEU FITNESS",
+        "wrap": true,
+        "size": "small",
+        "weight": "bolder",
+        "isSubtle": true
+       },
+       {
+        "type": "TextBlock",
+        "text": "Nutrição",
+        "wrap": true,
+        "size": "extraLarge",
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "{dia_frase} · registro e estimativa; cardápio é do nutricionista",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       }
+      ],
+      "spacing": "small"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "{selo_nutri}",
+        "wrap": true,
+        "size": "small",
+        "weight": "bolder",
+        "isSubtle": true
+       },
+       {
+        "type": "TextBlock",
+        "text": "{titulo_nutri}",
+        "wrap": true,
+        "size": "large",
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "{frase_nutri}",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       }
+      ],
+      "style": "accent",
+      "spacing": "medium"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Sua meta",
+        "wrap": true,
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "{meta_texto}",
+        "wrap": true
+       },
+       {
+        "type": "okmigoProgresso",
+        "feito": "{hoje_kcal_n}",
+        "de": "{meta_kcal_n}",
+        "fallback": {
+         "type": "TextBlock",
+         "text": "{progresso_rotulo}: {hoje_kcal_n} de {meta_kcal_n}",
+         "wrap": true
+        },
+        "rotulo": "{progresso_rotulo}"
+       },
+       {
+        "type": "TextBlock",
+        "text": "{hoje_texto}",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       }
+      ],
+      "style": "emphasis",
+      "spacing": "medium"
+     },
+     {
+      "_repetir_lista": {
+       "type": "Container",
+       "items": [
+        {
+         "type": "TextBlock",
+         "text": "META ASSINADA",
+         "wrap": true,
+         "size": "small",
+         "weight": "bolder",
+         "isSubtle": true
+        },
+        {
+         "type": "TextBlock",
+         "text": "{kcal_texto}",
+         "wrap": true,
+         "weight": "bolder"
+        },
+        {
+         "type": "TextBlock",
+         "text": "{macros_texto}",
+         "wrap": true,
+         "size": "small"
+        },
+        {
+         "type": "TextBlock",
+         "text": "{orientacoes}",
+         "wrap": true,
+         "size": "small"
+        },
+        {
+         "type": "TextBlock",
+         "text": "{assinatura_texto}",
+         "wrap": true,
+         "size": "small",
+         "isSubtle": true
+        }
+       ],
+       "style": "good",
+       "spacing": "medium"
+      },
+      "_de": "metas"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Registrar uma refeição",
+        "wrap": true,
+        "weight": "bolder"
+       }
+      ],
+      "spacing": "medium"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Foto do prato",
+        "wrap": true,
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "Tire uma foto do prato para estimar e registrar as calorias.",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "nu_foto_momento",
+        "choices": [
+         {
+          "title": "café da manhã",
+          "value": "cafe",
+          "okmigoIcone": "☕"
+         },
+         {
+          "title": "almoço",
+          "value": "almoco",
+          "okmigoIcone": "🍽️"
+         },
+         {
+          "title": "lanche",
+          "value": "lanche",
+          "okmigoIcone": "🍎"
+         },
+         {
+          "title": "jantar",
+          "value": "jantar",
+          "okmigoIcone": "🌙"
+         },
+         {
+          "title": "outro",
+          "value": "outro",
+          "okmigoIcone": "➕"
+         }
+        ],
+        "label": "Qual refeição?",
+        "campo": "momento",
+        "isRequired": true,
+        "style": "expanded",
+        "value": "almoco"
+       },
+       {
+        "type": "okmigoArquivo",
+        "id": "nu_foto",
+        "campo": "okmigo_visao_leitura_visual",
+        "label": "Foto do prato",
+        "aceita": [
+         "imagem"
+        ],
+        "isRequired": true,
+        "maxBytes": 8388608
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.Submit",
+          "title": "Calcular e registrar",
+          "data": {
+           "operacao": "registrar_refeicao_por_foto"
+          },
+          "style": "positive"
+         }
+        ]
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.ToggleVisibility",
+          "title": "Informar calorias manualmente",
+          "targetElements": [
+           {
+            "elementId": "registrar_foto",
+            "isVisible": false
+           },
+           {
+            "elementId": "registrar_manual",
+            "isVisible": true
+           }
+          ],
+          "mode": "secondary"
+         }
+        ]
+       }
+      ],
+      "id": "registrar_foto",
+      "spacing": "medium"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Informar calorias",
+        "wrap": true,
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "Use o valor do rótulo ou de outro aplicativo.",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "nu_momento",
+        "choices": [
+         {
+          "title": "café da manhã",
+          "value": "cafe",
+          "okmigoIcone": "☕"
+         },
+         {
+          "title": "almoço",
+          "value": "almoco",
+          "okmigoIcone": "🍽️"
+         },
+         {
+          "title": "lanche",
+          "value": "lanche",
+          "okmigoIcone": "🍎"
+         },
+         {
+          "title": "jantar",
+          "value": "jantar",
+          "okmigoIcone": "🌙"
+         },
+         {
+          "title": "outro",
+          "value": "outro",
+          "okmigoIcone": "➕"
+         }
+        ],
+        "label": "Qual refeição?",
+        "campo": "momento",
+        "isRequired": true,
+        "style": "expanded",
+        "value": "almoco"
+       },
+       {
+        "type": "Input.Text",
+        "id": "nu_desc",
+        "label": "O que você comeu?",
+        "campo": "descricao",
+        "placeholder": "ex.: arroz, feijão e frango"
+       },
+       {
+        "type": "Input.Number",
+        "id": "nu_kcal",
+        "label": "Calorias (kcal)",
+        "campo": "kcal",
+        "isRequired": true,
+        "placeholder": "450",
+        "min": 0,
+        "max": 5000
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.Submit",
+          "title": "registrar",
+          "data": {
+           "operacao": "registrar_refeicao"
+          },
+          "style": "positive"
+         }
+        ]
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.ToggleVisibility",
+          "title": "Usar foto do prato",
+          "targetElements": [
+           {
+            "elementId": "registrar_manual",
+            "isVisible": false
+           },
+           {
+            "elementId": "registrar_foto",
+            "isVisible": true
+           }
+          ],
+          "mode": "secondary"
+         }
+        ]
+       }
+      ],
+      "id": "registrar_manual",
+      "isVisible": false,
+      "spacing": "medium"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Hoje",
+        "wrap": true,
+        "weight": "bolder"
+       },
+       {
+        "_repetir_lista": {
+         "type": "Container",
+         "items": [
+          {
+           "type": "ColumnSet",
+           "columns": [
+            {
+             "type": "Column",
+             "width": "stretch",
+             "items": [
+              {
+               "type": "TextBlock",
+               "text": "{momento_texto}",
+               "wrap": true,
+               "weight": "bolder"
+              },
+              {
+               "type": "TextBlock",
+               "text": "{descricao}",
+               "wrap": true,
+               "size": "small",
+               "isSubtle": true
+              }
+             ]
+            },
+            {
+             "type": "Column",
+             "width": "auto",
+             "items": [
+              {
+               "type": "TextBlock",
+               "text": "{kcal_texto}",
+               "wrap": true,
+               "weight": "bolder"
+              },
+              {
+               "type": "TextBlock",
+               "text": "{estimado}",
+               "wrap": true,
+               "horizontalAlignment": "right",
+               "size": "small",
+               "isSubtle": true
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "type": "Input.Text",
+           "id": "rid_{chave}",
+           "label": "",
+           "campo": "refeicao_id",
+           "value": "{refeicao_id}",
+           "isVisible": false
+          },
+          {
+           "type": "ActionSet",
+           "actions": [
+            {
+             "type": "Action.Submit",
+             "title": "tirar",
+             "data": {
+              "operacao": "remover_refeicao"
+             },
+             "mode": "secondary"
+            }
+           ]
+          }
+         ],
+         "style": "emphasis",
+         "spacing": "small"
+        }
+       }
+      ],
+      "spacing": "medium"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Encontrar um nutricionista",
+        "wrap": true,
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "{diretorio_nutris}",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "_repetir_lista": {
+         "type": "Container",
+         "items": [
+          {
+           "type": "TextBlock",
+           "text": "NUTRICIONISTA",
+           "wrap": true,
+           "size": "small",
+           "weight": "bolder",
+           "isSubtle": true
+          },
+          {
+           "type": "TextBlock",
+           "text": "{nome}",
+           "wrap": true,
+           "size": "large",
+           "weight": "bolder"
+          },
+          {
+           "type": "TextBlock",
+           "text": "Atende em: {onde_atende} · CRN {crn}",
+           "wrap": true,
+           "size": "small",
+           "isSubtle": true
+          },
+          {
+           "type": "Input.Text",
+           "id": "nutri_handle_{handle}",
+           "label": "",
+           "campo": "handle",
+           "value": "{handle}",
+           "isVisible": false
+          },
+          {
+           "type": "ActionSet",
+           "actions": [
+            {
+             "type": "Action.Submit",
+             "title": "Ver perfil",
+             "data": {
+              "operacao": "falar_com_nutricionista"
+             },
+             "style": "positive"
+            }
+           ]
+          }
+         ],
+         "style": "emphasis",
+         "spacing": "medium"
+        },
+        "_de": "nutris_publicos"
+       }
+      ],
+      "spacing": "medium"
+     },
+     {
+      "_repetir_lista": {
+       "type": "Container",
+       "items": [
+        {
+         "type": "TextBlock",
+         "text": "Encerrar o acompanhamento com {nome}? O seu histórico e as metas já assinadas continuam seus.",
+         "wrap": true,
+         "size": "small",
+         "isSubtle": true
+        },
+        {
+         "type": "ActionSet",
+         "actions": [
+          {
+           "type": "Action.Submit",
+           "title": "sair do nutricionista",
+           "data": {
+            "operacao": "sair_do_nutricionista"
+           },
+           "style": "destructive"
+          }
+         ]
+        }
+       ],
+       "spacing": "medium"
+      },
+      "_de": "nutri"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "{limite}",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       }
+      ],
+      "style": "attention",
+      "spacing": "medium"
+     }
+    ],
+    "okmigoTema": "jornada-ativa",
+    "okmigoNavegacao": "inferior"
+   },
+   "icone": "nutricao",
+   "rotulo_superficie": "Nutrição"
+  },
+  {
+   "nome": "historico",
+   "titulo": "Histórico",
+   "hint": "os treinos finalizados e um arquivo com todo o seu histórico",
+   "fonte": {
+    "resumo": {
+     "operacao": "meus_treinos_recentes"
+    }
+   },
+   "cartao": {
+    "type": "AdaptiveCard",
+    "version": "1.5",
+    "body": [
+     {
+      "type": "okmigoCabecalhoDaTela",
+      "titulo": "Seu histórico",
+      "subtitulo": "Treinos finalizados nas últimas semanas. Marcar exercício sem fechar o dia não conta como sessão.",
+      "variante": "tela",
+      "favorito": false,
+      "fallback": {
+       "type": "TextBlock",
+       "text": "Seu histórico",
+       "wrap": true,
+       "size": "extraLarge",
+       "weight": "bolder",
+       "spacing": "none"
+      }
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "{resumo}",
+        "wrap": true,
+        "size": "medium",
+        "weight": "bolder"
+       },
+       {
+        "type": "ColumnSet",
+        "columns": [
+         {
+          "type": "Column",
+          "width": "stretch",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "{total}",
+            "wrap": true,
+            "size": "extraLarge",
+            "weight": "bolder"
+           },
+           {
+            "type": "TextBlock",
+            "text": "no período",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true
+           }
+          ]
+         },
+         {
+          "type": "Column",
+          "width": "stretch",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "{semana_atual}",
+            "wrap": true,
+            "size": "extraLarge",
+            "weight": "bolder"
+           },
+           {
+            "type": "TextBlock",
+            "text": "esta semana",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true
+           }
+          ]
+         },
+         {
+          "type": "Column",
+          "width": "stretch",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "{semana_anterior}",
+            "wrap": true,
+            "size": "extraLarge",
+            "weight": "bolder"
+           },
+           {
+            "type": "TextBlock",
+            "text": "semana anterior",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true
+           }
+          ]
+         }
+        ]
+       }
+      ],
+      "style": "emphasis",
+      "spacing": "medium"
+     },
+     {
+      "type": "TextBlock",
+      "text": "Sessões",
+      "wrap": true,
+      "size": "large",
+      "weight": "bolder"
+     },
+     {
+      "_repetir_lista": {
+       "type": "Container",
+       "items": [
+        {
+         "type": "TextBlock",
+         "text": "{dia_da_semana} · {dia}",
+         "wrap": true,
+         "size": "small",
+         "weight": "bolder",
+         "isSubtle": true
+        },
+        {
+         "type": "TextBlock",
+         "text": "{treino}",
+         "wrap": true,
+         "size": "medium",
+         "weight": "bolder"
+        },
+        {
+         "type": "TextBlock",
+         "text": "{feitos} de {de_quantos} exercícios · {nota}",
+         "wrap": true,
+         "size": "small",
+         "isSubtle": true
+        }
+       ],
+       "spacing": "small"
+      },
+      "_de": "sessoes"
+     },
+     {
+      "_repetir_lista": {
+       "type": "TextBlock",
+       "text": "{titulo}",
+       "wrap": true,
+       "size": "large",
+       "weight": "bolder"
+      },
+      "_de": "titulo_fichas"
+     },
+     {
+      "_repetir_lista": {
+       "type": "Container",
+       "items": [
+        {
+         "type": "ColumnSet",
+         "columns": [
+          {
+           "type": "Column",
+           "width": "stretch",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{nome}",
+             "wrap": true,
+             "weight": "bolder"
+            }
+           ]
+          },
+          {
+           "type": "Column",
+           "width": "auto",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{status}",
+             "wrap": true,
+             "horizontalAlignment": "right",
+             "size": "small",
+             "isSubtle": true
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "type": "TextBlock",
+         "text": "{autoria}",
+         "wrap": true,
+         "size": "small",
+         "weight": "bolder"
+        },
+        {
+         "type": "TextBlock",
+         "text": "{vigencia}",
+         "wrap": true,
+         "size": "small",
+         "isSubtle": true
+        },
+        {
+         "type": "TextBlock",
+         "text": "{mudou}",
+         "wrap": true,
+         "size": "small"
+        }
+       ],
+       "style": "emphasis",
+       "spacing": "small"
+      },
+      "_de": "fichas_antigas"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Levar meus dados",
+        "wrap": true,
+        "size": "medium",
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "Baixe fichas, execuções, medidas e refeições num documento seu.",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "okmigoDocumento",
+        "titulo": "O meu histórico",
+        "nome": "historico-fitness.md",
+        "tipo": "text/markdown",
+        "ler": {
+         "operacao": "meu_historico",
+         "pedido": {}
+        }
+       }
+      ],
+      "style": "accent",
+      "spacing": "medium"
+     }
+    ],
+    "okmigoTema": "jornada-ativa",
+    "okmigoNavegacao": "inferior"
+   },
+   "icone": "arquivo",
+   "rotulo_superficie": "Histórico"
+  },
+  {
+   "nome": "saude",
+   "titulo": "Saúde e progresso",
+   "hint": "consentimento, medidas, restrições e fotos de progresso",
+   "fonte": {
+    "resumo": {
+     "operacao": "meu_treino"
+    }
+   },
+   "cartao": {
+    "type": "AdaptiveCard",
+    "version": "1.5",
+    "body": [
+     {
+      "type": "okmigoCabecalhoDaTela",
+      "titulo": "Saúde e progresso",
+      "subtitulo": "Dados opcionais e protegidos. Você escolhe se quer guardar e pode revogar quando quiser.",
+      "variante": "tela",
+      "favorito": false,
+      "fallback": {
+       "type": "TextBlock",
+       "text": "Saúde e progresso",
+       "wrap": true,
+       "size": "extraLarge",
+       "weight": "bolder",
+       "spacing": "none"
+      }
+     },
+     {
+      "_repetir_lista": {
+       "type": "Container",
+       "items": [
+        {
+         "type": "TextBlock",
+         "text": "Acompanhar minha evolução",
+         "wrap": true,
+         "size": "medium",
+         "weight": "bolder"
+        },
+        {
+         "type": "TextBlock",
+         "text": "{finalidade}",
+         "wrap": true,
+         "size": "small"
+        },
+        {
+         "type": "ActionSet",
+         "actions": [
+          {
+           "type": "Action.Submit",
+           "title": "Autorizo o uso desses dados",
+           "data": {
+            "operacao": "autorizar_dado_de_saude"
+           },
+           "style": "positive"
+          }
+         ]
+        }
+       ],
+       "style": "attention",
+       "spacing": "medium"
+      },
+      "_de": "saude",
+      "_quando": {
+       "campo": "passo",
+       "em": [
+        "consentir"
+       ]
+      }
+     },
+     {
+      "_repetir_lista": {
+       "type": "Container",
+       "items": [
+        {
+         "type": "TextBlock",
+         "text": "Minhas medidas",
+         "wrap": true,
+         "size": "large",
+         "weight": "bolder"
+        },
+        {
+         "type": "TextBlock",
+         "text": "Preencha somente o que quiser.",
+         "wrap": true,
+         "size": "small",
+         "isSubtle": true
+        },
+        {
+         "type": "Input.Number",
+         "id": "saude_altura",
+         "label": "Altura (cm)",
+         "campo": "altura_cm",
+         "isRequired": false,
+         "placeholder": "175"
+        },
+        {
+         "type": "Input.Number",
+         "id": "saude_peso",
+         "label": "Peso (kg)",
+         "campo": "peso_kg",
+         "isRequired": false,
+         "placeholder": "75"
+        },
+        {
+         "type": "Input.Number",
+         "id": "saude_nascimento",
+         "label": "Ano de nascimento",
+         "campo": "nascimento_ano",
+         "isRequired": false,
+         "placeholder": "1990"
+        },
+        {
+         "type": "Input.Text",
+         "id": "saude_sexo",
+         "label": "Sexo (opcional)",
+         "campo": "sexo",
+         "isRequired": false,
+         "isMultiline": false,
+         "placeholder": "opcional"
+        },
+        {
+         "type": "ActionSet",
+         "actions": [
+          {
+           "type": "Action.Submit",
+           "title": "Guardar medidas",
+           "data": {
+            "operacao": "informar_medidas"
+           },
+           "style": "positive"
+          }
+         ]
+        }
+       ],
+       "spacing": "medium"
+      },
+      "_de": "saude",
+      "_quando": {
+       "campo": "passo",
+       "em": [
+        "medidas"
+       ]
+      }
+     },
+     {
+      "_repetir_lista": {
+       "type": "Container",
+       "items": [
+        {
+         "type": "TextBlock",
+         "text": "{titulo}",
+         "wrap": true,
+         "size": "large",
+         "weight": "bolder"
+        },
+        {
+         "type": "TextBlock",
+         "text": "{frase}",
+         "wrap": true,
+         "size": "small",
+         "isSubtle": true
+        },
+        {
+         "type": "Input.Text",
+         "id": "saude_restricao_musculo",
+         "label": "Grupo muscular",
+         "campo": "musculo",
+         "isRequired": false,
+         "isMultiline": false,
+         "placeholder": "ombros"
+        },
+        {
+         "type": "Input.Text",
+         "id": "saude_restricao_nota",
+         "label": "Observação (opcional)",
+         "campo": "nota",
+         "isRequired": false,
+         "isMultiline": false,
+         "placeholder": "desde a cirurgia"
+        },
+        {
+         "type": "ActionSet",
+         "actions": [
+          {
+           "type": "Action.Submit",
+           "title": "Anotar restrição",
+           "data": {
+            "operacao": "guardar_restricao"
+           }
+          }
+         ]
+        }
+       ],
+       "spacing": "medium"
+      },
+      "_de": "convite_restricao"
+     },
+     {
+      "_repetir_lista": {
+       "type": "Container",
+       "items": [
+        {
+         "type": "TextBlock",
+         "text": "Sem {musculo}",
+         "wrap": true,
+         "weight": "bolder"
+        },
+        {
+         "type": "TextBlock",
+         "text": "{nota}",
+         "wrap": true,
+         "size": "small",
+         "isSubtle": true
+        },
+        {
+         "type": "Input.Text",
+         "id": "saude_rm_{chave}",
+         "label": "",
+         "campo": "musculo",
+         "isRequired": false,
+         "isMultiline": false,
+         "value": "{musculo}",
+         "isVisible": false
+        },
+        {
+         "type": "ActionSet",
+         "actions": [
+          {
+           "type": "Action.Submit",
+           "title": "Remover restrição",
+           "data": {
+            "operacao": "remover_restricao"
+           },
+           "style": "destructive"
+          }
+         ]
+        }
+       ],
+       "style": "attention",
+       "spacing": "small"
+      },
+      "_de": "restricoes"
+     },
+     {
+      "_repetir_lista": {
+       "type": "Container",
+       "items": [
+        {
+         "type": "TextBlock",
+         "text": "{titulo}",
+         "wrap": true,
+         "size": "large",
+         "weight": "bolder"
+        },
+        {
+         "type": "TextBlock",
+         "text": "{frase}",
+         "wrap": true,
+         "size": "small",
+         "isSubtle": true
+        },
+        {
+         "type": "okmigoArquivo",
+         "id": "saude_foto",
+         "campo": "foto",
+         "label": "Foto de hoje",
+         "aceita": [
+          "imagem"
+         ],
+         "isRequired": false,
+         "maxBytes": 8388608
+        },
+        {
+         "type": "Input.Text",
+         "id": "saude_foto_nota",
+         "label": "Uma nota (opcional)",
+         "campo": "nota",
+         "isRequired": false,
+         "isMultiline": false,
+         "placeholder": "começo"
+        },
+        {
+         "type": "ActionSet",
+         "actions": [
+          {
+           "type": "Action.Submit",
+           "title": "Guardar foto",
+           "data": {
+            "operacao": "guardar_foto_de_progresso"
+           },
+           "style": "positive"
+          }
+         ]
+        }
+       ],
+       "spacing": "medium"
+      },
+      "_de": "convite_foto"
+     },
+     {
+      "_repetir_lista": {
+       "type": "Container",
+       "items": [
+        {
+         "type": "TextBlock",
+         "text": "{quando}",
+         "wrap": true,
+         "weight": "bolder"
+        },
+        {
+         "type": "TextBlock",
+         "text": "{nota}",
+         "wrap": true,
+         "size": "small",
+         "isSubtle": true
+        },
+        {
+         "type": "okmigoDocumento",
+         "titulo": "Foto de {quando}",
+         "nome": "progresso-{chave}.webp",
+         "tipo": "image/webp",
+         "ler": {
+          "operacao": "ver_foto_de_progresso",
+          "pedido": {
+           "foto_id": "{foto_id}"
+          }
+         },
+         "tamanho": "{tamanho}"
+        },
+        {
+         "type": "Input.Text",
+         "id": "saude_fid_{chave}",
+         "label": "",
+         "campo": "foto_id",
+         "isRequired": false,
+         "isMultiline": false,
+         "value": "{foto_id}",
+         "isVisible": false
+        },
+        {
+         "type": "ActionSet",
+         "actions": [
+          {
+           "type": "Action.Submit",
+           "title": "Apagar foto",
+           "data": {
+            "operacao": "remover_foto_de_progresso"
+           },
+           "style": "destructive"
+          }
+         ]
+        }
+       ],
+       "style": "emphasis",
+       "spacing": "small"
+      },
+      "_de": "fotos"
+     },
+     {
+      "_repetir_lista": {
+       "type": "Container",
+       "items": [
+        {
+         "type": "TextBlock",
+         "text": "Dados autorizados desde {desde}.",
+         "wrap": true,
+         "size": "small",
+         "isSubtle": true
+        },
+        {
+         "type": "ActionSet",
+         "actions": [
+          {
+           "type": "Action.Submit",
+           "title": "Revogar autorização",
+           "data": {
+            "operacao": "revogar_dado_de_saude"
+           },
+           "style": "destructive"
+          }
+         ]
+        }
+       ],
+       "style": "attention",
+       "spacing": "medium"
+      },
+      "_de": "consentimento"
+     }
+    ],
+    "okmigoTema": "jornada-ativa",
+    "okmigoNavegacao": "inferior"
+   },
+   "icone": "evolucao",
+   "rotulo_superficie": "Saúde"
+  },
+  {
+   "nome": "perfil",
+   "titulo": "Meu perfil",
+   "hint": "nível, frequência, equipamento e objetivo",
+   "fonte": {
+    "resumo": {
+     "operacao": "meu_treino"
+    }
+   },
+   "cartao": {
+    "type": "AdaptiveCard",
+    "version": "1.5",
+    "body": [
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "MEU FITNESS",
+        "wrap": true,
+        "size": "small",
+        "weight": "bolder",
+        "isSubtle": true
+       },
+       {
+        "type": "TextBlock",
+        "text": "Meu perfil",
+        "wrap": true,
+        "size": "extraLarge",
+        "weight": "bolder"
+       }
+      ],
+      "spacing": "small"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Nível, frequência e equipamento. É o que a sugestão usa para montar o treino.",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "perfil_nivel",
+        "choices": [
+         {
+          "title": "iniciante",
+          "value": "iniciante",
+          "okmigoNota": "começando agora ou voltando"
+         },
+         {
+          "title": "intermediário",
+          "value": "intermediário",
+          "okmigoNota": "treina há alguns meses"
+         },
+         {
+          "title": "avançado",
+          "value": "avançado",
+          "okmigoNota": "treina há anos, sem pausa"
+         },
+         {
+          "title": "rato de academia",
+          "value": "rato de academia",
+          "okmigoNota": "vive na academia — mais série por treino"
+         }
+        ],
+        "label": "Nível de experiência",
+        "campo": "nivel",
+        "isRequired": true,
+        "style": "expanded",
+        "value": "{nivel_atual}"
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "perfil_dias",
+        "choices": [
+         {
+          "title": "2",
+          "value": "2"
+         },
+         {
+          "title": "3",
+          "value": "3"
+         },
+         {
+          "title": "4",
+          "value": "4"
+         },
+         {
+          "title": "5",
+          "value": "5"
+         },
+         {
+          "title": "6",
+          "value": "6"
+         }
+        ],
+        "label": "Dias por semana",
+        "campo": "dias_por_semana",
+        "isRequired": true,
+        "style": "expanded",
+        "value": "{dias_atual}"
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "perfil_equip",
+        "choices": [
+         {
+          "title": "só peso do corpo",
+          "value": "só peso do corpo",
+          "okmigoNota": "em casa, sem nada"
+         },
+         {
+          "title": "halteres",
+          "value": "halteres",
+          "okmigoNota": "um par de halteres"
+         },
+         {
+          "title": "academia",
+          "value": "academia",
+          "okmigoNota": "máquinas e barra"
+         }
+        ],
+        "label": "Com o que você treina",
+        "campo": "equipamento",
+        "isRequired": true,
+        "style": "expanded",
+        "value": "{equipamento_atual}"
+       },
+       {
+        "type": "TextBlock",
+        "text": "{aviso_equipamento}",
+        "wrap": true,
+        "size": "small",
+        "weight": "bolder"
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.Submit",
+          "title": "Salvar meu perfil",
+          "data": {
+           "operacao": "guardar_perfil"
+          },
+          "style": "positive"
+         }
+        ]
+       }
+      ],
+      "spacing": "medium"
+     }
+    ],
+    "okmigoTema": "jornada-ativa",
+    "okmigoNavegacao": "inferior"
+   },
+   "icone": "perfil",
+   "rotulo_superficie": "Perfil"
+  },
+  {
+   "nome": "objetivo",
+   "titulo": "Objetivo",
+   "hint": "o que você quer e como é a rotina",
+   "fonte": {
+    "resumo": {
+     "operacao": "meu_treino"
+    }
+   },
+   "cartao": {
+    "type": "AdaptiveCard",
+    "version": "1.5",
+    "body": [
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "MEU FITNESS",
+        "wrap": true,
+        "size": "small",
+        "weight": "bolder",
+        "isSubtle": true
+       },
+       {
+        "type": "TextBlock",
+        "text": "Objetivo",
+        "wrap": true,
+        "size": "extraLarge",
+        "weight": "bolder"
+       }
+      ],
+      "spacing": "small"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Seu objetivo",
+        "wrap": true,
+        "size": "large",
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "O objetivo é do seu perfil Fitness e também orienta a estimativa da área Nutrição.",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "perfil_objetivo",
+        "choices": [
+         {
+          "title": "perder peso",
+          "value": "perder",
+          "okmigoNota": "déficit leve, −15 %"
+         },
+         {
+          "title": "manter",
+          "value": "manter",
+          "okmigoNota": "o que o corpo gasta"
+         },
+         {
+          "title": "ganhar massa",
+          "value": "ganhar",
+          "okmigoNota": "superávit leve, +10 %"
+         }
+        ],
+        "label": "O que você quer?",
+        "campo": "objetivo",
+        "isRequired": true,
+        "style": "expanded",
+        "value": "{objetivo_atual}"
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "perfil_atividade",
+        "choices": [
+         {
+          "title": "leve",
+          "value": "leve",
+          "okmigoNota": "sentado a maior parte do dia"
+         },
+         {
+          "title": "moderada",
+          "value": "moderada",
+          "okmigoNota": "se mexe, treina 3-4×"
+         },
+         {
+          "title": "intensa",
+          "value": "intensa",
+          "okmigoNota": "trabalho físico ou treino diário"
+         }
+        ],
+        "label": "Sua rotina",
+        "campo": "atividade",
+        "isRequired": true,
+        "style": "expanded",
+        "value": "{atividade_atual}"
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.Submit",
+          "title": "Salvar objetivo",
+          "data": {
+           "operacao": "definir_objetivo"
+          },
+          "style": "positive"
+         }
+        ]
+       }
+      ],
+      "style": "emphasis",
+      "spacing": "medium"
+     }
+    ],
+    "okmigoTema": "jornada-ativa",
+    "okmigoNavegacao": "inferior"
+   },
+   "icone": "perfil",
+   "rotulo_superficie": "Objetivo"
+  },
+  {
+   "nome": "modo",
+   "titulo": "Treino",
+   "hint": "treinar com personal ou sozinho",
+   "fonte": {
+    "resumo": {
+     "operacao": "meu_treino"
+    }
+   },
+   "cartao": {
+    "type": "AdaptiveCard",
+    "version": "1.5",
+    "body": [
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "MEU FITNESS",
+        "wrap": true,
+        "size": "small",
+        "weight": "bolder",
+        "isSubtle": true
+       },
+       {
+        "type": "TextBlock",
+        "text": "Treino",
+        "wrap": true,
+        "size": "extraLarge",
+        "weight": "bolder"
+       }
+      ],
+      "spacing": "small"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Treinar com personal",
+        "wrap": true,
+        "size": "large",
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "Um profissional monta e assina o treino.",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       }
+      ],
+      "style": "emphasis",
+      "selectAction": {
+       "type": "Action.ToggleVisibility",
+       "targetElements": [
+        "lista_personais"
+       ]
+      },
+      "spacing": "medium"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "{diretorio_personais}",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "_repetir_lista": {
+         "type": "Container",
+         "items": [
+          {
+           "type": "TextBlock",
+           "text": "Seu personal",
+           "wrap": true,
+           "size": "small",
+           "weight": "bolder",
+           "isSubtle": true
+          },
+          {
+           "type": "TextBlock",
+           "text": "{nome}",
+           "wrap": true,
+           "size": "large",
+           "weight": "bolder"
+          },
+          {
+           "type": "TextBlock",
+           "text": "Atende em: {onde_atende}",
+           "wrap": true,
+           "size": "small",
+           "isSubtle": true
+          },
+          {
+           "type": "ActionSet",
+           "actions": [
+            {
+             "type": "Action.Execute",
+             "title": "Ver no Meu treino",
+             "data": {
+              "okmigoNavegar": {
+               "rota": "treino",
+               "parametros": {}
+              }
+             }
+            }
+           ]
+          }
+         ],
+         "style": "accent",
+         "spacing": "small"
+        },
+        "_de": "personal"
+       },
+       {
+        "_repetir_lista": {
+         "type": "Container",
+         "items": [
+          {
+           "type": "TextBlock",
+           "text": "PERSONAL",
+           "wrap": true,
+           "size": "small",
+           "weight": "bolder",
+           "isSubtle": true
+          },
+          {
+           "type": "TextBlock",
+           "text": "{nome}",
+           "wrap": true,
+           "size": "large",
+           "weight": "bolder"
+          },
+          {
+           "type": "TextBlock",
+           "text": "Atende em: {onde_atende}",
+           "wrap": true,
+           "size": "small",
+           "isSubtle": true
+          },
+          {
+           "type": "Input.Text",
+           "id": "personal_handle_perfil_{handle}",
+           "label": "",
+           "campo": "handle",
+           "value": "{handle}",
+           "isVisible": false
+          },
+          {
+           "type": "ActionSet",
+           "actions": [
+            {
+             "type": "Action.Submit",
+             "title": "Ver perfil",
+             "data": {
+              "operacao": "falar_com_personal"
+             },
+             "style": "positive"
+            }
+           ]
+          }
+         ],
+         "style": "emphasis",
+         "spacing": "medium"
+        },
+        "_de": "personais_publicos"
+       }
+      ],
+      "id": "lista_personais",
+      "isVisible": false,
+      "spacing": "small"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Treinar sozinho",
+        "wrap": true,
+        "size": "large",
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "A sugestão pelo seu nível, pelos seus dias e pelo equipamento.",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       }
+      ],
+      "style": "emphasis",
+      "selectAction": {
+       "type": "Action.ToggleVisibility",
+       "targetElements": [
+        "criar_sozinho"
+       ]
+      },
+      "spacing": "medium"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "_repetir_lista": {
+         "type": "Container",
+         "items": [
+          {
+           "type": "Container",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{titulo}",
+             "wrap": true,
+             "size": "extraLarge",
+             "weight": "bolder"
+            },
+            {
+             "type": "TextBlock",
+             "text": "{pergunta}",
+             "wrap": true,
+             "size": "small",
+             "isSubtle": true
+            },
+            {
+             "type": "Container",
+             "items": [
+              {
+               "_repetir_lista": {
+                "type": "TextBlock",
+                "text": "{t}",
+                "wrap": true,
+                "size": "small"
+               },
+               "_de": "chips"
+              }
+             ],
+             "okmigoGrade": "etiquetas",
+             "spacing": "small"
+            },
+            {
+             "type": "TextBlock",
+             "text": "{limite}",
+             "wrap": true,
+             "size": "small",
+             "weight": "bolder"
+            },
+            {
+             "type": "TextBlock",
+             "text": "{aviso_equipamento}",
+             "wrap": true,
+             "size": "small",
+             "weight": "bolder"
+            },
+            {
+             "type": "Container",
+             "items": [
+              {
+               "type": "Input.ChoiceSet",
+               "id": "foco_tro",
+               "choices": [
+                {
+                 "_repetir_lista": {
+                  "title": "{area}",
+                  "value": "{area}",
+                  "okmigoNota": "{nota}",
+                  "okmigoIcone": "{icone}",
+                  "okmigoImagem": "{capa}"
+                 },
+                 "_de": "areas"
+                }
+               ],
+               "label": "",
+               "campo": "foco",
+               "isRequired": true,
+               "style": "expanded",
+               "value": ""
+              },
+              {
+               "_repetir_lista": {
+                "type": "ActionSet",
+                "actions": [
+                 {
+                  "type": "Action.Submit",
+                  "title": "{cta}",
+                  "data": {
+                   "operacao": "sugerir_treino"
+                  },
+                  "style": "positive"
+                 }
+                ],
+                "okmigoRodape": true
+               },
+               "_de": "criar",
+               "_quando": {
+                "campo": "passo",
+                "em": [
+                 "criar"
+                ]
+               }
+              }
+             ],
+             "style": "emphasis",
+             "spacing": "medium"
+            },
+            {
+             "type": "TextBlock",
+             "text": "{titulo_prontos}",
+             "wrap": true,
+             "spacing": "medium",
+             "size": "small",
+             "weight": "bolder"
+            },
+            {
+             "_repetir_lista": {
+              "type": "Container",
+              "items": [
+               {
+                "type": "Container",
+                "items": [
+                 {
+                  "type": "TextBlock",
+                  "text": "{rotulo} · {foco}",
+                  "wrap": true,
+                  "size": "medium",
+                  "weight": "bolder"
+                 },
+                 {
+                  "type": "TextBlock",
+                  "text": "{nivel} · {equipamento} · {quando}",
+                  "wrap": true,
+                  "size": "small",
+                  "isSubtle": true
+                 },
+                 {
+                  "type": "Input.Text",
+                  "id": "f_{chave}",
+                  "label": "",
+                  "campo": "foco",
+                  "value": "{foco}",
+                  "isVisible": false
+                 },
+                 {
+                  "type": "Input.Text",
+                  "id": "n_{chave}",
+                  "label": "",
+                  "campo": "nivel",
+                  "value": "{nivel}",
+                  "isVisible": false
+                 },
+                 {
+                  "type": "Input.Text",
+                  "id": "e_{chave}",
+                  "label": "",
+                  "campo": "equipamento",
+                  "value": "{equipamento}",
+                  "isVisible": false
+                 },
+                 {
+                  "type": "Input.Text",
+                  "id": "p_{chave}",
+                  "label": "",
+                  "campo": "par_id",
+                  "value": "{par_id}",
+                  "isVisible": false
+                 },
+                 {
+                  "type": "ActionSet",
+                  "actions": [
+                   {
+                    "type": "Action.Submit",
+                    "title": "Usar",
+                    "data": {
+                     "operacao": "sugerir_treino"
+                    },
+                    "style": "positive"
+                   },
+                   {
+                    "type": "Action.ToggleVisibility",
+                    "title": "Editar",
+                    "targetElements": [
+                     "edit_{chave}"
+                    ]
+                   },
+                   {
+                    "type": "Action.Submit",
+                    "title": "Remover",
+                    "data": {
+                     "operacao": "remover_sugestao"
+                    },
+                    "style": "destructive"
+                   }
+                  ],
+                  "spacing": "medium"
+                 }
+                ]
+               },
+               {
+                "type": "Container",
+                "items": [
+                 {
+                  "_repetir_lista": {
+                   "type": "Container",
+                   "items": [
+                    {
+                     "type": "TextBlock",
+                     "text": "{exercicio}",
+                     "wrap": true,
+                     "size": "small",
+                     "weight": "bolder"
+                    },
+                    {
+                     "type": "TextBlock",
+                     "text": "{detalhe}",
+                     "wrap": true,
+                     "size": "small",
+                     "isSubtle": true
+                    },
+                    {
+                     "type": "Input.Text",
+                     "id": "ip_{ichave}",
+                     "label": "",
+                     "campo": "item_par",
+                     "value": "{item_par}",
+                     "isVisible": false
+                    },
+                    {
+                     "type": "Input.ChoiceSet",
+                     "id": "tr_{ichave}",
+                     "choices": [
+                      {
+                       "_repetir_lista": {
+                        "title": "{nome}",
+                        "value": "{id}"
+                       },
+                       "_de": "opcoes"
+                      }
+                     ],
+                     "label": "Trocar por",
+                     "campo": "exercicio_id",
+                     "style": "filtered",
+                     "okmigoEstrito": true,
+                     "placeholder": "buscar exercício",
+                     "value": ""
+                    },
+                    {
+                     "type": "ActionSet",
+                     "actions": [
+                      {
+                       "type": "Action.Submit",
+                       "title": "trocar",
+                       "data": {
+                        "operacao": "trocar_exercicio"
+                       }
+                      },
+                      {
+                       "type": "Action.Submit",
+                       "title": "remover",
+                       "data": {
+                        "operacao": "tirar_exercicio"
+                       },
+                       "style": "destructive"
+                      }
+                     ],
+                     "spacing": "medium"
+                    }
+                   ],
+                   "spacing": "large",
+                   "separator": true
+                  },
+                  "_de": "itens"
+                 },
+                 {
+                  "type": "Container",
+                  "items": [
+                   {
+                    "type": "TextBlock",
+                    "text": "Adicionar exercício",
+                    "wrap": true,
+                    "size": "small",
+                    "weight": "bolder"
+                   },
+                   {
+                    "type": "Input.Text",
+                    "id": "pa_{chave}",
+                    "label": "",
+                    "campo": "par_id",
+                    "value": "{par_id}",
+                    "isVisible": false
+                   },
+                   {
+                    "type": "Input.ChoiceSet",
+                    "id": "ad_{chave}",
+                    "choices": [
+                     {
+                      "_repetir_lista": {
+                       "title": "{nome}",
+                       "value": "{id}"
+                      },
+                      "_de": "acervo"
+                     }
+                    ],
+                    "label": "Qual entra",
+                    "campo": "exercicio_id",
+                    "isRequired": true,
+                    "style": "filtered",
+                    "okmigoEstrito": true,
+                    "placeholder": "buscar na biblioteca",
+                    "value": ""
+                   },
+                   {
+                    "type": "ActionSet",
+                    "actions": [
+                     {
+                      "type": "Action.Submit",
+                      "title": "adicionar",
+                      "data": {
+                       "operacao": "incluir_exercicio"
+                      }
+                     }
+                    ],
+                    "spacing": "medium"
+                   }
+                  ],
+                  "spacing": "large",
+                  "separator": true
+                 }
+                ],
+                "id": "edit_{chave}",
+                "isVisible": false,
+                "spacing": "medium"
+               }
+              ],
+              "style": "emphasis",
+              "spacing": "small"
+             },
+             "_de": "sugestoes"
+            }
+           ],
+           "id": "foco_sozinho"
+          }
+         ],
+         "style": "default",
+         "spacing": "medium"
+        },
+        "_de": "trocar"
+       }
+      ],
+      "id": "criar_sozinho",
+      "isVisible": false,
+      "spacing": "small"
+     }
+    ],
+    "okmigoTema": "jornada-ativa",
+    "okmigoNavegacao": "inferior"
+   },
+   "icone": "perfil",
+   "rotulo_superficie": "Treino"
+  }
+ ],
+ "conversa": [
+  "meu_treino",
+  "meu_perfil",
+  "minha_saude",
+  "meus_treinos_recentes",
+  "registrar_execucao",
+  "marcar_feito",
+  "autorizar_dado_de_saude",
+  "informar_medidas",
+  "revogar_dado_de_saude",
+  "sugerir_treino",
+  "remover_sugestao",
+  "guardar_perfil",
+  "buscar_exercicios",
+  "trocar_exercicio",
+  "sair_do_personal",
+  "marcar_os_dias",
+  "finalizar_sessao",
+  "falar_com_personal",
+  "minha_nutricao",
+  "definir_objetivo",
+  "registrar_refeicao",
+  "remover_refeicao",
+  "sair_do_nutricionista",
+  "falar_com_nutricionista",
+  "guardar_foto_de_progresso",
+  "remover_foto_de_progresso",
+  "meu_dia",
+  "guardar_restricao",
+  "remover_restricao",
+  "tirar_exercicio",
+  "incluir_exercicio"
+ ],
+ "navegacao": {
+  "tipo": "agrupada",
+  "grupos": [
+   {
+    "nome": "fitness",
+    "rotulo": "Fitness",
+    "icone": "inicio",
+    "superficies": [
+     "inicio",
+     "treino",
+     "nutricao"
+    ],
+    "inicial": "inicio"
+   },
+   {
+    "nome": "progresso",
+    "rotulo": "Progresso",
+    "icone": "evolucao",
+    "superficies": [
+     "historico",
+     "saude"
+    ],
+    "inicial": "historico"
+   },
+   {
+    "nome": "perfil",
+    "rotulo": "Perfil",
+    "icone": "perfil",
+    "superficies": [
+     "perfil",
+     "objetivo",
+     "modo"
+    ],
+    "inicial": "perfil"
+   }
+  ]
+ },
+ "rotas": [
+  {
+   "nome": "treino",
+   "superficie": "treino",
+   "parametros": [],
+   "compartilhavel": false,
+   "historico": true,
+   "favoritavel": false
+  },
+  {
+   "nome": "saude",
+   "superficie": "saude",
+   "parametros": [],
+   "compartilhavel": false,
+   "historico": true,
+   "favoritavel": false
+  }
+ ],
+ "para_tipo": "amigo",
+ "descricao_humana": "O seu treino e a sua nutrição: os exercícios de hoje, o que você comeu e a sua meta.",
+ "nome_visivel": "Fitness",
+ "eventos": {
+  "operacao": "eventos",
+  "parametro": "dias"
+ },
+ "convite": {
+  "operacao": "aceitar_convite",
+  "parametro": "de",
+  "par": "estoufit"
+ },
+ "agente": {
+  "contrato": "1",
+  "modo": "declarado",
+  "competencias": [
+   "o treino de hoje e o que foi prescrito",
+   "o que a pessoa treinou nos últimos dias",
+   "o que comeu e a meta de nutrição",
+   "o perfil de treino, o objetivo, a rotina, as medidas e as restrições da pessoa",
+   "como é um exercício",
+   "registrar refeição ou treino feito (propõe, a pessoa confirma)"
+  ],
+  "ferramentas": [
+   "meu_dia",
+   "meu_treino",
+   "meu_perfil",
+   "minha_saude",
+   "meus_treinos_recentes",
+   "minha_nutricao",
+   "buscar_exercicios"
+  ],
+  "orcamento": {
+   "chamadas": 3,
+   "tokens": 12000,
+   "segundos": 20
+  },
+  "instrucoes": "⛔ Você NÃO prescreve treino nem dieta, e não sugere carga, série, exercício novo nem meta: isso é do profissional com CREF ou CRN. Você CONSULTA o que ele prescreveu e o que foi registrado. Pedido de prescrição é indisponivel com codigo fora_do_dominio.\n- O treino de hoje: meu_treino. Para quem treina sozinho, NÃO confunda: treino_atual é só o treino aberto hoje; treinos_ab_c é a lista de treinos salvos A/B/C. Se a pessoa perguntar quais treinos existem, responda por treinos_ab_c, não só pelo treino_atual. O dia inteiro (treino e comida): meu_dia.\n- Perfil de treino, objetivo e rotina: meu_perfil. Responda por nivel_atual, dias_atual, equipamento_atual, objetivo_atual e atividade_atual. Não use tem_treino para responder perfil: alguém pode ter preferências salvas e zero treino.\n- Saúde e progresso: minha_saude. Responda por consentimento, medidas, restricoes e fotos; diga ausente somente quando ESSE campo estiver vazio. Não use meu_treino para isso: a ficha completa é grande e pode esconder esses campos.\n- Saúde tem operações exatas: «autorizo guardar dados de saúde» = autorizar_dado_de_saude (sem parênteses); altura, peso, nascimento ou sexo = informar_medidas, NUNCA guardar_perfil; «revogo» = revogar_dado_de_saude; restrição muscular = guardar_restricao ou remover_restricao. NUNCA troque o pedido de medida/restrição por uma proposta de autorização: proponha exatamente a operação pedida, e o serviço recusa com clareza se ainda faltar consentimento. Todos os campos de informar_medidas são opcionais: se a pessoa informou só peso, proponha só peso e não pergunte por sexo, altura ou nascimento.\n- «Criar», «montar», «gerar» ou «fazer» treino para a própria pessoa NÃO é prescrição: devolva acao_proposta para sugerir_treino. A sugestão ocupa um dos três slots Treino A, B ou C. Se os três já existem, use meu_treino para listar A/B/C e pergunte qual substituir; quando a pessoa escolher a letra, chame sugerir_treino com substituir_slot=A/B/C. No campo foco use SOMENTE um destes valores exatos: corpo inteiro, pernas e glúteos, abdômen, peito, costas, braços ou ombros. Nunca traduza para nomes internos em inglês como middle back.\n- «Quais dias eu treinei?»: meus_treinos_recentes(dias=N), com N pelo período da pergunta.\n- Comida e meta: minha_nutricao. A meta ASSINADA é do nutricionista; a ESTIMADA é só estimativa.\n- Um exercício pelo nome: buscar_exercicios(termo=...).\n- Registrar execução ou refeição é ação: devolva acao_proposta, nunca diga que registrou. Quando houver foto de comida, use o valor central da linha `Estimativa visual: N kcal` da leitura automática, descreva somente os alimentos visíveis e marque origem=estimado. A faixa expressa a incerteza e não vira o valor registrado. Se a leitura não trouxer essa linha, peça uma foto mais clara ou a porção; NUNCA use uma caloria padrão. Sem foto, você pode estimar pelo relato da pessoa, sempre marcando origem=estimado.\nVocabulário: série, repetição, carga (kg), descanso; sessão fechada = treino finalizado.",
+  "exemplos": [
+   {
+    "pedido": "quais dias eu treinei essa semana?",
+    "espera": "respondido"
+   },
+   {
+    "pedido": "monta um treino de perna pra mim",
+    "espera": "acao_proposta"
+   },
+   {
+    "pedido": "me prescreve um treino com carga",
+    "espera": "indisponivel"
+   },
+   {
+    "pedido": "comi um pão com ovo agora",
+    "espera": "acao_proposta"
+   },
+   {
+    "pedido": "estime as calorias deste almoço pela foto e registre",
+    "espera": "acao_proposta"
+   }
+  ]
+ }
+}

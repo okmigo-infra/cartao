@@ -1,0 +1,1438 @@
+{
+ "slug": "sohautos",
+ "endpoint": "http://SEU-HOST:8000/mcp/",
+ "forma": "do_operador",
+ "descricao": "Estoque e negociação de uma revenda de veículos: administra o pátio (cadastra e corrige carro), consulta o estoque, registra interessado, segura carro e conduz proposta.",
+ "versao": "0.22.0",
+ "superficies": [
+  {
+   "nome": "patio",
+   "titulo": "O pátio",
+   "hint": "os carros do seu estoque",
+   "fonte": {
+    "resumo": {
+     "operacao": "resumo_do_estoque"
+    },
+    "lista": {
+     "operacao": "buscar_veiculos",
+     "pedido": {
+      "incluir_indisponiveis": true,
+      "limite": 500
+     },
+     "caminho": "veiculos"
+    }
+   },
+   "cartao": {
+    "type": "AdaptiveCard",
+    "version": "1.5",
+    "body": [
+     {
+      "type": "ActionSet",
+      "actions": [
+       {
+        "type": "Action.ToggleVisibility",
+        "title": "Carros",
+        "targetElements": [
+         {
+          "elementId": "aba_patio",
+          "isVisible": true
+         },
+         {
+          "elementId": "aba_numeros",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_sobre",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_novo",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_vitrine",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_corrigir",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_tirar",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_devolver",
+          "isVisible": false
+         }
+        ]
+       },
+       {
+        "type": "Action.ToggleVisibility",
+        "title": "Números",
+        "targetElements": [
+         {
+          "elementId": "aba_patio",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_numeros",
+          "isVisible": true
+         },
+         {
+          "elementId": "aba_sobre",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_novo",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_vitrine",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_corrigir",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_tirar",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_devolver",
+          "isVisible": false
+         }
+        ]
+       },
+       {
+        "type": "Action.ToggleVisibility",
+        "title": "Sobre",
+        "targetElements": [
+         {
+          "elementId": "aba_patio",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_numeros",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_sobre",
+          "isVisible": true
+         },
+         {
+          "elementId": "aba_novo",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_vitrine",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_corrigir",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_tirar",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_devolver",
+          "isVisible": false
+         }
+        ]
+       },
+       {
+        "type": "Action.ToggleVisibility",
+        "title": "Novo carro",
+        "targetElements": [
+         {
+          "elementId": "aba_patio",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_numeros",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_sobre",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_novo",
+          "isVisible": true
+         },
+         {
+          "elementId": "aba_vitrine",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_corrigir",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_tirar",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_devolver",
+          "isVisible": false
+         }
+        ]
+       },
+       {
+        "type": "Action.ToggleVisibility",
+        "title": "A vitrine",
+        "targetElements": [
+         {
+          "elementId": "aba_patio",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_numeros",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_sobre",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_novo",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_vitrine",
+          "isVisible": true
+         },
+         {
+          "elementId": "aba_corrigir",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_tirar",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_devolver",
+          "isVisible": false
+         }
+        ]
+       },
+       {
+        "type": "Action.ToggleVisibility",
+        "title": "Corrigir",
+        "targetElements": [
+         {
+          "elementId": "aba_patio",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_numeros",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_sobre",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_novo",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_vitrine",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_corrigir",
+          "isVisible": true
+         },
+         {
+          "elementId": "aba_tirar",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_devolver",
+          "isVisible": false
+         }
+        ]
+       },
+       {
+        "type": "Action.ToggleVisibility",
+        "title": "Tirar do pátio",
+        "targetElements": [
+         {
+          "elementId": "aba_patio",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_numeros",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_sobre",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_novo",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_vitrine",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_corrigir",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_tirar",
+          "isVisible": true
+         },
+         {
+          "elementId": "aba_devolver",
+          "isVisible": false
+         }
+        ]
+       },
+       {
+        "type": "Action.ToggleVisibility",
+        "title": "Devolver",
+        "targetElements": [
+         {
+          "elementId": "aba_patio",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_numeros",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_sobre",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_novo",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_vitrine",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_corrigir",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_tirar",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_devolver",
+          "isVisible": true
+         }
+        ]
+       }
+      ],
+      "spacing": "medium"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "ColumnSet",
+        "columns": [
+         {
+          "type": "Column",
+          "width": "stretch",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "NO PÁTIO",
+            "size": "small",
+            "isSubtle": true
+           },
+           {
+            "type": "TextBlock",
+            "text": "{total}",
+            "size": "extraLarge",
+            "weight": "bolder"
+           },
+           {
+            "type": "TextBlock",
+            "text": "{disponiveis} disponíveis",
+            "size": "small",
+            "isSubtle": true
+           }
+          ],
+          "style": "emphasis"
+         },
+         {
+          "type": "Column",
+          "width": "stretch",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "RESERVADOS",
+            "size": "small",
+            "isSubtle": true
+           },
+           {
+            "type": "TextBlock",
+            "text": "{reservados}",
+            "size": "extraLarge",
+            "weight": "bolder"
+           },
+           {
+            "type": "TextBlock",
+            "text": "segurados agora",
+            "size": "small",
+            "isSubtle": true
+           }
+          ],
+          "style": "emphasis"
+         },
+         {
+          "type": "Column",
+          "width": "stretch",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "PARADO EM ESTOQUE",
+            "size": "small",
+            "isSubtle": true
+           },
+           {
+            "type": "TextBlock",
+            "text": "R$ {valor_disponivel_reais}",
+            "size": "extraLarge",
+            "weight": "bolder"
+           },
+           {
+            "type": "TextBlock",
+            "text": "no que está disponível",
+            "size": "small",
+            "isSubtle": true
+           }
+          ],
+          "style": "emphasis"
+         }
+        ],
+        "spacing": "medium"
+       },
+       {
+        "type": "TextBlock",
+        "text": "VEÍCULOS",
+        "separator": true,
+        "spacing": "large",
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "_repetir_lista": {
+         "type": "Container",
+         "items": [
+          {
+           "type": "ColumnSet",
+           "columns": [
+            {
+             "type": "Column",
+             "width": "auto",
+             "items": [
+              {
+               "type": "Image",
+               "url": "{capa}",
+               "altText": "{marca} {modelo}",
+               "height": "medium"
+              }
+             ]
+            },
+            {
+             "type": "Column",
+             "width": "stretch",
+             "items": [
+              {
+               "type": "TextBlock",
+               "text": "{marca} {modelo} {versao}",
+               "weight": "bolder"
+              },
+              {
+               "type": "TextBlock",
+               "text": "{ano} · {km} km · {cor} · R$ {preco_reais}",
+               "size": "small",
+               "isSubtle": true
+              }
+             ]
+            },
+            {
+             "type": "Column",
+             "width": "auto",
+             "items": [
+              {
+               "type": "TextBlock",
+               "text": "{situacao}",
+               "size": "small",
+               "isSubtle": true
+              }
+             ]
+            }
+           ]
+          }
+         ],
+         "style": "emphasis",
+         "spacing": "small"
+        }
+       }
+      ],
+      "id": "aba_patio",
+      "spacing": "medium"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "FactSet",
+        "facts": [
+         {
+          "title": "Disponíveis",
+          "value": "{disponiveis}"
+         },
+         {
+          "title": "Reservados",
+          "value": "{reservados}"
+         },
+         {
+          "title": "Vendidos",
+          "value": "{vendidos}"
+         }
+        ],
+        "spacing": "large",
+        "separator": true
+       },
+       {
+        "type": "TextBlock",
+        "text": "DE ONDE VEM O MOVIMENTO",
+        "wrap": true,
+        "spacing": "large",
+        "size": "small",
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "Pergunte ao seu amigo: \"de onde vieram meus interessados esse mês?\". Ele responde por canal — vitrine, WhatsApp, classificado — e é isso que diz onde vale gastar.",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "TextBlock",
+        "text": "⚠️ Quem cadastra um interessado sem dizer o canal entra como \"não perguntado\". Se esse número for grande, a resposta é começar a perguntar.",
+        "wrap": true,
+        "spacing": "small",
+        "size": "small",
+        "isSubtle": true
+       }
+      ],
+      "id": "aba_numeros",
+      "isVisible": false,
+      "spacing": "medium"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Esta tela foi escrita pelo sohautos",
+        "size": "medium",
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "O serviço declara a estrutura; o okmigo escolhe a aparência. Trocar de aba não faz chamada nenhuma — os três blocos já vieram no mesmo cartão.",
+        "size": "small",
+        "isSubtle": true
+       }
+      ],
+      "id": "aba_sobre",
+      "isVisible": false,
+      "spacing": "medium"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "Container",
+        "items": [
+         {
+          "type": "Container",
+          "items": [
+           {
+            "type": "FactSet",
+            "facts": [
+             {
+              "title": "Publicação",
+              "value": "Entra no pátio e na vitrine"
+             },
+             {
+              "title": "Essencial",
+              "value": "Marca, modelo, ano, preço, km e cor"
+             },
+             {
+              "title": "Depois",
+              "value": "Fotos, FIPE e opcionais podem ser completados"
+             }
+            ]
+           }
+          ],
+          "style": "emphasis"
+         },
+         {
+          "type": "Container",
+          "items": [
+           {
+            "type": "Container",
+            "style": "emphasis",
+            "items": [
+             {
+              "type": "TextBlock",
+              "text": "Pôr um carro no pátio",
+              "wrap": true,
+              "weight": "bolder"
+             },
+             {
+              "type": "TextBlock",
+              "text": "Preencha o que sustenta a decisão de compra. O que você não souber pode ser completado depois — ficha errada é pior que ficha vazia.",
+              "wrap": true,
+              "size": "small",
+              "isSubtle": true
+             },
+             {
+              "type": "ColumnSet",
+              "columns": [
+               {
+                "type": "Column",
+                "width": "stretch",
+                "items": [
+                 {
+                  "type": "Input.Text",
+                  "id": "marca",
+                  "label": "Marca",
+                  "placeholder": "Fiat"
+                 }
+                ]
+               },
+               {
+                "type": "Column",
+                "width": "stretch",
+                "items": [
+                 {
+                  "type": "Input.Text",
+                  "id": "modelo",
+                  "label": "Modelo",
+                  "placeholder": "Argo"
+                 }
+                ]
+               }
+              ],
+              "spacing": "medium"
+             },
+             {
+              "type": "ColumnSet",
+              "columns": [
+               {
+                "type": "Column",
+                "width": "stretch",
+                "items": [
+                 {
+                  "type": "Input.Number",
+                  "id": "ano_fabricacao",
+                  "label": "Ano de fabricação",
+                  "min": 1900
+                 }
+                ]
+               },
+               {
+                "type": "Column",
+                "width": "stretch",
+                "items": [
+                 {
+                  "type": "Input.Number",
+                  "id": "ano_modelo",
+                  "label": "Ano do modelo",
+                  "min": 1900
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "ColumnSet",
+              "columns": [
+               {
+                "type": "Column",
+                "width": "stretch",
+                "items": [
+                 {
+                  "type": "Input.Number",
+                  "id": "preco_reais",
+                  "label": "Preço (R$)",
+                  "min": 1
+                 }
+                ]
+               },
+               {
+                "type": "Column",
+                "width": "stretch",
+                "items": [
+                 {
+                  "type": "Input.Number",
+                  "id": "km",
+                  "label": "Quilometragem",
+                  "min": 0
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Input.Text",
+              "id": "cor",
+              "label": "Cor",
+              "placeholder": "prata"
+             },
+             {
+              "type": "Input.Text",
+              "id": "versao",
+              "label": "Versão (opcional)",
+              "placeholder": "1.0 Drive"
+             },
+             {
+              "type": "Input.Text",
+              "id": "descricao",
+              "label": "Observações (opcional)",
+              "isMultiline": true,
+              "placeholder": "o que vale a pena o comprador saber"
+             },
+             {
+              "type": "ActionSet",
+              "actions": [
+               {
+                "type": "Action.Submit",
+                "title": "Pôr no pátio",
+                "data": {
+                 "operacao": "cadastrar_veiculo"
+                }
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Container",
+            "style": "default",
+            "items": [
+             {
+              "type": "TextBlock",
+              "text": "Como o anúncio será percebido",
+              "wrap": true,
+              "weight": "bolder"
+             },
+             {
+              "type": "TextBlock",
+              "text": "A foto é a protagonista do anúncio. Cadastre a ficha e depois acrescente imagens reais deste veículo — nunca uma foto genérica.",
+              "wrap": true,
+              "size": "small"
+             },
+             {
+              "type": "TextBlock",
+              "text": "Antes de publicar, confira ano/modelo, preço e quilometragem: são os dados que o comprador compara primeiro.",
+              "wrap": true,
+              "size": "small",
+              "isSubtle": true
+             }
+            ]
+           }
+          ],
+          "okmigoGrade": "larga"
+         }
+        ]
+       }
+      ],
+      "id": "aba_novo",
+      "isVisible": false,
+      "spacing": "medium"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Como a loja aparece por fora",
+        "size": "medium",
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "O nome vira o título da sua página, e o endereço vira o link que você manda. Os dois são públicos — e o endereço é o que você vai imprimir no cartão, então confira antes de salvar.",
+        "wrap": true,
+        "spacing": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "Input.Text",
+        "id": "nome",
+        "label": "Nome da loja",
+        "placeholder": "Revenda do Zé",
+        "value": "{nome}"
+       },
+       {
+        "type": "Input.Text",
+        "id": "endereco",
+        "label": "Endereço da página",
+        "placeholder": "revenda-do-ze",
+        "value": "{endereco_campo}"
+       },
+       {
+        "type": "TextBlock",
+        "text": "Hoje: {link_ou_aviso}",
+        "wrap": true,
+        "spacing": "small",
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "TextBlock",
+        "text": "Letras minúsculas, números e hífen. Trocar depois quebra os links que já circularam.",
+        "wrap": true,
+        "spacing": "small",
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "TextBlock",
+        "text": "Como falam com você",
+        "spacing": "medium",
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "{aviso_da_porta_ou_ok}",
+        "wrap": true,
+        "spacing": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "Input.Text",
+        "id": "onde_falam_com_a_loja",
+        "label": "Para onde vai quem se interessar",
+        "placeholder": "https://wa.me/5511999999999",
+        "value": "{contato_campo}"
+       },
+       {
+        "type": "Input.Text",
+        "id": "rotulo_do_botao",
+        "label": "O que o botão diz",
+        "placeholder": "Falar no WhatsApp",
+        "value": "{rotulo_campo}"
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.Submit",
+          "title": "Salvar",
+          "data": {
+           "operacao": "definir_a_vitrine"
+          }
+         }
+        ],
+        "spacing": "medium"
+       }
+      ],
+      "id": "aba_vitrine",
+      "isVisible": false,
+      "spacing": "medium"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Corrigir um carro",
+        "wrap": true,
+        "size": "large",
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "Mudar preço é o gesto mais frequente de uma revenda — mais que cadastrar carro novo. O valor novo aparece na vitrine na hora.",
+        "wrap": true,
+        "spacing": "small",
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "TextBlock",
+        "text": "⚠️ Deixe em branco o que não muda. Campo vazio quer dizer \"não mexa\", nunca \"apague\" — por aqui não se esvazia um campo, só se corrige.",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "descricao_do_veiculo",
+        "choices": [
+         {
+          "_repetir_lista": {
+           "title": "{marca} {modelo} {versao} · {ano} · {situacao}",
+           "value": "{id}"
+          },
+          "_quando": {
+           "campo": "situacao",
+           "em": [
+            "disponivel",
+            "reservado",
+            "vendido"
+           ]
+          }
+         }
+        ],
+        "label": "Qual carro",
+        "isRequired": true,
+        "placeholder": "escolha o carro"
+       },
+       {
+        "type": "Input.Number",
+        "id": "preco_reais",
+        "label": "Preço (R$)",
+        "placeholder": "o valor novo"
+       },
+       {
+        "type": "ColumnSet",
+        "columns": [
+         {
+          "type": "Column",
+          "width": "stretch",
+          "items": [
+           {
+            "type": "Input.Number",
+            "id": "km",
+            "label": "Quilometragem"
+           }
+          ]
+         },
+         {
+          "type": "Column",
+          "width": "stretch",
+          "items": [
+           {
+            "type": "Input.Text",
+            "id": "cor",
+            "label": "Cor"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.Submit",
+          "title": "Salvar a correção",
+          "data": {
+           "operacao": "atualizar_veiculo"
+          }
+         }
+        ],
+        "spacing": "medium"
+       }
+      ],
+      "id": "aba_corrigir",
+      "isVisible": false
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Tirar um carro do pátio",
+        "wrap": true,
+        "size": "large",
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "O anúncio sai da vitrine na hora. Nada é apagado: as propostas e os interessados daquele carro continuam no histórico da loja.",
+        "wrap": true,
+        "spacing": "small",
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "TextBlock",
+        "text": "⚠️ Se alguém tiver o carro reservado, a reserva é cancelada — e a resposta diz quantas eram, para você avisar.",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "TextBlock",
+        "text": "Só aparecem os carros que estão no pátio. O que já saiu está na aba Devolver.",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "descricao_do_veiculo",
+        "choices": [
+         {
+          "_repetir_lista": {
+           "title": "{marca} {modelo} {versao} · {ano} · {situacao}",
+           "value": "{id}"
+          },
+          "_quando": {
+           "campo": "situacao",
+           "em": [
+            "disponivel",
+            "reservado"
+           ]
+          }
+         }
+        ],
+        "label": "Qual carro",
+        "isRequired": true,
+        "placeholder": "escolha o carro"
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "motivo",
+        "choices": [
+         {
+          "title": "Cadastrei errado",
+          "value": "cadastro_errado"
+         },
+         {
+          "title": "Voltou para o dono",
+          "value": "devolvido_ao_dono"
+         },
+         {
+          "title": "Foi para outra loja",
+          "value": "foi_para_outra_loja"
+         },
+         {
+          "title": "Outro motivo",
+          "value": "outro"
+         }
+        ],
+        "label": "Por que saiu",
+        "isRequired": true,
+        "placeholder": "escolha o motivo"
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.Submit",
+          "title": "Tirar do pátio",
+          "data": {
+           "operacao": "tirar_do_patio"
+          }
+         }
+        ],
+        "spacing": "medium"
+       }
+      ],
+      "id": "aba_tirar",
+      "isVisible": false
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Devolver um carro ao pátio",
+        "wrap": true,
+        "size": "large",
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "Desfaz uma retirada. O anúncio volta para a vitrine, com a mesma ficha e o mesmo id — não é cadastrar de novo.",
+        "wrap": true,
+        "spacing": "small",
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "TextBlock",
+        "text": "⚠️ As reservas canceladas na retirada NÃO voltam. Quem quiser segurar o carro reserva outra vez, com prazo novo — que é a verdade.",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "TextBlock",
+        "text": "Aqui aparecem só os carros que saíram do pátio — se não houver nenhum, não há nada a devolver.",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "descricao_do_veiculo",
+        "choices": [
+         {
+          "_repetir_lista": {
+           "title": "{marca} {modelo} {versao} · {ano} · saiu do pátio",
+           "value": "{id}"
+          },
+          "_quando": {
+           "campo": "situacao",
+           "em": [
+            "retirado"
+           ]
+          }
+         }
+        ],
+        "label": "Qual carro",
+        "isRequired": true,
+        "placeholder": "escolha o carro"
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.Submit",
+          "title": "Devolver ao pátio",
+          "data": {
+           "operacao": "devolver_ao_patio"
+          }
+         }
+        ],
+        "spacing": "medium"
+       }
+      ],
+      "id": "aba_devolver",
+      "isVisible": false
+     }
+    ],
+    "okmigoTema": "operacao-direta",
+    "okmigoNavegacao": "inferior"
+   },
+   "icone": "patio",
+   "tela": {
+    "titulo": "O pátio",
+    "resumo": "{total} carros · R$ {valor_disponivel_reais} parados no que está disponível",
+    "paineis": [
+     {
+      "rotulo": "no pátio",
+      "valor": "{total}",
+      "quebra": [
+       "{disponiveis} disponíveis",
+       "{reservados} reservados",
+       "{vendidos} vendidos"
+      ]
+     },
+     {
+      "rotulo": "parado em estoque",
+      "valor": "R$ {valor_disponivel_reais}"
+     }
+    ],
+    "item": {
+     "id": "id",
+     "texto": "{marca} {modelo} {versao}",
+     "apoio": "{ano} · {km} km · R$ {preco_reais}",
+     "marca": "{cor}"
+    },
+    "agrupar_por": "situacao",
+    "ordem_dos_grupos": [
+     "disponivel",
+     "reservado",
+     "vendido"
+    ],
+    "titulo_do_grupo": {
+     "disponivel": "Disponíveis",
+     "reservado": "Reservados",
+     "vendido": "Vendidos"
+    }
+   }
+  },
+  {
+   "nome": "balcao",
+   "titulo": "O balcão",
+   "hint": "as propostas esperando você decidir",
+   "fonte": {
+    "resumo": {
+     "operacao": "resumo_do_balcao"
+    },
+    "lista": {
+     "operacao": "propostas_esperando",
+     "caminho": "propostas"
+    }
+   },
+   "cartao": {
+    "type": "AdaptiveCard",
+    "version": "1.5",
+    "body": [
+     {
+      "type": "ActionSet",
+      "actions": [
+       {
+        "type": "Action.ToggleVisibility",
+        "title": "Esperando",
+        "targetElements": [
+         {
+          "elementId": "aba_esperando",
+          "isVisible": true
+         },
+         {
+          "elementId": "aba_decidir",
+          "isVisible": false
+         }
+        ]
+       },
+       {
+        "type": "Action.ToggleVisibility",
+        "title": "Decidir",
+        "targetElements": [
+         {
+          "elementId": "aba_esperando",
+          "isVisible": false
+         },
+         {
+          "elementId": "aba_decidir",
+          "isVisible": true
+         }
+        ]
+       }
+      ],
+      "spacing": "medium"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "{propostas_abertas} propostas esperando · R$ {valor_em_jogo_reais} em jogo",
+        "wrap": true,
+        "size": "medium",
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "{esperando_ha_mais_de_um_dia} estão paradas há mais de um dia. A mais antiga vem primeiro — quem espera há três dias é o problema, quem propôs agora ainda não é.",
+        "wrap": true,
+        "spacing": "small",
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "Container",
+        "items": [
+         {
+          "_repetir_lista": {
+           "type": "Container",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{veiculo} — R$ {valor_reais}",
+             "wrap": true,
+             "weight": "bolder"
+            },
+            {
+             "type": "TextBlock",
+             "text": "{ano} · {km} km · pedido R$ {preco_pedido_reais} ({diferenca_reais}) · {oferta_vs_referencia}",
+             "wrap": true,
+             "spacing": "none",
+             "size": "small",
+             "isSubtle": true
+            },
+            {
+             "type": "TextBlock",
+             "text": "{interessado} · {contato} · {esperando_desde}",
+             "wrap": true,
+             "spacing": "none",
+             "size": "small",
+             "isSubtle": true
+            }
+           ],
+           "spacing": "small",
+           "separator": true
+          }
+         }
+        ],
+        "spacing": "medium"
+       },
+       {
+        "type": "TextBlock",
+        "text": "Propostas já decididas não aparecem aqui — ficam no histórico da loja, e você pergunta por elas conversando.",
+        "wrap": true,
+        "spacing": "medium",
+        "size": "small",
+        "isSubtle": true
+       }
+      ],
+      "id": "aba_esperando",
+      "isVisible": true,
+      "spacing": "medium"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Decidir uma proposta",
+        "wrap": true,
+        "size": "medium",
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "{propostas_abertas} propostas esperando · R$ {valor_em_jogo_reais} em jogo. Com zero, o formulário não aparece: não há o que decidir.",
+        "wrap": true,
+        "spacing": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "TextBlock",
+        "text": "⚠️ Aceitar VENDE o carro: ele sai da vitrine, e as outras propostas dele são recusadas na hora. Não tem como desfazer conversando.",
+        "wrap": true,
+        "spacing": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "proposta_id",
+        "choices": [
+         {
+          "_repetir_lista": {
+           "title": "{veiculo} · R$ {valor_reais} · {interessado}",
+           "value": "{id}"
+          }
+         }
+        ],
+        "label": "Qual proposta",
+        "isRequired": true,
+        "placeholder": "escolha a proposta"
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.Submit",
+          "title": "Recusar",
+          "data": {
+           "operacao": "recusar_proposta"
+          }
+         },
+         {
+          "type": "Action.Submit",
+          "title": "Aceitar (vende o carro)",
+          "data": {
+           "operacao": "aceitar_proposta"
+          }
+         }
+        ],
+        "spacing": "medium"
+       },
+       {
+        "type": "TextBlock",
+        "text": "Recusar fecha a proposta sem vender: o carro fica no estoque e as outras propostas dele seguem abertas. Deixar aberta não é neutro — a conta do que está esperando passa a mentir.",
+        "wrap": true,
+        "spacing": "small",
+        "size": "small",
+        "isSubtle": true
+       }
+      ],
+      "id": "aba_decidir",
+      "isVisible": false,
+      "spacing": "medium"
+     }
+    ],
+    "okmigoTema": "operacao-direta",
+    "okmigoNavegacao": "inferior"
+   },
+   "icone": "balcao",
+   "tela": {
+    "titulo": "O balcão",
+    "resumo": "{propostas_abertas} propostas esperando · R$ {valor_em_jogo_reais} em jogo",
+    "paineis": [
+     {
+      "rotulo": "esperando decisão",
+      "valor": "{propostas_abertas}",
+      "quebra": [
+       "{esperando_ha_mais_de_um_dia} há mais de um dia",
+       "{reservas_vigentes} carros reservados"
+      ]
+     },
+     {
+      "rotulo": "maior proposta",
+      "valor": "R$ {maior_valor_reais}"
+     }
+    ],
+    "item": {
+     "id": "id",
+     "texto": "{veiculo} · R$ {valor_reais}",
+     "apoio": "{interessado} · pedido R$ {preco_pedido_reais} · {diferenca_reais}",
+     "marca": "{contato}"
+    }
+   }
+  }
+ ],
+ "para_tipo": "socio",
+ "descricao_humana": "O estoque da sua revenda: pôr carro no pátio, corrigir a ficha, procurar, segurar para um cliente, pendurar foto e registrar proposta.",
+ "vitrine_url": "https://sohautos.okmigo.com",
+ "aceita_contato": {
+  "operacao": "definir_a_vitrine",
+  "parametro": "onde_falam_com_a_loja",
+  "rotulo": "rotulo_do_botao"
+ },
+ "agente": {
+  "contrato": "1",
+  "modo": "declarado",
+  "competencias": [
+   "o estoque do pátio: procurar carro, a ficha, a situação e os totais",
+   "comparar carros do pátio",
+   "o preço do anúncio contra a referência FIPE",
+   "reservas vigentes e propostas esperando decisão",
+   "desempenho do balcão: quem atendeu, quem vendeu, de onde vêm os leads"
+  ],
+  "ferramentas": [
+   "buscar_veiculos",
+   "listar_opcionais",
+   "detalhes_do_veiculo",
+   "resumo_do_estoque",
+   "listar_reservas",
+   "propostas_esperando",
+   "resumo_do_balcao",
+   "quem_vendeu",
+   "de_onde_vem_o_movimento"
+  ],
+  "orcamento": {
+   "chamadas": 3,
+   "tokens": 12000,
+   "segundos": 20
+  },
+  "instrucoes": "Você entende de revenda de veículos e consulta o pátio de UMA loja. Use as ferramentas assim:\n- Procurar carro: buscar_veiculos(texto=..., preco_maximo_reais=..., ano_minimo=..., km_maximo=..., carroceria=...). O texto aceita marca, modelo, cor, ano ou placa. Se vier havia maior que mostrando, a lista foi CORTADA: estreite a busca e nunca conclua que a loja não tem o carro.\n- Filtrar por opcional: listar_opcionais antes, para usar o código exato.\n- Um carro só (ficha, placa, fotos): detalhes_do_veiculo(descricao=...), com a descrição como a pessoa falou.\n- Comparar carros: detalhes_do_veiculo de cada um, e descreva as diferenças (versão, ano-modelo, quilometragem, câmbio, preço, selos). Não eleja o melhor. Se a descrição servir a mais de um carro, pergunte qual, com as opções, e nunca escolha pela pessoa.\n- Quantos carros, quanto dinheiro está parado, o endereço da vitrine: resumo_do_estoque.\n- O que espera a loja: resumo_do_balcao para os números, propostas_esperando para a lista, listar_reservas para os carros segurados e até quando.\n- Quem atendeu e quem vendeu: quem_vendeu(dias=N). De onde vêm os interessados: de_onde_vem_o_movimento(dias=N). N pelo período da pergunta; sem período, 30.\nPreço: o preço de venda é o do ANÚNCIO (preco_reais). A FIPE é REFERÊNCIA de mercado, não avaliação do carro nem preço de venda: cite-a só quando vier em comparacao_de_preco, com o mês de referência e a origem (referencia_origem): só chame de FIPE o que veio da tabela FIPE. Se referencia_vigente vier falso, diga que a referência está desatualizada. Sem comparacao_de_preco, o carro não tem FIPE ligada; diga isso e nunca estime.\nResponda só com números que vieram das ferramentas. Sem dado, diga que não conseguiu consultar.\nReservar, registrar proposta, aceitar (que VENDE o carro), recusar, cadastrar, corrigir ou tirar do pátio é ação: devolva acao_proposta, nunca diga que fez. O carro vem de detalhes_do_veiculo; o id da proposta, de propostas_esperando.\nVocabulário: placa; versão é a variante do modelo (1.0 LT, EXL); ano 2020/2021 é fabricação/modelo, e o ano-modelo é o segundo; km é a quilometragem; proposta é a oferta de um interessado por um carro; reserva segura o carro para alguém até uma hora; lead é o interessado; situação é disponível, reservado ou vendido.",
+  "exemplos": [
+   {
+    "pedido": "quantos carros eu tenho no pátio?",
+    "espera": "respondido"
+   },
+   {
+    "pedido": "como está o balcão?",
+    "espera": "respondido"
+   },
+   {
+    "pedido": "quem vendeu mais nos últimos 30 dias?",
+    "espera": "respondido"
+   },
+   {
+    "pedido": "o preço está acima da FIPE?",
+    "espera": "precisa_esclarecer"
+   }
+  ]
+ }
+}

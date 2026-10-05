@@ -1,0 +1,2078 @@
+{
+ "slug": "horaok",
+ "endpoint": "http://SEU-HOST:8000/mcp/",
+ "forma": "do_operador",
+ "descricao": "A operação dos atendimentos: serviços, equipe, expediente, folgas, endereço e fila do dia. Quando você liga o HoraOk à sua Agenda, cada horário aparece lá na hora; sem isso, o HoraOk guarda os horários sozinho.",
+ "versao": "0.18.0",
+ "superficies": [
+  {
+   "nome": "hoje",
+   "titulo": "Hoje",
+   "hint": "a fila do dia",
+   "fonte": {
+    "resumo": {
+     "operacao": "resumo_do_dia"
+    },
+    "lista": {
+     "operacao": "agenda_do_dia",
+     "caminho": "itens"
+    }
+   },
+   "cartao": {
+    "type": "AdaptiveCard",
+    "version": "1.5",
+    "body": [
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Hoje, {dia}",
+        "wrap": true,
+        "size": "large",
+        "weight": "bolder"
+       },
+       {
+        "type": "FactSet",
+        "facts": [
+         {
+          "title": "Na fila",
+          "value": "{total}"
+         },
+         {
+          "title": "Confirmados",
+          "value": "{confirmados}"
+         },
+         {
+          "title": "Aguardando",
+          "value": "{aguardando}"
+         }
+        ]
+       }
+      ],
+      "style": "accent"
+     },
+     {
+      "type": "Table",
+      "columns": [
+       {
+        "width": 2
+       },
+       {
+        "width": 1
+       },
+       {
+        "width": 1
+       },
+       {
+        "width": 2
+       },
+       {
+        "width": 1
+       }
+      ],
+      "rows": [
+       {
+        "type": "TableRow",
+        "cells": [
+         {
+          "type": "TableCell",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Quem",
+            "weight": "bolder"
+           }
+          ]
+         },
+         {
+          "type": "TableCell",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Hora",
+            "weight": "bolder"
+           }
+          ]
+         },
+         {
+          "type": "TableCell",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Com",
+            "weight": "bolder"
+           }
+          ]
+         },
+         {
+          "type": "TableCell",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Serviço",
+            "weight": "bolder"
+           }
+          ]
+         },
+         {
+          "type": "TableCell",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Status",
+            "weight": "bolder"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "_repetir_lista": {
+         "type": "TableRow",
+         "cells": [
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{nome}",
+             "wrap": true
+            }
+           ]
+          },
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{hora}"
+            }
+           ]
+          },
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{profissional}",
+             "wrap": true
+            }
+           ]
+          },
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{servico}",
+             "wrap": true
+            }
+           ]
+          },
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{rotulo}"
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ],
+      "firstRowAsHeader": true,
+      "fallback": {
+       "type": "TextBlock",
+       "text": "Ninguém na fila hoje. Quando alguém marcar, aparece aqui.",
+       "wrap": true,
+       "isSubtle": true
+      }
+     },
+     {
+      "type": "TextBlock",
+      "text": "Se a fila está zerada, a tabela some. Marque abaixo ou pela conversa.",
+      "wrap": true,
+      "isSubtle": true
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Confirmar, atender ou cancelar",
+        "wrap": true,
+        "weight": "bolder"
+       },
+       {
+        "type": "Input.Text",
+        "id": "acao_nome",
+        "label": "Nome",
+        "campo": "nome",
+        "isRequired": true
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "acao_dia",
+        "choices": [
+         {
+          "_repetir_lista": {
+           "title": "{rotulo}",
+           "value": "{nome}"
+          },
+          "_de": "dias"
+         }
+        ],
+        "label": "Dia",
+        "campo": "dia",
+        "isRequired": true,
+        "style": "filtered",
+        "okmigoEstrito": true
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "acao_hora",
+        "choices": [
+         {
+          "_repetir_lista": {
+           "title": "{nome}",
+           "value": "{nome}"
+          },
+          "_de": "horas"
+         }
+        ],
+        "label": "Hora",
+        "campo": "hora",
+        "isRequired": true,
+        "style": "filtered",
+        "okmigoEstrito": true,
+        "placeholder": "HH:MM"
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.Submit",
+          "title": "Aceitar pedido",
+          "data": {
+           "operacao": "aceitar_pedido"
+          },
+          "style": "positive"
+         },
+         {
+          "type": "Action.Submit",
+          "title": "Marcar atendido",
+          "data": {
+           "operacao": "marcar_atendido"
+          }
+         },
+         {
+          "type": "Action.Submit",
+          "title": "Cancelar",
+          "data": {
+           "operacao": "cancelar"
+          },
+          "style": "destructive",
+          "mode": "secondary"
+         }
+        ],
+        "okmigoRodape": true
+       }
+      ]
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Marcar horário",
+        "wrap": true,
+        "weight": "bolder"
+       },
+       {
+        "type": "Input.Text",
+        "id": "marcar_nome",
+        "label": "Cliente",
+        "campo": "nome",
+        "isRequired": true
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "marcar_dia",
+        "choices": [
+         {
+          "_repetir_lista": {
+           "title": "{rotulo}",
+           "value": "{nome}"
+          },
+          "_de": "dias"
+         }
+        ],
+        "label": "Dia",
+        "campo": "dia",
+        "isRequired": true,
+        "style": "filtered",
+        "okmigoEstrito": true
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "marcar_hora",
+        "choices": [
+         {
+          "_repetir_lista": {
+           "title": "{nome}",
+           "value": "{nome}"
+          },
+          "_de": "horas"
+         }
+        ],
+        "label": "Hora",
+        "campo": "hora",
+        "isRequired": true,
+        "style": "filtered",
+        "okmigoEstrito": true,
+        "placeholder": "HH:MM"
+       },
+       {
+        "type": "Input.Text",
+        "id": "marcar_servico",
+        "label": "Serviço",
+        "campo": "servico",
+        "isRequired": true
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "marcar_prof",
+        "label": "Quem atende",
+        "campo": "profissional",
+        "isRequired": false,
+        "style": "expanded",
+        "okmigoQuemOpera": true
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.Submit",
+          "title": "Marcar",
+          "data": {
+           "operacao": "criar_agendamento"
+          },
+          "style": "positive"
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "okmigoTema": "jornada-ativa",
+    "okmigoNavegacao": "inferior"
+   },
+   "icone": "hoje"
+  },
+  {
+   "nome": "servicos",
+   "titulo": "Serviços",
+   "hint": "o que o negócio oferece",
+   "fonte": {
+    "resumo": {
+     "operacao": "resumo_servicos"
+    },
+    "lista": {
+     "operacao": "listar_servicos",
+     "caminho": "servicos"
+    }
+   },
+   "cartao": {
+    "type": "AdaptiveCard",
+    "version": "1.5",
+    "body": [
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Serviços",
+        "wrap": true,
+        "size": "large",
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "{dica}",
+        "wrap": true
+       },
+       {
+        "type": "FactSet",
+        "facts": [
+         {
+          "title": "Cadastrados",
+          "value": "{total}"
+         }
+        ]
+       }
+      ],
+      "style": "accent"
+     },
+     {
+      "type": "Table",
+      "columns": [
+       {
+        "width": 2
+       },
+       {
+        "width": 1
+       },
+       {
+        "width": 1
+       }
+      ],
+      "rows": [
+       {
+        "type": "TableRow",
+        "cells": [
+         {
+          "type": "TableCell",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Nome",
+            "weight": "bolder"
+           }
+          ]
+         },
+         {
+          "type": "TableCell",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Min",
+            "weight": "bolder"
+           }
+          ]
+         },
+         {
+          "type": "TableCell",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "R$",
+            "weight": "bolder"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "_repetir_lista": {
+         "type": "TableRow",
+         "cells": [
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{nome}",
+             "wrap": true
+            }
+           ]
+          },
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{duracao_min}"
+            }
+           ]
+          },
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{preco_reais}"
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ],
+      "firstRowAsHeader": true,
+      "fallback": {
+       "type": "TextBlock",
+       "text": "Nenhum serviço ainda. Cadastre o primeiro abaixo.",
+       "wrap": true,
+       "isSubtle": true
+      }
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "Container",
+        "items": [
+         {
+          "type": "FactSet",
+          "facts": [
+           {
+            "title": "Agenda",
+            "value": "Reserva o tempo completo"
+           },
+           {
+            "title": "Disponibilidade",
+            "value": "Respeita expediente, folgas e feriados"
+           },
+           {
+            "title": "Preço",
+            "value": "Opcional para serviços sem valor fixo"
+           }
+          ]
+         }
+        ],
+        "style": "emphasis"
+       },
+       {
+        "type": "Container",
+        "items": [
+         {
+          "type": "Container",
+          "style": "emphasis",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Cadastrar serviço",
+            "wrap": true,
+            "weight": "bolder"
+           },
+           {
+            "type": "TextBlock",
+            "text": "Duração e preço alimentam a disponibilidade, a confirmação e a visão do atendimento.",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true
+           },
+           {
+            "type": "Input.Text",
+            "id": "svc_nome",
+            "label": "Nome",
+            "campo": "nome",
+            "isRequired": true,
+            "placeholder": "corte"
+           },
+           {
+            "type": "Input.Number",
+            "id": "svc_dur",
+            "label": "Duração (min)",
+            "campo": "duracao_min",
+            "isRequired": true
+           },
+           {
+            "type": "Input.Number",
+            "id": "svc_preco",
+            "label": "Preço (R$), opcional",
+            "campo": "preco_reais"
+           },
+           {
+            "type": "ActionSet",
+            "actions": [
+             {
+              "type": "Action.Submit",
+              "title": "Criar serviço",
+              "data": {
+               "operacao": "criar_servico"
+              },
+              "style": "positive"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "Container",
+          "style": "default",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Efeito na agenda",
+            "wrap": true,
+            "weight": "bolder"
+           },
+           {
+            "type": "TextBlock",
+            "text": "A duração define quantos minutos ficam ocupados na Agenda canônica. Um serviço de 60 minutos não cabe num intervalo de 30.",
+            "wrap": true,
+            "size": "small"
+           },
+           {
+            "type": "TextBlock",
+            "text": "Depois de criar, ligue o serviço aos profissionais que podem realizá-lo para liberar horários.",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true
+           }
+          ]
+         }
+        ],
+        "okmigoGrade": "larga"
+       }
+      ]
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Remover serviço",
+        "wrap": true,
+        "weight": "bolder"
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "rm_svc",
+        "choices": [
+         {
+          "_repetir_lista": {
+           "title": "{nome}",
+           "value": "{nome}"
+          }
+         }
+        ],
+        "label": "Serviço",
+        "campo": "nome",
+        "isRequired": false,
+        "style": "filtered",
+        "okmigoEstrito": true
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.Submit",
+          "title": "Remover",
+          "data": {
+           "operacao": "remover_servico"
+          },
+          "style": "destructive",
+          "mode": "secondary"
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "okmigoTema": "jornada-ativa",
+    "okmigoNavegacao": "inferior"
+   },
+   "icone": "servicos"
+  },
+  {
+   "nome": "expediente",
+   "titulo": "Expediente",
+   "hint": "os dias e horas em que atende",
+   "fonte": {
+    "resumo": {
+     "operacao": "resumo_expediente"
+    },
+    "lista": {
+     "operacao": "listar_expediente",
+     "caminho": "itens"
+    }
+   },
+   "cartao": {
+    "type": "AdaptiveCard",
+    "version": "1.5",
+    "body": [
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Expediente",
+        "wrap": true,
+        "size": "large",
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "{dica}",
+        "wrap": true
+       },
+       {
+        "type": "FactSet",
+        "facts": [
+         {
+          "title": "Dias abertos",
+          "value": "{total}"
+         }
+        ]
+       }
+      ],
+      "style": "accent"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Segunda",
+        "wrap": true,
+        "weight": "bolder"
+       },
+       {
+        "type": "Input.Text",
+        "id": "exp_wd_0",
+        "campo": "weekday",
+        "value": "0",
+        "isVisible": false
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "exp_ini_0",
+        "choices": [
+         {
+          "_repetir_lista": {
+           "title": "{nome}",
+           "value": "{nome}"
+          },
+          "_de": "horas"
+         }
+        ],
+        "label": "Abre",
+        "campo": "inicio",
+        "isRequired": false,
+        "style": "filtered",
+        "okmigoEstrito": true,
+        "placeholder": "HH:MM",
+        "value": "{inicio_0}"
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "exp_fim_0",
+        "choices": [
+         {
+          "_repetir_lista": {
+           "title": "{nome}",
+           "value": "{nome}"
+          },
+          "_de": "horas"
+         }
+        ],
+        "label": "Fecha",
+        "campo": "fim",
+        "isRequired": false,
+        "style": "filtered",
+        "okmigoEstrito": true,
+        "placeholder": "HH:MM",
+        "value": "{fim_0}"
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.Submit",
+          "title": "Salvar segunda",
+          "data": {
+           "operacao": "definir_horario"
+          },
+          "style": "positive"
+         },
+         {
+          "type": "Action.Submit",
+          "title": "Não abre",
+          "data": {
+           "operacao": "fechar_dia"
+          },
+          "style": "destructive",
+          "mode": "secondary"
+         }
+        ]
+       }
+      ],
+      "style": "emphasis"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Terça",
+        "wrap": true,
+        "weight": "bolder"
+       },
+       {
+        "type": "Input.Text",
+        "id": "exp_wd_1",
+        "campo": "weekday",
+        "value": "1",
+        "isVisible": false
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "exp_ini_1",
+        "choices": [
+         {
+          "_repetir_lista": {
+           "title": "{nome}",
+           "value": "{nome}"
+          },
+          "_de": "horas"
+         }
+        ],
+        "label": "Abre",
+        "campo": "inicio",
+        "isRequired": false,
+        "style": "filtered",
+        "okmigoEstrito": true,
+        "placeholder": "HH:MM",
+        "value": "{inicio_1}"
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "exp_fim_1",
+        "choices": [
+         {
+          "_repetir_lista": {
+           "title": "{nome}",
+           "value": "{nome}"
+          },
+          "_de": "horas"
+         }
+        ],
+        "label": "Fecha",
+        "campo": "fim",
+        "isRequired": false,
+        "style": "filtered",
+        "okmigoEstrito": true,
+        "placeholder": "HH:MM",
+        "value": "{fim_1}"
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.Submit",
+          "title": "Salvar terça",
+          "data": {
+           "operacao": "definir_horario"
+          },
+          "style": "positive"
+         },
+         {
+          "type": "Action.Submit",
+          "title": "Não abre",
+          "data": {
+           "operacao": "fechar_dia"
+          },
+          "style": "destructive",
+          "mode": "secondary"
+         }
+        ]
+       }
+      ],
+      "style": "emphasis"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Quarta",
+        "wrap": true,
+        "weight": "bolder"
+       },
+       {
+        "type": "Input.Text",
+        "id": "exp_wd_2",
+        "campo": "weekday",
+        "value": "2",
+        "isVisible": false
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "exp_ini_2",
+        "choices": [
+         {
+          "_repetir_lista": {
+           "title": "{nome}",
+           "value": "{nome}"
+          },
+          "_de": "horas"
+         }
+        ],
+        "label": "Abre",
+        "campo": "inicio",
+        "isRequired": false,
+        "style": "filtered",
+        "okmigoEstrito": true,
+        "placeholder": "HH:MM",
+        "value": "{inicio_2}"
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "exp_fim_2",
+        "choices": [
+         {
+          "_repetir_lista": {
+           "title": "{nome}",
+           "value": "{nome}"
+          },
+          "_de": "horas"
+         }
+        ],
+        "label": "Fecha",
+        "campo": "fim",
+        "isRequired": false,
+        "style": "filtered",
+        "okmigoEstrito": true,
+        "placeholder": "HH:MM",
+        "value": "{fim_2}"
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.Submit",
+          "title": "Salvar quarta",
+          "data": {
+           "operacao": "definir_horario"
+          },
+          "style": "positive"
+         },
+         {
+          "type": "Action.Submit",
+          "title": "Não abre",
+          "data": {
+           "operacao": "fechar_dia"
+          },
+          "style": "destructive",
+          "mode": "secondary"
+         }
+        ]
+       }
+      ],
+      "style": "emphasis"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Quinta",
+        "wrap": true,
+        "weight": "bolder"
+       },
+       {
+        "type": "Input.Text",
+        "id": "exp_wd_3",
+        "campo": "weekday",
+        "value": "3",
+        "isVisible": false
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "exp_ini_3",
+        "choices": [
+         {
+          "_repetir_lista": {
+           "title": "{nome}",
+           "value": "{nome}"
+          },
+          "_de": "horas"
+         }
+        ],
+        "label": "Abre",
+        "campo": "inicio",
+        "isRequired": false,
+        "style": "filtered",
+        "okmigoEstrito": true,
+        "placeholder": "HH:MM",
+        "value": "{inicio_3}"
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "exp_fim_3",
+        "choices": [
+         {
+          "_repetir_lista": {
+           "title": "{nome}",
+           "value": "{nome}"
+          },
+          "_de": "horas"
+         }
+        ],
+        "label": "Fecha",
+        "campo": "fim",
+        "isRequired": false,
+        "style": "filtered",
+        "okmigoEstrito": true,
+        "placeholder": "HH:MM",
+        "value": "{fim_3}"
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.Submit",
+          "title": "Salvar quinta",
+          "data": {
+           "operacao": "definir_horario"
+          },
+          "style": "positive"
+         },
+         {
+          "type": "Action.Submit",
+          "title": "Não abre",
+          "data": {
+           "operacao": "fechar_dia"
+          },
+          "style": "destructive",
+          "mode": "secondary"
+         }
+        ]
+       }
+      ],
+      "style": "emphasis"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Sexta",
+        "wrap": true,
+        "weight": "bolder"
+       },
+       {
+        "type": "Input.Text",
+        "id": "exp_wd_4",
+        "campo": "weekday",
+        "value": "4",
+        "isVisible": false
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "exp_ini_4",
+        "choices": [
+         {
+          "_repetir_lista": {
+           "title": "{nome}",
+           "value": "{nome}"
+          },
+          "_de": "horas"
+         }
+        ],
+        "label": "Abre",
+        "campo": "inicio",
+        "isRequired": false,
+        "style": "filtered",
+        "okmigoEstrito": true,
+        "placeholder": "HH:MM",
+        "value": "{inicio_4}"
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "exp_fim_4",
+        "choices": [
+         {
+          "_repetir_lista": {
+           "title": "{nome}",
+           "value": "{nome}"
+          },
+          "_de": "horas"
+         }
+        ],
+        "label": "Fecha",
+        "campo": "fim",
+        "isRequired": false,
+        "style": "filtered",
+        "okmigoEstrito": true,
+        "placeholder": "HH:MM",
+        "value": "{fim_4}"
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.Submit",
+          "title": "Salvar sexta",
+          "data": {
+           "operacao": "definir_horario"
+          },
+          "style": "positive"
+         },
+         {
+          "type": "Action.Submit",
+          "title": "Não abre",
+          "data": {
+           "operacao": "fechar_dia"
+          },
+          "style": "destructive",
+          "mode": "secondary"
+         }
+        ]
+       }
+      ],
+      "style": "emphasis"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Sábado",
+        "wrap": true,
+        "weight": "bolder"
+       },
+       {
+        "type": "Input.Text",
+        "id": "exp_wd_5",
+        "campo": "weekday",
+        "value": "5",
+        "isVisible": false
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "exp_ini_5",
+        "choices": [
+         {
+          "_repetir_lista": {
+           "title": "{nome}",
+           "value": "{nome}"
+          },
+          "_de": "horas"
+         }
+        ],
+        "label": "Abre",
+        "campo": "inicio",
+        "isRequired": false,
+        "style": "filtered",
+        "okmigoEstrito": true,
+        "placeholder": "HH:MM",
+        "value": "{inicio_5}"
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "exp_fim_5",
+        "choices": [
+         {
+          "_repetir_lista": {
+           "title": "{nome}",
+           "value": "{nome}"
+          },
+          "_de": "horas"
+         }
+        ],
+        "label": "Fecha",
+        "campo": "fim",
+        "isRequired": false,
+        "style": "filtered",
+        "okmigoEstrito": true,
+        "placeholder": "HH:MM",
+        "value": "{fim_5}"
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.Submit",
+          "title": "Salvar sábado",
+          "data": {
+           "operacao": "definir_horario"
+          },
+          "style": "positive"
+         },
+         {
+          "type": "Action.Submit",
+          "title": "Não abre",
+          "data": {
+           "operacao": "fechar_dia"
+          },
+          "style": "destructive",
+          "mode": "secondary"
+         }
+        ]
+       }
+      ],
+      "style": "emphasis"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Domingo",
+        "wrap": true,
+        "weight": "bolder"
+       },
+       {
+        "type": "Input.Text",
+        "id": "exp_wd_6",
+        "campo": "weekday",
+        "value": "6",
+        "isVisible": false
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "exp_ini_6",
+        "choices": [
+         {
+          "_repetir_lista": {
+           "title": "{nome}",
+           "value": "{nome}"
+          },
+          "_de": "horas"
+         }
+        ],
+        "label": "Abre",
+        "campo": "inicio",
+        "isRequired": false,
+        "style": "filtered",
+        "okmigoEstrito": true,
+        "placeholder": "HH:MM",
+        "value": "{inicio_6}"
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "exp_fim_6",
+        "choices": [
+         {
+          "_repetir_lista": {
+           "title": "{nome}",
+           "value": "{nome}"
+          },
+          "_de": "horas"
+         }
+        ],
+        "label": "Fecha",
+        "campo": "fim",
+        "isRequired": false,
+        "style": "filtered",
+        "okmigoEstrito": true,
+        "placeholder": "HH:MM",
+        "value": "{fim_6}"
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.Submit",
+          "title": "Salvar domingo",
+          "data": {
+           "operacao": "definir_horario"
+          },
+          "style": "positive"
+         },
+         {
+          "type": "Action.Submit",
+          "title": "Não abre",
+          "data": {
+           "operacao": "fechar_dia"
+          },
+          "style": "destructive",
+          "mode": "secondary"
+         }
+        ]
+       }
+      ],
+      "style": "emphasis"
+     }
+    ],
+    "okmigoTema": "jornada-ativa",
+    "okmigoNavegacao": "inferior"
+   },
+   "icone": "expediente"
+  },
+  {
+   "nome": "local",
+   "titulo": "Local",
+   "hint": "onde o negócio atende",
+   "fonte": {
+    "resumo": {
+     "operacao": "ler_local"
+    },
+    "lista": {
+     "operacao": "ler_local",
+     "caminho": "itens"
+    }
+   },
+   "cartao": {
+    "type": "AdaptiveCard",
+    "version": "1.5",
+    "body": [
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Local",
+        "wrap": true,
+        "size": "large",
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "{dica}",
+        "wrap": true
+       },
+       {
+        "type": "FactSet",
+        "facts": [
+         {
+          "title": "Cidade",
+          "value": "{cidade}"
+         },
+         {
+          "title": "Bairro",
+          "value": "{bairro}"
+         },
+         {
+          "title": "Rua",
+          "value": "{rua}"
+         },
+         {
+          "title": "Referência",
+          "value": "{referencia}"
+         }
+        ]
+       }
+      ],
+      "style": "accent"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Atualizar endereço",
+        "wrap": true,
+        "weight": "bolder"
+       },
+       {
+        "type": "Input.Text",
+        "id": "loc_cidade",
+        "label": "Cidade",
+        "campo": "cidade",
+        "isRequired": true,
+        "value": "{cidade}"
+       },
+       {
+        "type": "Input.Text",
+        "id": "loc_bairro",
+        "label": "Bairro",
+        "campo": "bairro",
+        "value": "{bairro}"
+       },
+       {
+        "type": "Input.Text",
+        "id": "loc_rua",
+        "label": "Rua e número",
+        "campo": "rua",
+        "value": "{rua}"
+       },
+       {
+        "type": "Input.Text",
+        "id": "loc_ref",
+        "label": "Referência",
+        "campo": "referencia",
+        "value": "{referencia}"
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.Submit",
+          "title": "Salvar local",
+          "data": {
+           "operacao": "definir_local"
+          },
+          "style": "positive"
+         }
+        ],
+        "okmigoRodape": true
+       }
+      ]
+     }
+    ],
+    "okmigoTema": "jornada-ativa",
+    "okmigoNavegacao": "inferior"
+   },
+   "icone": "local"
+  },
+  {
+   "nome": "bloqueios",
+   "titulo": "Folgas",
+   "hint": "dias e intervalos fechados",
+   "fonte": {
+    "resumo": {
+     "operacao": "resumo_bloqueios"
+    },
+    "lista": {
+     "operacao": "listar_bloqueios",
+     "caminho": "itens"
+    }
+   },
+   "cartao": {
+    "type": "AdaptiveCard",
+    "version": "1.5",
+    "body": [
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Folgas",
+        "wrap": true,
+        "size": "large",
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "{dica}",
+        "wrap": true
+       },
+       {
+        "type": "FactSet",
+        "facts": [
+         {
+          "title": "À frente",
+          "value": "{total}"
+         }
+        ]
+       }
+      ],
+      "style": "accent"
+     },
+     {
+      "type": "Table",
+      "columns": [
+       {
+        "width": 2
+       },
+       {
+        "width": 1
+       },
+       {
+        "width": 1
+       },
+       {
+        "width": 1
+       },
+       {
+        "width": 2
+       }
+      ],
+      "rows": [
+       {
+        "type": "TableRow",
+        "cells": [
+         {
+          "type": "TableCell",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Dia",
+            "weight": "bolder"
+           }
+          ]
+         },
+         {
+          "type": "TableCell",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "De",
+            "weight": "bolder"
+           }
+          ]
+         },
+         {
+          "type": "TableCell",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Até",
+            "weight": "bolder"
+           }
+          ]
+         },
+         {
+          "type": "TableCell",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Quem",
+            "weight": "bolder"
+           }
+          ]
+         },
+         {
+          "type": "TableCell",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Motivo",
+            "weight": "bolder"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "_repetir_lista": {
+         "type": "TableRow",
+         "cells": [
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{dia}"
+            }
+           ]
+          },
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{hora}"
+            }
+           ]
+          },
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{hora_fim}"
+            }
+           ]
+          },
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{rotulo}"
+            }
+           ]
+          },
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{motivo}",
+             "wrap": true
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ],
+      "firstRowAsHeader": true,
+      "fallback": {
+       "type": "TextBlock",
+       "text": "Nenhuma folga à frente. Quando alguém folgar, aparece aqui.",
+       "wrap": true,
+       "isSubtle": true
+      }
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Bloquear",
+        "wrap": true,
+        "weight": "bolder"
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "blk_dia",
+        "choices": [
+         {
+          "_repetir_lista": {
+           "title": "{rotulo}",
+           "value": "{nome}"
+          },
+          "_de": "dias"
+         }
+        ],
+        "label": "Dia",
+        "campo": "dia",
+        "isRequired": true,
+        "style": "filtered",
+        "okmigoEstrito": true
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "blk_ini",
+        "choices": [
+         {
+          "_repetir_lista": {
+           "title": "{nome}",
+           "value": "{nome}"
+          },
+          "_de": "horas"
+         }
+        ],
+        "label": "De",
+        "campo": "inicio",
+        "isRequired": false,
+        "style": "filtered",
+        "okmigoEstrito": true,
+        "placeholder": "HH:MM"
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "blk_fim",
+        "choices": [
+         {
+          "_repetir_lista": {
+           "title": "{nome}",
+           "value": "{nome}"
+          },
+          "_de": "horas"
+         }
+        ],
+        "label": "Até",
+        "campo": "fim",
+        "isRequired": false,
+        "style": "filtered",
+        "okmigoEstrito": true,
+        "placeholder": "HH:MM"
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "blk_quem",
+        "label": "Quem folga (vazio = casa)",
+        "campo": "profissional",
+        "isRequired": false,
+        "style": "expanded",
+        "okmigoQuemOpera": true
+       },
+       {
+        "type": "Input.Text",
+        "id": "blk_mot",
+        "label": "Motivo",
+        "campo": "motivo",
+        "placeholder": "almoço"
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.Submit",
+          "title": "Bloquear",
+          "data": {
+           "operacao": "criar_bloqueio"
+          },
+          "style": "positive"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Remover",
+        "wrap": true,
+        "weight": "bolder"
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "unblk_dia",
+        "choices": [
+         {
+          "_repetir_lista": {
+           "title": "{rotulo}",
+           "value": "{nome}"
+          },
+          "_de": "dias"
+         }
+        ],
+        "label": "Dia",
+        "campo": "dia",
+        "isRequired": true,
+        "style": "filtered",
+        "okmigoEstrito": true
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "unblk_ini",
+        "choices": [
+         {
+          "_repetir_lista": {
+           "title": "{nome}",
+           "value": "{nome}"
+          },
+          "_de": "horas"
+         }
+        ],
+        "label": "De",
+        "campo": "inicio",
+        "isRequired": false,
+        "style": "filtered",
+        "okmigoEstrito": true,
+        "placeholder": "HH:MM"
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "unblk_quem",
+        "label": "Quem",
+        "campo": "profissional",
+        "isRequired": false,
+        "style": "expanded",
+        "okmigoQuemOpera": true
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.Submit",
+          "title": "Remover folga",
+          "data": {
+           "operacao": "remover_bloqueio"
+          },
+          "style": "destructive",
+          "mode": "secondary"
+         }
+        ],
+        "okmigoRodape": true
+       }
+      ]
+     }
+    ],
+    "okmigoTema": "jornada-ativa",
+    "okmigoNavegacao": "inferior"
+   },
+   "icone": "bloqueios"
+  },
+  {
+   "nome": "especialidade",
+   "titulo": "Equipe",
+   "hint": "o que cada um faz",
+   "fonte": {
+    "resumo": {
+     "operacao": "resumo_equipe"
+    },
+    "lista": {
+     "operacao": "listar_servicos",
+     "caminho": "servicos"
+    }
+   },
+   "cartao": {
+    "type": "AdaptiveCard",
+    "version": "1.5",
+    "body": [
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Equipe e especialidades",
+        "wrap": true,
+        "size": "large",
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "{dica}",
+        "wrap": true
+       }
+      ],
+      "style": "accent"
+     },
+     {
+      "type": "Table",
+      "columns": [
+       {
+        "width": 1
+       },
+       {
+        "width": 2
+       }
+      ],
+      "rows": [
+       {
+        "type": "TableRow",
+        "cells": [
+         {
+          "type": "TableCell",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Serviço",
+            "weight": "bolder"
+           }
+          ]
+         },
+         {
+          "type": "TableCell",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Quem faz",
+            "weight": "bolder"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "_repetir_lista": {
+         "type": "TableRow",
+         "cells": [
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{nome}",
+             "wrap": true
+            }
+           ]
+          },
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{quem}",
+             "wrap": true
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ],
+      "firstRowAsHeader": true,
+      "fallback": {
+       "type": "TextBlock",
+       "text": "Nenhum serviço no catálogo. Cadastre em Serviços para ligar quem faz o quê.",
+       "wrap": true,
+       "isSubtle": true
+      }
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Ligar o quê com quem",
+        "wrap": true,
+        "weight": "bolder"
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "prof",
+        "label": "Profissional",
+        "campo": "nome",
+        "isRequired": false,
+        "style": "filtered",
+        "placeholder": "comece a digitar",
+        "okmigoQuemOpera": true
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "esp_svc",
+        "choices": [
+         {
+          "_repetir_lista": {
+           "title": "{nome}",
+           "value": "{nome}"
+          }
+         }
+        ],
+        "label": "Serviço",
+        "campo": "servico",
+        "isRequired": false
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.Submit",
+          "title": "Ligar",
+          "data": {
+           "operacao": "ligar_servico"
+          },
+          "style": "positive"
+         },
+         {
+          "type": "Action.Submit",
+          "title": "Desligar",
+          "data": {
+           "operacao": "desligar_servico"
+          },
+          "style": "destructive",
+          "mode": "secondary"
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "okmigoTema": "jornada-ativa",
+    "okmigoNavegacao": "inferior"
+   },
+   "icone": "especialidade"
+  }
+ ],
+ "conversa": [
+  "listar_servicos",
+  "listar_equipe",
+  "horarios_livres",
+  "agenda_do_dia",
+  "buscar_cliente",
+  "ler_local",
+  "definir_local",
+  "definir_fuso",
+  "listar_feriados",
+  "abrir_no_feriado",
+  "fechar_no_feriado",
+  "listar_bloqueios",
+  "criar_bloqueio",
+  "remover_bloqueio",
+  "criar_servico",
+  "remover_servico",
+  "ligar_servico",
+  "desligar_servico",
+  "definir_horario",
+  "fechar_dia",
+  "criar_agendamento",
+  "pedir_horario",
+  "aceitar_pedido",
+  "recusar_pedido",
+  "cancelar",
+  "reagendar",
+  "marcar_atendido"
+ ],
+ "navegacao": {
+  "tipo": "agrupada",
+  "grupos": [
+   {
+    "nome": "rotina",
+    "rotulo": "Hoje",
+    "icone": "hoje",
+    "superficies": [
+     "hoje"
+    ],
+    "inicial": "hoje"
+   },
+   {
+    "nome": "oferta",
+    "rotulo": "Serviços",
+    "icone": "servicos",
+    "superficies": [
+     "servicos",
+     "especialidade"
+    ],
+    "inicial": "servicos"
+   },
+   {
+    "nome": "disponibilidade",
+    "rotulo": "Disponibilidade",
+    "icone": "expediente",
+    "superficies": [
+     "expediente",
+     "bloqueios"
+    ],
+    "inicial": "expediente"
+   },
+   {
+    "nome": "estabelecimento",
+    "rotulo": "Local",
+    "icone": "local",
+    "superficies": [
+     "local"
+    ],
+    "inicial": "local"
+   }
+  ]
+ },
+ "para_tipo": "socio",
+ "tipo": "ponte",
+ "tenant_sondagem": "sondagem",
+ "credencial_sondagem": "credencial-ficticia",
+ "eventos": {
+  "operacao": "eventos",
+  "parametro": "dias"
+ },
+ "avisa_antes": {
+  "operacao": "a_avisar",
+  "parametro": "janela_minutos"
+ },
+ "relata_mudancas": {
+  "operacao": "mudou",
+  "parametro": "janela_minutos"
+ },
+ "quer_a_marca": {
+  "operacao": "definir_a_marca",
+  "nome": "nome",
+  "logo": "logo"
+ },
+ "aceita_contato": {
+  "operacao": "definir_a_vitrine",
+  "parametro": "onde_falam_com_a_loja",
+  "rotulo": "rotulo_do_botao"
+ },
+ "publico": {
+  "ofertas": "listar_servicos",
+  "expediente": "listar_expediente"
+ },
+ "marca_horario": {
+  "operacao": "pedir_horario",
+  "ofertas": "listar_servicos"
+ },
+ "agente": {
+  "contrato": "1",
+  "modo": "declarado",
+  "competencias": [
+   "horário livre: tem vaga, em que dia, para que serviço e com quem",
+   "a agenda do dia: quem vem, a que horas, com quem",
+   "marcar, remarcar e cancelar horário (propõe; a pessoa confirma)",
+   "clientes, serviços, equipe, folgas, feriados e endereço"
+  ],
+  "ferramentas": [
+   "horarios_livres",
+   "agenda_do_dia",
+   "buscar_cliente",
+   "listar_servicos",
+   "listar_equipe",
+   "listar_bloqueios",
+   "listar_feriados",
+   "ler_local"
+  ],
+  "orcamento": {
+   "chamadas": 3,
+   "tokens": 12000,
+   "segundos": 20
+  },
+  "instrucoes": "Você entende da operação de atendimentos de um negócio: serviços, equipe, expediente e folgas. O HoraOk guarda os horários do negócio; quando a pessoa o liga à Agenda dela, cada horário aparece lá também. Nunca invente disponibilidade. Use as ferramentas assim:\n- Tem vaga? horarios_livres(dia, servico, profissional). Só existe o horário que ela devolveu em livres: nunca invente, arredonde nem desloque um horário. Se ela devolver erro (dia sem expediente, feriado, serviço que não existe, profissional que não faz o serviço), repasse o motivo como veio.\n- Quem vem hoje ou num dia: agenda_do_dia(dia). Sem dia, é o hoje do negócio.\n- Serviços, duração e preço: listar_servicos. Quem atende e o que cada um faz: listar_equipe.\n- Folgas e bloqueios: listar_bloqueios. Feriado e se o negócio abre nele: listar_feriados.\n- Cliente pelo nome: buscar_cliente(nome). Telefone só se vier gravado.\n- Endereço e fuso do negócio: ler_local.\nMarcar, remarcar e cancelar são SEMPRE acao_proposta, e você nunca os executa: marcar é criar_agendamento(nome, servico, dia, hora, e profissional se a pessoa pediu alguém); remarcar é reagendar(nome, dia, hora, novo_dia, nova_hora), num gesto só, nunca cancelar e marcar de novo; cancelar é cancelar(nome, dia, hora). Antes de propor marcar ou remarcar, confira em horarios_livres que o horário pedido está em livres. Se não estiver, devolva precisa_esclarecer com os horários livres como opções.\nSem serviço, devolva precisa_esclarecer com as opções que listar_servicos devolveu. Profissional pedido que não está em listar_equipe também é pergunta. Nunca escolha serviço, profissional ou horário pela pessoa.\nData e hora são sempre as do fuso do negócio, como as ferramentas devolvem: mande dia AAAA-MM-DD e hora HH:MM. «Amanhã» e «sexta» contam a partir do hoje do negócio. Responda só com o que as ferramentas devolveram, com o dia consultado como data-base. Sem dado, diga que não conseguiu consultar.\nVocabulário: serviço é o que o negócio oferece (corte, barba), com duração e preço; profissional é quem da equipe atende; horário livre é um início em que o serviço inteiro cabe no expediente sem bater em outra marcação; bloqueio é folga ou intervalo fechado, da casa inteira ou de uma pessoa; encaixe é marcar num horário livre entre outras marcações, e aqui não existe encaixe fora do que horarios_livres devolveu; expediente é a abertura e o fechamento de cada dia da semana; pedido em hold é horário segurado por alguns minutos, que o dono aceita ou recusa.",
+  "exemplos": [
+   {
+    "pedido": "marca um corte amanhã às 10h pra Ana",
+    "espera": "acao_proposta"
+   },
+   {
+    "pedido": "marca um horário pra Ana amanhã",
+    "espera": "precisa_esclarecer"
+   },
+   {
+    "pedido": "quem vem hoje?",
+    "espera": "respondido"
+   }
+  ]
+ }
+}

@@ -1,0 +1,866 @@
+{
+ "slug": "estoufit-nutri",
+ "endpoint": "http://SEU-HOST:8000/mcp/",
+ "forma": "do_operador",
+ "descricao": "Os pacientes de um nutricionista: o que cada um registrou (refeições e calorias), a média da semana, o rascunho de metas e a meta que ele ASSINOU. O histórico é do PACIENTE e sobrevive à troca de profissional. Assinar meta exige quem tem CRN — a IA rascunha, não prescreve; não há cardápio.",
+ "versao": "0.33.0",
+ "superficies": [
+  {
+   "nome": "pacientes",
+   "titulo": "Fitness Nutri",
+   "hint": "quem você acompanha, o que cada um registrou e as metas que você assinou",
+   "fonte": {
+    "resumo": {
+     "operacao": "meus_pacientes"
+    },
+    "lista": {
+     "operacao": "meus_pacientes",
+     "caminho": "pacientes"
+    }
+   },
+   "cartao": {
+    "type": "AdaptiveCard",
+    "version": "1.5",
+    "body": [
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "Container",
+        "items": [
+         {
+          "type": "TextBlock",
+          "text": "ÁREA DO NUTRICIONISTA",
+          "wrap": true,
+          "size": "small",
+          "weight": "bolder",
+          "isSubtle": true
+         },
+         {
+          "type": "TextBlock",
+          "text": "Meus pacientes",
+          "wrap": true,
+          "size": "extraLarge",
+          "weight": "bolder"
+         },
+         {
+          "type": "TextBlock",
+          "text": "{hoje_frase} · {subtitulo}",
+          "wrap": true,
+          "size": "small",
+          "isSubtle": true
+         }
+        ],
+        "spacing": "small"
+       },
+       {
+        "type": "Container",
+        "items": [
+         {
+          "type": "Container",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "{m_pacientes}",
+            "wrap": true,
+            "size": "extraLarge",
+            "weight": "bolder"
+           },
+           {
+            "type": "TextBlock",
+            "text": "Pacientes",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true
+           }
+          ],
+          "style": "accent",
+          "spacing": "small"
+         },
+         {
+          "type": "Container",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "{m_registraram_hoje}",
+            "wrap": true,
+            "size": "extraLarge",
+            "weight": "bolder"
+           },
+           {
+            "type": "TextBlock",
+            "text": "Registraram hoje",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true
+           }
+          ],
+          "style": "good",
+          "spacing": "small"
+         },
+         {
+          "type": "Container",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "{m_sem_meta}",
+            "wrap": true,
+            "size": "extraLarge",
+            "weight": "bolder"
+           },
+           {
+            "type": "TextBlock",
+            "text": "Sem meta assinada",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true
+           }
+          ],
+          "style": "warning",
+          "spacing": "small"
+         }
+        ],
+        "okmigoGrade": "compacta",
+        "spacing": "medium"
+       },
+       {
+        "type": "TextBlock",
+        "text": "{vazio}",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "Container",
+        "items": [
+         {
+          "type": "TextBlock",
+          "text": "Trazer um paciente",
+          "wrap": true,
+          "weight": "bolder"
+         },
+         {
+          "type": "TextBlock",
+          "text": "Pelo @ da conta no okmigo — a relação nasce quando a pessoa aceita, e o histórico é dela desde o primeiro dia.",
+          "wrap": true,
+          "size": "small",
+          "isSubtle": true
+         },
+         {
+          "type": "Input.Text",
+          "id": "cv_para",
+          "label": "@ da pessoa",
+          "campo": "para",
+          "placeholder": "@"
+         },
+         {
+          "type": "ActionSet",
+          "actions": [
+           {
+            "type": "Action.Submit",
+            "title": "convidar",
+            "data": {
+             "operacao": "convidar_paciente"
+            },
+            "style": "positive"
+           }
+          ]
+         },
+         {
+          "type": "TextBlock",
+          "text": "Ou cadastre quem ainda não tem conta — quando ela aceitar o convite, o histórico já estará lá.",
+          "wrap": true,
+          "size": "small",
+          "isSubtle": true
+         },
+         {
+          "type": "Input.Text",
+          "id": "cd_apelido",
+          "label": "Como você chama essa pessoa",
+          "campo": "apelido"
+         },
+         {
+          "type": "ActionSet",
+          "actions": [
+           {
+            "type": "Action.Submit",
+            "title": "cadastrar sem conta",
+            "data": {
+             "operacao": "cadastrar_paciente"
+            },
+            "mode": "secondary"
+           }
+          ]
+         }
+        ],
+        "style": "emphasis",
+        "id": "trazer",
+        "spacing": "medium"
+       },
+       {
+        "_repetir_lista": {
+         "type": "Container",
+         "items": [
+          {
+           "type": "ColumnSet",
+           "columns": [
+            {
+             "type": "Column",
+             "width": "auto",
+             "items": [
+              {
+               "type": "Container",
+               "items": [
+                {
+                 "type": "TextBlock",
+                 "text": "{iniciais}",
+                 "wrap": true,
+                 "weight": "bolder"
+                }
+               ],
+               "okmigoGrade": "etiquetas",
+               "spacing": "small"
+              }
+             ]
+            },
+            {
+             "type": "Column",
+             "width": "stretch",
+             "items": [
+              {
+               "type": "TextBlock",
+               "text": "{apelido}",
+               "wrap": true,
+               "weight": "bolder"
+              },
+              {
+               "type": "TextBlock",
+               "text": "{objetivo_texto}",
+               "wrap": true,
+               "size": "small"
+              },
+              {
+               "type": "TextBlock",
+               "text": "{hoje_texto}",
+               "wrap": true,
+               "size": "small"
+              },
+              {
+               "type": "TextBlock",
+               "text": "{media_texto}",
+               "wrap": true,
+               "size": "small",
+               "isSubtle": true
+              },
+              {
+               "type": "TextBlock",
+               "text": "{meta_texto}",
+               "wrap": true,
+               "size": "small",
+               "weight": "bolder"
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "type": "TextBlock",
+           "text": "toque para ver o dia, o rascunho e a assinatura ›",
+           "wrap": true,
+           "size": "small",
+           "isSubtle": true
+          }
+         ],
+         "id": "capa_{chave}",
+         "selectAction": {
+          "type": "Action.ToggleVisibility",
+          "targetElements": [
+           {
+            "elementId": "pac_{chave}",
+            "isVisible": true
+           },
+           {
+            "elementId": "home",
+            "isVisible": false
+           }
+          ]
+         },
+         "spacing": "medium",
+         "separator": true
+        }
+       },
+       {
+        "type": "Container",
+        "items": [
+         {
+          "type": "TextBlock",
+          "text": "{limite}",
+          "wrap": true,
+          "size": "small",
+          "isSubtle": true
+         }
+        ],
+        "style": "attention",
+        "spacing": "medium"
+       }
+      ],
+      "id": "home",
+      "spacing": "medium"
+     },
+     {
+      "_repetir_lista": {
+       "type": "Container",
+       "items": [
+        {
+         "type": "ActionSet",
+         "actions": [
+          {
+           "type": "Action.ToggleVisibility",
+           "title": "‹ pacientes",
+           "targetElements": [
+            {
+             "elementId": "home",
+             "isVisible": true
+            },
+            {
+             "elementId": "pac_{chave}",
+             "isVisible": false
+            }
+           ],
+           "mode": "secondary"
+          }
+         ]
+        },
+        {
+         "type": "ColumnSet",
+         "columns": [
+          {
+           "type": "Column",
+           "width": "auto",
+           "items": [
+            {
+             "type": "Container",
+             "items": [
+              {
+               "type": "TextBlock",
+               "text": "{iniciais}",
+               "wrap": true,
+               "weight": "bolder"
+              }
+             ],
+             "okmigoGrade": "etiquetas",
+             "spacing": "small"
+            }
+           ]
+          },
+          {
+           "type": "Column",
+           "width": "stretch",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{apelido}",
+             "wrap": true,
+             "size": "large",
+             "weight": "bolder"
+            },
+            {
+             "type": "TextBlock",
+             "text": "{objetivo_texto}",
+             "wrap": true,
+             "size": "small",
+             "isSubtle": true
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "_repetir_lista": {
+          "type": "ColumnSet",
+          "columns": [
+           {
+            "type": "Column",
+            "width": "auto",
+            "items": [
+             {
+              "type": "TextBlock",
+              "text": "{momento_texto}",
+              "wrap": true,
+              "size": "small",
+              "weight": "bolder"
+             }
+            ]
+           },
+           {
+            "type": "Column",
+            "width": "stretch",
+            "items": [
+             {
+              "type": "TextBlock",
+              "text": "{descricao}",
+              "wrap": true,
+              "size": "small",
+              "isSubtle": true
+             }
+            ]
+           },
+           {
+            "type": "Column",
+            "width": "auto",
+            "items": [
+             {
+              "type": "TextBlock",
+              "text": "{kcal_texto}",
+              "wrap": true,
+              "size": "small"
+             }
+            ]
+           }
+          ]
+         },
+         "_de": "refeicoes_hoje"
+        },
+        {
+         "type": "Container",
+         "items": [
+          {
+           "type": "TextBlock",
+           "text": "{passo_texto}",
+           "wrap": true,
+           "size": "small",
+           "weight": "bolder",
+           "isSubtle": true
+          },
+          {
+           "type": "TextBlock",
+           "text": "Rascunho de metas — nada chega ao paciente até você assinar. Não há cardápio aqui: o que comer é conversa sua com ele.",
+           "wrap": true,
+           "size": "small",
+           "isSubtle": true
+          },
+          {
+           "type": "Input.Number",
+           "id": "rk_{chave}",
+           "label": "kcal por dia",
+           "campo": "kcal_dia",
+           "value": "{r_kcal}",
+           "min": 800,
+           "max": 6000
+          },
+          {
+           "type": "Input.Number",
+           "id": "rp_{chave}",
+           "label": "proteína (g/dia)",
+           "campo": "proteina_g",
+           "value": "{r_prot}",
+           "min": 0,
+           "max": 500
+          },
+          {
+           "type": "Input.Number",
+           "id": "rc_{chave}",
+           "label": "carboidrato (g/dia)",
+           "campo": "carboidrato_g",
+           "value": "{r_carb}",
+           "min": 0,
+           "max": 1000
+          },
+          {
+           "type": "Input.Number",
+           "id": "rg_{chave}",
+           "label": "gordura (g/dia)",
+           "campo": "gordura_g",
+           "value": "{r_gord}",
+           "min": 0,
+           "max": 300
+          },
+          {
+           "type": "Input.Text",
+           "id": "ro_{chave}",
+           "label": "Orientações",
+           "campo": "orientacoes",
+           "isMultiline": true,
+           "placeholder": "nas suas palavras",
+           "value": "{r_orient}"
+          },
+          {
+           "type": "Input.Text",
+           "id": "rv_{chave}",
+           "label": "",
+           "campo": "vinculo_id",
+           "value": "{vinculo_id}",
+           "isVisible": false
+          },
+          {
+           "type": "ActionSet",
+           "actions": [
+            {
+             "type": "Action.Submit",
+             "title": "salvar rascunho",
+             "data": {
+              "operacao": "rascunhar_metas"
+             },
+             "mode": "secondary"
+            }
+           ]
+          }
+         ],
+         "spacing": "medium"
+        },
+        {
+         "type": "Container",
+         "items": [
+          {
+           "type": "TextBlock",
+           "text": "A meta só vale assinada — nome e CRN de quem responde por ela.",
+           "wrap": true,
+           "size": "small",
+           "isSubtle": true
+          },
+          {
+           "type": "Input.Text",
+           "id": "crn_{chave}",
+           "label": "Quem assina — nome e CRN",
+           "campo": "assinado_por",
+           "isRequired": true
+          },
+          {
+           "type": "Input.Text",
+           "id": "av_{chave}",
+           "label": "",
+           "campo": "vinculo_id",
+           "value": "{vinculo_id}",
+           "isVisible": false
+          },
+          {
+           "type": "ActionSet",
+           "actions": [
+            {
+             "type": "Action.Submit",
+             "title": "Assinar as metas",
+             "data": {
+              "operacao": "assinar_metas"
+             },
+             "style": "positive"
+            }
+           ]
+          }
+         ],
+         "style": "emphasis",
+         "spacing": "medium"
+        },
+        {
+         "type": "ActionSet",
+         "actions": [
+          {
+           "type": "Action.Submit",
+           "title": "encerrar acompanhamento",
+           "data": {
+            "operacao": "encerrar_paciente"
+           },
+           "style": "destructive"
+          }
+         ]
+        }
+       ],
+       "id": "pac_{chave}",
+       "isVisible": false,
+       "spacing": "medium"
+      }
+     }
+    ],
+    "okmigoTema": "jornada-ativa",
+    "okmigoNavegacao": "inferior"
+   },
+   "icone": "pacientes",
+   "rotulo_superficie": "Pacientes"
+  },
+  {
+   "nome": "perfil",
+   "titulo": "Meu perfil profissional",
+   "hint": "como pacientes encontram e reconhecem você — com o CRN",
+   "fonte": {
+    "resumo": {
+     "operacao": "meus_pacientes"
+    }
+   },
+   "cartao": {
+    "type": "AdaptiveCard",
+    "version": "1.5",
+    "body": [
+     {
+      "type": "TextBlock",
+      "text": "ÁREA DO NUTRICIONISTA",
+      "wrap": true,
+      "size": "small",
+      "weight": "bolder",
+      "isSubtle": true
+     },
+     {
+      "type": "TextBlock",
+      "text": "Meu perfil profissional",
+      "wrap": true,
+      "size": "extraLarge",
+      "weight": "bolder"
+     },
+     {
+      "type": "TextBlock",
+      "text": "O CRN é o que a pessoa confere antes de aceitar que você assine a meta dela.",
+      "wrap": true,
+      "size": "small",
+      "isSubtle": true
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Sua ficha pública",
+        "wrap": true,
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "É assim que pacientes e novas pessoas encontram você no OkMigo.",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "TextBlock",
+        "text": "Nome e @ vêm do perfil do sócio e não são alterados aqui.",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "Input.Text",
+        "id": "pp_nome",
+        "label": "Seu nome profissional",
+        "campo": "nome",
+        "okmigoSomenteLeitura": true
+       },
+       {
+        "type": "Input.Text",
+        "id": "pp_handle",
+        "label": "seu @ no okmigo",
+        "campo": "handle",
+        "okmigoSomenteLeitura": true
+       },
+       {
+        "type": "Input.Text",
+        "id": "pp_onde",
+        "label": "Onde você atende?",
+        "campo": "onde_atende",
+        "placeholder": "consultório, bairro, cidade ou online",
+        "value": "{perfil_onde}"
+       },
+       {
+        "type": "Input.Text",
+        "id": "pp_crn",
+        "label": "Seu CRN",
+        "campo": "crn",
+        "isRequired": true,
+        "placeholder": "CRN-3 12345",
+        "value": "{perfil_crn}"
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.Submit",
+          "title": "publicar minha ficha",
+          "data": {
+           "operacao": "salvar_perfil_nutricionista"
+          },
+          "style": "positive"
+         }
+        ]
+       },
+       {
+        "type": "TextBlock",
+        "text": "NA SUA PÁGINA",
+        "wrap": true,
+        "size": "small",
+        "weight": "bolder",
+        "isSubtle": true
+       },
+       {
+        "type": "TextBlock",
+        "text": "O que você oferece e o seu horário aparecem na página do seu negócio, que é pública e entra em buscador. Nada de aluno ou paciente vai para lá.",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "Input.Text",
+        "id": "oferta_nome",
+        "label": "O que você oferece",
+        "campo": "nome",
+        "placeholder": "Treino presencial"
+       },
+       {
+        "type": "Input.Number",
+        "id": "oferta_duracao",
+        "label": "Duração, em minutos",
+        "campo": "duracao_min",
+        "isRequired": false,
+        "min": 1,
+        "max": 600
+       },
+       {
+        "type": "Input.Number",
+        "id": "oferta_preco",
+        "label": "Preço em reais (vazio = sob consulta)",
+        "campo": "preco_reais",
+        "isRequired": false,
+        "min": 0,
+        "max": 100000
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.Submit",
+          "title": "pôr na minha página",
+          "data": {
+           "operacao": "guardar_servico"
+          }
+         }
+        ]
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "exp_dias",
+        "choices": [
+         {
+          "title": "de segunda a sexta",
+          "value": "1,2,3,4,5"
+         },
+         {
+          "title": "de segunda a sábado",
+          "value": "1,2,3,4,5,6"
+         },
+         {
+          "title": "todos os dias",
+          "value": "1,2,3,4,5,6,7"
+         },
+         {
+          "title": "segunda, quarta e sexta",
+          "value": "1,3,5"
+         },
+         {
+          "title": "terça e quinta",
+          "value": "2,4"
+         },
+         {
+          "title": "só o fim de semana",
+          "value": "6,7"
+         }
+        ],
+        "label": "Dias em que você atende",
+        "campo": "dias",
+        "isRequired": false,
+        "style": "expanded"
+       },
+       {
+        "type": "Input.Text",
+        "id": "exp_inicio",
+        "label": "Das",
+        "campo": "inicio",
+        "placeholder": "06:00"
+       },
+       {
+        "type": "Input.Text",
+        "id": "exp_fim",
+        "label": "Às",
+        "campo": "fim",
+        "placeholder": "22:00"
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.Submit",
+          "title": "guardar meu horário",
+          "data": {
+           "operacao": "guardar_expediente"
+          }
+         }
+        ]
+       }
+      ],
+      "style": "emphasis",
+      "id": "perfil_profissional_direto",
+      "isVisible": true,
+      "spacing": "medium"
+     }
+    ],
+    "okmigoTema": "jornada-ativa",
+    "okmigoNavegacao": "inferior"
+   },
+   "icone": "perfil",
+   "rotulo_superficie": "Perfil"
+  }
+ ],
+ "conversa": [
+  "meus_pacientes",
+  "paciente",
+  "cadastrar_paciente",
+  "convidar_paciente",
+  "rascunhar_metas",
+  "assinar_metas",
+  "encerrar_paciente",
+  "salvar_perfil_nutricionista",
+  "guardar_servico",
+  "remover_servico",
+  "guardar_expediente",
+  "marcar_consulta",
+  "cancelar_consulta"
+ ],
+ "para_tipo": "socio",
+ "descricao_humana": "Os seus pacientes: o que cada um registrou hoje, as metas que você assinou e quem precisa de atenção.",
+ "nome_visivel": "Fitness Nutri",
+ "eventos": {
+  "operacao": "eventos",
+  "parametro": "dias"
+ },
+ "convite": {
+  "operacao": "aceitar_convite_nutri",
+  "parametro": "de",
+  "par": "estoufit-aluno"
+ },
+ "publico": {
+  "ofertas": "listar_servicos",
+  "expediente": "ver_expediente"
+ },
+ "agente": {
+  "contrato": "1",
+  "modo": "declarado",
+  "competencias": [
+   "quem são os pacientes e o que registraram",
+   "a média da semana e a meta assinada de um paciente"
+  ],
+  "ferramentas": [
+   "meus_pacientes",
+   "paciente"
+  ],
+  "orcamento": {
+   "chamadas": 3,
+   "tokens": 12000,
+   "segundos": 20
+  },
+  "instrucoes": "Você ajuda um nutricionista a consultar os pacientes DELE.\n- Lista: meus_pacientes. Um paciente: paciente(vinculo_id=...), com o id que meus_pacientes devolveu; nunca invente um id.\n- Não há cardápio: você não sugere refeição nem dieta. Rascunhar ou assinar meta é gesto DELE: acao_proposta.\n- Caloria registrada é estimativa do registro, não medição.",
+  "exemplos": [
+   {
+    "pedido": "quem não registrou nada hoje?",
+    "espera": "respondido"
+   },
+   {
+    "pedido": "monta um cardápio pro joão",
+    "espera": "indisponivel"
+   }
+  ]
+ }
+}

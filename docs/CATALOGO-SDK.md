@@ -432,6 +432,9 @@ python -m okmigo_cartao preview seu_modulo.py:APLICATIVO \
 Valide sempre o aplicativo inteiro, em desktop e celular, nos modos claro e
 escuro. Para listas, use pelo menos dois itens, texto longo, zero e estado
 vazio; validar apenas o molde cru não exercita `Repetir`.
+O que o manifesto inteiro obriga a provar — cada superfície em cada estado,
+cada elemento, cada ação, cada operação da conversa — sai de
+`python -m okmigo_cartao matriz okmigo/manifesto.json` ([`MATRIZ.md`](MATRIZ.md)).
 Para telas cuja hierarquia realmente muda, `TelaResponsiva` recebe uma `Tela`
 de celular e outra de desktop. Prefira reflow dos componentes comuns; use duas
 composições quando o desktop ganhar painel, tabela, ações persistentes ou maior

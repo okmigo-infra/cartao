@@ -5,7 +5,7 @@
 | | |
 |---|---|
 | **Publicada** | **v0.22.1**, SHA `828e4cb`, tag de 29/09. |
-| **Na `main`** | <!-- conferir: versao_pacote -->0.24.0<!-- /conferir -->: além da régua de compatibilidade, da depreciação com janela e da correção da casca da 0.22.0, declara rotas internas fora da navegação e a injeção confiável do ator local; e (OMINFRA-937) o evento de **dia inteiro** no calendário — só com data, na faixa acima da régua — e (OMINFRA-942) o **recurso** do evento (a cadeira, a sala, o profissional) com a lista `recursos` para o filtro. |
+| **Na `main`** | <!-- conferir: versao_pacote -->0.25.0<!-- /conferir -->: além da régua de compatibilidade, da depreciação com janela e da correção da casca da 0.22.0, declara rotas internas fora da navegação e a injeção confiável do ator local; e (OMINFRA-937) o evento de **dia inteiro** no calendário — só com data, na faixa acima da régua — e (OMINFRA-942) o **recurso** do evento (a cadeira, a sala, o profissional) com a lista `recursos` para o filtro; e (OMINFRA-976) o comando `matriz`, que gera do manifesto registrado a matriz do contrato do `PADRAO-QA` §3.2 e confere a matriz preenchida. |
 | **Quem consome** | **12 repositórios** do ecossistema pinam `828e4cb` na `main`; cada produção avança pelo próprio fluxo de promoção. Medido em 29/09 depois da rodada de atualização dos consumidores. |
 | **Ambientes** | Nenhum: é um pacote. Publicar é **tag**, e quem roda o crivo é o produto e a suíte de cada consumidor. |
 | **Compatibilidade** | A 0.22.1 mantém a compatibilidade de expansão comprovada na 0.22.0: as <!-- conferir: superficies_do_corpus -->101<!-- /conferir --> superfícies do corpus e as dos `exemplos/` produzem o mesmo resultado nos cinco cenários da régua. Nos cartões reais, a prova lê cada consumidor antes da publicação. |
@@ -226,6 +226,23 @@ tabela que ficou só com cabeçalho, a lista que ficou sem opção. `--dados`
 expande o molde do mesmo jeito que a ponte do produto expande (`{campo}`,
 `_repetir_lista`, `_quando`, `_de`). Rode com dados que pareçam os seus, ou o
 «passou» é falso.
+
+### A matriz do contrato: o que o manifesto obriga a provar
+
+```bash
+python -m okmigo_cartao matriz okmigo/manifesto.json                       # Markdown, para ler
+python -m okmigo_cartao matriz okmigo/manifesto.json --formato json --saida matriz.json
+python -m okmigo_cartao matriz okmigo/manifesto.json --conferir matriz.json  # depois do ciclo
+```
+
+Uma linha por superfície × estado, por tipo de elemento e por ação de cada
+superfície (o cartão inteiro, moldes `_repetir_lista` incluídos), por rota e
+grupo de navegação, por operação da `conversa`, por ferramenta do `agente` e
+por declaração (`eventos`, `avisa_antes`, … `versao`), com os canais em que se
+prova (`web`, `android`, `ios`, `conversa`). `--conferir` reprova a matriz com
+canal ou `resultado` vazio, ou que não cubra o manifesto de hoje. ⛔ Chave de
+topo que o gerador não conhece **reprova**: acrescente-a à tabela §3.1 do
+`PADRAO-QA` e ao gerador. Detalhes em [`docs/MATRIZ.md`](docs/MATRIZ.md).
 
 ## Como código
 
