@@ -24,6 +24,10 @@ import html
 import re
 from typing import Any
 
+# A MESMA régua do crivo para a data de um evento de dia inteiro — importada,
+# e não copiada, para o relatório nunca discordar do que o crivo faz.
+from .crivo import _data_de_dia_inteiro
+
 # ── A expansão do molde ─────────────────────────────────────────────────────
 
 _CAMPO = re.compile(r"\{([a-zA-Z0-9_.]+)\}")
@@ -237,6 +241,8 @@ def _contar_entrada(no: Any, contagem: dict[str, int], avisos: list[str], caminh
         for (t, chave), motivo in _DESCARTADAS_DE_PROPOSITO.items():
             if tipo == t and chave in no:
                 avisos.append(f"{caminho}: `{tipo}.{chave}` é descartado — {motivo}")
+        if tipo == "okmigoCalendario":
+            _avisar_eventos(no.get("eventos"), avisos, caminho)
         if tipo == "Container" and no.get("selectAction", {}).get("type") not in (
             None,
             "Action.ToggleVisibility",
@@ -257,6 +263,30 @@ def _contar_entrada(no: Any, contagem: dict[str, int], avisos: list[str], caminh
     ):
         if chave in no:
             _contar_entrada(no[chave], contagem, avisos, f"{caminho}.{chave}")
+
+
+def _avisar_eventos(eventos: Any, avisos: list[str], caminho: str) -> None:
+    """O evento comido não aparece na contagem: ele não é nó — o calendário
+    vale 1 e «nunca some por si». Então cada descarte que o crivo faz em
+    silêncio dentro de `eventos` ganha aqui a frase, pelo índice."""
+    if not isinstance(eventos, list):
+        return
+    for i, e in enumerate(eventos):
+        if not isinstance(e, dict):
+            continue
+        onde = f"{caminho}.eventos[{i}]"
+        if not str(e.get("inicio") or "").strip() or not str(e.get("titulo") or "").strip():
+            avisos.append(f"{onde}: evento sem `inicio` ou sem `titulo` — some "
+                          "(sem início não há onde; sem título, o quê)")
+            continue
+        if e.get("dia_inteiro") is not True:
+            continue
+        fora = [c for c in ("inicio", "fim") if e.get(c) and not _data_de_dia_inteiro(e[c])]
+        if fora:
+            avisos.append(f"{onde}: dia inteiro com `{'` e `'.join(fora)}` fora de `AAAA-MM-DD` "
+                          "— some: dia inteiro não leva hora, e o dia tem de existir")
+        elif e.get("fim") and str(e["fim"]).strip() < str(e["inicio"]).strip():
+            avisos.append(f"{onde}: `fim` antes do `inicio` — cai para um dia só")
 
 
 def _contar_saida(no: Any, contagem: dict[str, int]) -> None:
@@ -494,7 +524,9 @@ def _no(n: dict, s: list[str]) -> None:
     elif tipo == "calendario":
         s.append(f"<section{ident}{escondido}><h3>Calendário ({_e(n['vista'])}) {_e(n['de'])}</h3><ul>")
         for ev in n["eventos"]:
-            s.append(f"<li><time>{_e(ev['inicio'])}</time>{(' – ' + _e(ev['fim'])) if ev['fim'] else ''} {_e(ev['titulo'])}"
+            # `.get`: a casca também recebe telas montadas à mão, de antes do campo.
+            dia_inteiro = " (dia inteiro)" if ev.get("dia_inteiro") else ""
+            s.append(f"<li><time>{_e(ev['inicio'])}</time>{(' – ' + _e(ev['fim'])) if ev['fim'] else ''}{dia_inteiro} {_e(ev['titulo'])}"
                      f"{(' <small>' + _e(ev['detalhe']) + '</small>') if ev['detalhe'] else ''}</li>")
         s.append("</ul>")
         if n.get("acoes_do_evento"):

@@ -51,7 +51,7 @@ dois é bug de um deles.
 | `Input.ChoiceSet` | `choices[{title, value}]` (⛔ os dois obrigatórios: `value` viaja, `title` se lê) · `isMultiSelect` para múltipla escolha · `okmigoControle: "alternancia"` para booleano · `okmigoAoAlterar` para visibilidade local explícita · `okmigoNota` (linha de apoio) e `okmigoIcone` (um glifo, ≤ 12 caracteres) por opção · três formas: sem `style` = lista suspensa; `style: "expanded"` = **fichas tocáveis**; `style: "filtered"` = typeahead LIVRE; com `okmigoEstrito: true` = busca estrita · `okmigoBuscar: "operacao"` pede sugestões remotas declaradas · `okmigoAoEscolher: {Action.Execute}` **consulta ao escolher uma sugestão**, sem segundo toque | corta em 60 opções; múltiplos valores continuam limitados às opções; alteração condicional só aceita alvos com booleano explícito e não alcança rede; lista estrita vazia derruba o campo e os botões da caixa; ⛔ `okmigoAoEscolher` só aceita **leitura declarada** — um `Action.Submit` ali não vira nada, porque escrever ao escolher seria gravar por engano de toque, sem confirmação |
 | `ActionSet` | `Action.ToggleVisibility` · `Action.Submit` para escrita · `Action.Execute` para leitura (⛔ operação fora do contrato recusa a tela INTEIRA) · ênfase semântica · `okmigoIcone: "delete"` · `okmigoConfirmacao` com título, mensagem e rótulos · `okmigoRodape` · `okmigoAposEnviar` · `okmigoMenu` para menu contextual · `okmigoSegmentado` para abas/filtros · `okmigoExpansivel` para acordeão | `OpenUrl` evapora; menu é limitado a 10 itens; cada operação ganha os campos da própria caixa; confirmação não contém código nem endereço; dicas de apresentação não ampliam a fronteira |
 | `okmigoGrafico` | `forma: barras\|linha` · `series[{rotulo, cor}]` com cor SEMÂNTICA (`positivo/negativo/neutro/atencao/principal/suave`) · `pontos[{rotulo, valores[]}]` · teto 4 séries × 24 pontos | valores casam com séries por ÍNDICE; ponto faltando é buraco honesto, nunca série deslocada; aceita `1234.5` e `"1.234,50"`; NaN/infinito somem; gráfico sem ponto some; ⛔ não existe pizza (posição e comprimento se julgam melhor que ângulo e área) |
-| `okmigoCalendario` | `vista: mes\|semana\|dia` · `de` · `eventos[{inicio, fim, titulo, detalhe, id, tipo}]` (teto 500; vale 1 nó) · `aoTocarODia {mostrar, preencher}` · `acoesDoEvento[{para, titulo, gesto, enviar+campos \| mostrar+preencher}]` (teto 6) | o serviço nomeia o CAMPO, nunca o VALOR (`preencher: {"dia": "data", "hora": "hora"}`); a grade mensal fornece só `data`, a régua diária fornece também `hora`; evento sem `id` desenha mas não aceita ação; `nova_*` só existem no gesto `arrastar`; um toque abre formulário, nunca escreve |
+| `okmigoCalendario` | `vista: mes\|semana\|dia` · `de` · `eventos[{inicio, fim, titulo, detalhe, id, tipo, dia_inteiro}]` (teto 500; vale 1 nó) · `aoTocarODia {mostrar, preencher}` · `acoesDoEvento[{para, titulo, gesto, enviar+campos \| mostrar+preencher}]` (teto 6) | o serviço nomeia o CAMPO, nunca o VALOR (`preencher: {"dia": "data", "hora": "hora"}`); a grade mensal fornece só `data`, a régua diária fornece também `hora`; evento sem `id` desenha mas não aceita ação; `nova_*` só existem no gesto `arrastar`; um toque abre formulário, nunca escreve. ⭐ `dia_inteiro: true` = `inicio`/`fim` SÓ com data (`AAAA-MM-DD`, `fim` inclusivo), desenhado na **faixa acima da régua** e em **todos os dias cobertos** no mês; ⛔ dia inteiro com hora é erro de forma e o evento é DESCARTADO (§ «O evento de dia inteiro») |
 | `okmigoArquivo` | `id`, `campo`, `label`, `aceita` (`pdf/imagem/xml/planilha/texto`), `maxBytes` (só aperta o teto do produto), `isRequired` | palavra desconhecida em `aceita` some; sem nenhuma, aceita tudo |
 | `okmigoDocumento` | `titulo`/`nome`, `tipo` (MIME), `tamanho`, `ler: {operacao, pedido}` — a operação tem de ser LEITURA declarada (⛔ fora dela recusa a tela) | `formato` sai derivado do MIME (`pdf`, `imagem` só raster, `outro`); `pedido` só com escalares |
 | `okmigoCopiar` | `{rotulo, valor}` → área de transferência | sem valor, some |
@@ -174,6 +174,67 @@ recentes/favoritos e retenção.
 `IndicadorDeNavegacao` é uma leitura pequena e independente por área. A
 operação precisa ser leitura declarada; `caminho` escolhe um escalar na
 resposta. Falha ou demora do indicador não bloqueia a tela nem a navegação.
+
+### O evento de dia inteiro (OMINFRA-937)
+
+Um feriado, uma folga, o dia em que a loja fecha: eventos que têm DATA e não
+têm hora. Até aqui o evento do `okmigoCalendario` só sabia dizer «começa às» —
+quem queria o dia inteiro escrevia uma hora, e a régua o desenhava num horário
+que não existe (medido em 02/10/2026: nem o web nem o app tinham onde pôr um
+evento sem hora; a casca o descrevia como `<time>inicio – fim</time>`).
+
+```json
+{"inicio": "2026-10-12", "titulo": "Feriado", "dia_inteiro": true}
+{"inicio": "2026-10-05", "fim": "2026-10-07", "titulo": "Férias", "dia_inteiro": true, "id": "f1"}
+```
+
+- **`dia_inteiro: true` muda a FORMA de `inicio` e `fim`**: só `AAAA-MM-DD`,
+  de um dia que exista. Sem hora e sem fuso de propósito — carimbar um feriado
+  às 00:00 de um fuso o faria cair na véspera em outro. `fim` é opcional e
+  **inclusivo**: `05` a `07` são três dias.
+- ⛔ **Dia inteiro com hora é erro de forma, e o evento é DESCARTADO** — hora
+  em `inicio` ou em `fim` —, não «consertado»: o crivo não tem como saber se o
+  autor queria a faixa do dia ou a hora que escreveu, e um evento desenhado no
+  lugar errado é a agenda mentindo. Um dia que não existe (`2026-02-30`) cai
+  pela mesma porta. O `relatorio()` nomeia o evento pelo índice
+  (``body[0].eventos[1]: dia inteiro com `inicio` fora de `AAAA-MM-DD` — some``).
+  `fim` anterior ao `inicio` é forma certa com valor errado: cai no padrão (um
+  dia só), como a hora fora da faixa cai em 7–21.
+- **Evento sem o campo segue igual**: sai com `dia_inteiro: false` e o
+  `inicio`/`fim` que tinha. É dica em tipo que já existe, não tipo novo — um
+  cliente que não a conhece desenha o evento como antes.
+- ⛔ **É booleano literal, como todo booleano do vocabulário** (`is True`). A
+  expansão do molde entrega TEXTO — `"{dia_inteiro}"` vira `"True"`, que não é
+  `true`. Para separar por dado, o molde repete a lista duas vezes, com
+  `_quando`:
+
+```json
+"eventos": [
+  {"_repetir_lista": {"inicio": "{dia}", "titulo": "{titulo}", "dia_inteiro": true},
+   "_quando": {"campo": "forma", "em": ["dia_inteiro"]}},
+  {"_repetir_lista": {"inicio": "{inicio}", "fim": "{fim}", "titulo": "{titulo}"},
+   "_quando": {"campo": "forma", "em": ["com_hora"]}}
+]
+```
+
+**Como o cliente desenha** — web e app, a mesma regra:
+
+- **Vista de dia e de semana**: numa **faixa fixa acima da régua** das horas,
+  uma linha por evento, sob o(s) dia(s) cobertos; a faixa cresce com o número
+  de eventos e a régua começa abaixo dela. ⛔ **Nunca dentro da régua**: não há
+  hora onde o pôr — às 00:00 ele some na dobra do dia, e esticado de 7 a 21
+  ele tapa a agenda inteira.
+- **Vista de mês**: em **todos os dias cobertos**, de `inicio` a `fim`
+  inclusive, antes dos eventos com hora daquele dia. Um evento de três dias
+  aparece nos três (ou como uma barra contínua, se o cliente souber
+  desenhá-la) — nunca só no primeiro.
+- **Vista de agenda**: listado no dia, antes dos de hora, com «dia inteiro» no
+  lugar da hora.
+- **Toque e arrasto**: `aoTocarODia` e `acoesDoEvento` valem igual. Para um
+  evento de dia inteiro o cliente entrega `data` (e `nova_data` no arrasto);
+  `hora`, `duracao_minutos` e `nova_hora` chegam **vazios**, e `novo_inicio` é
+  só a data — arrastar um dia inteiro muda o DIA, nunca lhe inventa uma hora.
+- **A casca** o descreve como `<time>2026-10-12</time> (dia inteiro) Feriado`.
 
 ## 3 · Escrita: o que um toque pode e não pode
 

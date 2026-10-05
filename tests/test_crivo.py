@@ -1010,3 +1010,123 @@ class OpcaoComImagemTest(unittest.TestCase):
             with self.subTest(forma=forma):
                 opcao = self._opcao("/img/peito", style=forma)
                 self.assertEqual(opcao.get("imagem"), "https://exemplo.com/img/peito")
+
+
+class DiaInteiroNoCalendarioTest(unittest.TestCase):
+    """OMINFRA-937: o evento SÓ com data. Até aqui o evento do calendário só
+    sabia dizer «começa às», e um feriado tinha de inventar uma hora. O caso
+    negativo fica ao lado de cada positivo: o mesmo evento, sem o campo, tem
+    de sobreviver — o que recusa é a MISTURA de dia inteiro com hora."""
+
+    def _eventos(self, *eventos):
+        tela, erro = validar(cartao({
+            "type": "okmigoCalendario",
+            "vista": "mes",
+            "de": "2026-10-01",
+            "eventos": list(eventos),
+        }))
+        self.assertIsNone(erro)
+        return tela["corpo"][0]["eventos"]
+
+    def test_dia_inteiro_so_com_data_passa_e_sai_marcado(self):
+        [ev] = self._eventos({"inicio": "2026-10-12", "titulo": "Feriado", "dia_inteiro": True})
+        self.assertEqual((ev["inicio"], ev["fim"], ev["dia_inteiro"]), ("2026-10-12", "", True))
+
+    def test_dia_inteiro_de_varios_dias_guarda_o_fim_inclusivo(self):
+        [ev] = self._eventos({
+            "inicio": "2026-10-05", "fim": "2026-10-07", "titulo": "Férias",
+            "dia_inteiro": True, "id": "f1",
+        })
+        self.assertEqual((ev["inicio"], ev["fim"], ev["dia_inteiro"], ev["id"]),
+                         ("2026-10-05", "2026-10-07", True, "f1"))
+
+    def test_dia_inteiro_com_hora_e_descartado(self):
+        com_hora = {"inicio": "2026-10-12T10:00:00-03:00", "titulo": "Feriado"}
+        # O MESMO evento sem o campo sobrevive: é o negativo que prova o positivo.
+        self.assertEqual(len(self._eventos(com_hora)), 1)
+        self.assertEqual(self._eventos({**com_hora, "dia_inteiro": True}), [])
+        # Hora no `fim` é a mesma mistura.
+        self.assertEqual(self._eventos({
+            "inicio": "2026-10-12", "fim": "2026-10-12T18:00", "titulo": "x", "dia_inteiro": True,
+        }), [])
+        # E um dia que não existe cai pela mesma porta.
+        self.assertEqual(self._eventos({"inicio": "2026-02-30", "titulo": "x", "dia_inteiro": True}), [])
+
+    def test_so_o_evento_errado_cai_e_os_vizinhos_ficam(self):
+        eventos = self._eventos(
+            {"inicio": "2026-10-12", "titulo": "Feriado", "dia_inteiro": True},
+            {"inicio": "2026-10-12T10:00", "titulo": "Errado", "dia_inteiro": True},
+            {"inicio": "2026-10-13T09:00:00-03:00", "fim": "2026-10-13T09:30:00-03:00", "titulo": "Consulta"},
+        )
+        self.assertEqual([e["titulo"] for e in eventos], ["Feriado", "Consulta"])
+        self.assertEqual([e["dia_inteiro"] for e in eventos], [True, False])
+
+    def test_evento_com_hora_segue_igual_e_sem_o_campo_sai_falso(self):
+        [ev] = self._eventos({
+            "inicio": "2026-10-13T09:00:00-03:00", "fim": "2026-10-13T09:30:00-03:00",
+            "titulo": "Consulta", "detalhe": "Sala 2", "id": "c1", "tipo": "atendimento",
+        })
+        self.assertEqual(ev, {
+            "inicio": "2026-10-13T09:00:00-03:00", "fim": "2026-10-13T09:30:00-03:00",
+            "dia_inteiro": False, "titulo": "Consulta", "detalhe": "Sala 2",
+            "id": "c1", "tipo": "atendimento",
+        })
+
+    def test_dia_inteiro_e_booleano_literal_nunca_texto(self):
+        # A expansão do molde entrega TEXTO: `"{dia_inteiro}"` vira `"True"`,
+        # que não é `true`. Texto não liga o campo — e, com hora, o evento
+        # fica, porque sem o campo ele é um evento de hora como qualquer outro.
+        for valor in ("true", "True", "sim", 1):
+            with self.subTest(valor=valor):
+                [ev] = self._eventos({"inicio": "2026-10-12T10:00", "titulo": "x", "dia_inteiro": valor})
+                self.assertFalse(ev["dia_inteiro"])
+
+    def test_fim_antes_do_inicio_cai_para_um_dia(self):
+        [ev] = self._eventos({"inicio": "2026-10-07", "fim": "2026-10-05", "titulo": "x", "dia_inteiro": True})
+        self.assertEqual((ev["inicio"], ev["fim"], ev["dia_inteiro"]), ("2026-10-07", "", True))
+
+    def test_no_molde_o_dia_inteiro_se_separa_por_quando(self):
+        """O caminho documentado: duas repetições, uma por forma. Prova a
+        travessia molde → expansão → crivo, não só o crivo."""
+        from okmigo_cartao import expandir
+
+        molde = cartao({"type": "okmigoCalendario", "vista": "mes", "eventos": [
+            {"_repetir_lista": {"inicio": "{dia}", "titulo": "{titulo}", "dia_inteiro": True},
+             "_quando": {"campo": "forma", "em": ["dia_inteiro"]}},
+            {"_repetir_lista": {"inicio": "{inicio}", "fim": "{fim}", "titulo": "{titulo}"},
+             "_quando": {"campo": "forma", "em": ["com_hora"]}},
+        ]})
+        linhas = [
+            {"forma": "dia_inteiro", "dia": "2026-10-12", "titulo": "Feriado"},
+            {"forma": "com_hora", "inicio": "2026-10-13T09:00", "fim": "2026-10-13T09:30", "titulo": "Consulta"},
+        ]
+        tela, erro = validar(expandir(molde, {}, linhas))
+        self.assertIsNone(erro)
+        eventos = tela["corpo"][0]["eventos"]
+        self.assertEqual([(e["titulo"], e["dia_inteiro"], e["inicio"]) for e in eventos],
+                         [("Feriado", True, "2026-10-12"), ("Consulta", False, "2026-10-13T09:00")])
+
+    def test_casca_descreve_o_dia_inteiro_e_o_relatorio_diz_por_que_sumiu(self):
+        from okmigo_cartao import casca, relatorio
+
+        bruto = cartao({"type": "okmigoCalendario", "vista": "semana", "de": "2026-10-12", "eventos": [
+            {"inicio": "2026-10-12", "titulo": "Feriado", "dia_inteiro": True},
+            {"inicio": "2026-10-13T10:00", "titulo": "Errado", "dia_inteiro": True},
+            {"inicio": "2026-10-14T09:00", "fim": "2026-10-14T09:30", "titulo": "Consulta"},
+            {"inicio": "2026-10-16", "fim": "2026-10-15", "titulo": "Invertido", "dia_inteiro": True},
+        ]})
+        tela, erro = validar(bruto)
+        documento = casca(tela)
+        self.assertIn("<time>2026-10-12</time> (dia inteiro) Feriado", documento)
+        self.assertIn("<time>2026-10-14T09:00</time> – 2026-10-14T09:30 Consulta", documento)
+        self.assertNotIn("(dia inteiro) Consulta", documento)
+        self.assertNotIn("Errado", documento)
+
+        linhas = relatorio(bruto, tela, erro)
+        comido = [l for l in linhas if "eventos[1]" in l]
+        self.assertEqual(len(comido), 1, linhas)
+        self.assertIn("dia inteiro", comido[0])
+        self.assertIn("some", comido[0])
+        self.assertTrue(any("eventos[3]" in l and "um dia" in l for l in linhas), linhas)
+        # O que sobreviveu não é acusado.
+        self.assertFalse(any("eventos[0]" in l or "eventos[2]" in l for l in linhas), linhas)

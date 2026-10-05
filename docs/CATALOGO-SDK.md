@@ -350,6 +350,18 @@ agenda = Calendario(
 O serviço nomeia campos e operações; a data tocada e o destino do arrasto são
 preenchidos pelo cliente.
 
+`Evento(..., dia_inteiro=True)` é o evento SÓ com data — feriado, folga, o dia
+em que a loja fecha. `inicio` e `fim` levam `AAAA-MM-DD` (o `fim` é
+inclusivo); o SDK recusa hora na autoria, e o marcador `{campo}` passa porque
+só a expansão sabe o valor. O que o cliente desenha (a faixa acima da régua;
+todos os dias cobertos, no mês) está no [`CONTRATO.md`](../CONTRATO.md),
+§ «O evento de dia inteiro».
+
+```python
+Evento("{dia}", "{titulo}", dia_inteiro=True)
+Evento("2026-10-05", "Férias", fim="2026-10-07", dia_inteiro=True)
+```
+
 ## Financeiro
 
 Os componentes financeiros existentes no renderer também têm autoria tipada:

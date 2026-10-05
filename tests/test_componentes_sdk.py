@@ -297,6 +297,36 @@ class ComponentesDoSdkTest(unittest.TestCase):
         with self.assertRaisesRegex(ContratoDoSdkInvalido, "horas do calendario"):
             Calendario((), hora_inicial=22, hora_final=8)
 
+    def test_evento_de_dia_inteiro_compila_so_quando_e_e_atravessa_o_crivo(self):
+        feriado = Evento("2026-10-12", "Feriado", dia_inteiro=True)
+        ferias = Evento("2026-10-05", "Férias", fim="2026-10-07", dia_inteiro=True)
+        consulta = Evento("2026-10-13T09:00:00-03:00", "Consulta", id="c1")
+        self.assertIs(feriado.compilar()["dia_inteiro"], True)
+        # O evento de sempre compila o MESMO JSON de antes: o manifesto gerado
+        # dos consumidores não muda por causa desta versão.
+        self.assertNotIn("dia_inteiro", consulta.compilar())
+
+        normalizada = Tela("Agenda", (Calendario((feriado, ferias, consulta)),)).conferir()
+        eventos = normalizada["corpo"][1]["eventos"]
+        self.assertEqual(
+            [(e["titulo"], e["dia_inteiro"], e["inicio"], e["fim"]) for e in eventos],
+            [("Feriado", True, "2026-10-12", ""),
+             ("Férias", True, "2026-10-05", "2026-10-07"),
+             ("Consulta", False, "2026-10-13T09:00:00-03:00", "")],
+        )
+
+    def test_evento_de_dia_inteiro_recusa_hora_na_autoria_mas_deixa_o_marcador_passar(self):
+        with self.assertRaisesRegex(ContratoDoSdkInvalido, "inicio de evento de dia inteiro"):
+            Evento("2026-10-12T10:00:00-03:00", "Feriado", dia_inteiro=True)
+        with self.assertRaisesRegex(ContratoDoSdkInvalido, "fim de evento de dia inteiro"):
+            Evento("2026-10-12", "Feriado", fim="2026-10-13T00:00", dia_inteiro=True)
+        with self.assertRaisesRegex(ContratoDoSdkInvalido, "dia inteiro"):
+            Evento("2026-02-30", "Feriado", dia_inteiro=True)
+        # O mesmo `inicio` com hora, SEM o campo, é um evento como qualquer outro.
+        Evento("2026-10-12T10:00:00-03:00", "Consulta")
+        # O marcador só ganha valor na expansão: a autoria não tem o que conferir.
+        self.assertIs(Evento("{dia}", "{titulo}", fim="{fim}", dia_inteiro=True).compilar()["dia_inteiro"], True)
+
     def test_toque_no_calendario_recusa_nome_de_campo_de_hora_invalido(self):
         with self.assertRaisesRegex(ContratoDoSdkInvalido, "campo da hora"):
             AoTocarODia("novo_atendimento", "data", "hora com espaco")
