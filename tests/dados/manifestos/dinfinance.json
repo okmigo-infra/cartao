@@ -1,0 +1,3100 @@
+{
+ "slug": "dinfinance",
+ "endpoint": "http://SEU-HOST:8000/mcp/",
+ "forma": "do_operador",
+ "descricao": "O dinheiro do negócio: contas, saldo e extrato, alimentados por Open Finance. Não move dinheiro — só lê.",
+ "versao": "3.38.0",
+ "superficies": [
+  {
+   "nome": "visao",
+   "titulo": "Visão Geral",
+   "hint": "saldo do mês, contas, cartões e últimas transações",
+   "fonte": {
+    "resumo": {
+     "operacao": "visao_geral"
+    },
+    "lista": {
+     "operacao": "extrato",
+     "pedido": {
+      "dias": 45,
+      "limite": 5
+     },
+     "caminho": "lancamentos"
+    }
+   },
+   "cartao": {
+    "type": "AdaptiveCard",
+    "version": "1.6",
+    "body": [
+     {
+      "type": "TextBlock",
+      "text": "Visão Geral",
+      "wrap": true,
+      "spacing": "none",
+      "size": "extraLarge",
+      "weight": "bolder"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Saldo do mês",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "TextBlock",
+        "text": "{saldo_liquido_texto}",
+        "wrap": true,
+        "size": "extraLarge",
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "{sobra_prevista_frase}",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "ColumnSet",
+        "columns": [
+         {
+          "type": "Column",
+          "width": "stretch",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Entradas mês",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true
+           },
+           {
+            "type": "TextBlock",
+            "text": "{entradas_mes_texto}",
+            "wrap": true,
+            "size": "medium",
+            "weight": "bolder"
+           }
+          ]
+         },
+         {
+          "type": "Column",
+          "width": "stretch",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Saídas mês",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true
+           },
+           {
+            "type": "TextBlock",
+            "text": "{saidas_mes_texto}",
+            "wrap": true,
+            "size": "medium",
+            "weight": "bolder"
+           }
+          ]
+         }
+        ],
+        "spacing": "medium"
+       }
+      ],
+      "style": "accent",
+      "spacing": "large"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Contas",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "TextBlock",
+        "text": "{contas_total_texto}",
+        "wrap": true,
+        "size": "large",
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "{contas_frase}",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "Container",
+        "items": [
+         {
+          "type": "ActionSet",
+          "actions": [
+           {
+            "type": "Action.ToggleVisibility",
+            "title": "Ver as contas",
+            "targetElements": [
+             "contas_do_inicio"
+            ]
+           }
+          ],
+          "okmigoExpansivel": true
+         },
+         {
+          "type": "Container",
+          "id": "contas_do_inicio",
+          "isVisible": false,
+          "items": [
+           {
+            "_repetir_lista": {
+             "type": "Container",
+             "items": [
+              {
+               "type": "ColumnSet",
+               "columns": [
+                {
+                 "type": "Column",
+                 "width": "auto",
+                 "items": [
+                  {
+                   "type": "Image",
+                   "url": "{logo}",
+                   "altText": "{banco}",
+                   "height": "small",
+                   "fallback": {
+                    "type": "TextBlock",
+                    "text": "{icone}",
+                    "wrap": true
+                   }
+                  }
+                 ],
+                 "verticalContentAlignment": "center"
+                },
+                {
+                 "type": "Column",
+                 "width": "stretch",
+                 "items": [
+                  {
+                   "type": "TextBlock",
+                   "text": "{banco}",
+                   "wrap": true,
+                   "weight": "bolder"
+                  },
+                  {
+                   "type": "TextBlock",
+                   "text": "{tipo_frase}",
+                   "wrap": true,
+                   "size": "small",
+                   "isSubtle": true
+                  }
+                 ]
+                },
+                {
+                 "type": "Column",
+                 "width": "auto",
+                 "items": [
+                  {
+                   "type": "TextBlock",
+                   "text": "{saldo_texto}",
+                   "wrap": true,
+                   "horizontalAlignment": "right",
+                   "weight": "bolder"
+                  }
+                 ]
+                }
+               ],
+               "spacing": "medium"
+              },
+              {
+               "type": "Container",
+               "items": [
+                {
+                 "type": "TextBlock",
+                 "text": "{gasto_frase}",
+                 "wrap": true,
+                 "size": "small",
+                 "isSubtle": true
+                },
+                {
+                 "_repetir_lista": {
+                  "type": "ColumnSet",
+                  "columns": [
+                   {
+                    "type": "Column",
+                    "width": "stretch",
+                    "items": [
+                     {
+                      "type": "TextBlock",
+                      "text": "{descricao}",
+                      "wrap": true,
+                      "size": "small"
+                     },
+                     {
+                      "type": "TextBlock",
+                      "text": "{quando}",
+                      "wrap": true,
+                      "size": "small",
+                      "isSubtle": true
+                     }
+                    ]
+                   },
+                   {
+                    "type": "Column",
+                    "width": "auto",
+                    "items": [
+                     {
+                      "type": "TextBlock",
+                      "text": "{valor_texto}",
+                      "wrap": true,
+                      "horizontalAlignment": "right",
+                      "size": "small",
+                      "weight": "bolder"
+                     }
+                    ]
+                   }
+                  ]
+                 },
+                 "_de": "movimentos"
+                },
+                {
+                 "type": "ActionSet",
+                 "actions": [
+                  {
+                   "type": "Action.Execute",
+                   "title": "Ver tudo no Extrato",
+                   "data": {
+                    "okmigoNavegar": {
+                     "rota": "extrato_filtrado",
+                     "parametros": {
+                      "periodo": "mes",
+                      "conta": "{id}",
+                      "categoria": ""
+                     }
+                    }
+                   }
+                  }
+                 ]
+                }
+               ],
+               "id": "{alvo_id}",
+               "isVisible": false,
+               "separator": true
+              }
+             ],
+             "selectAction": {
+              "type": "Action.ToggleVisibility",
+              "targetElements": [
+               "{alvo_id}"
+              ]
+             }
+            },
+            "_de": "contas_do_inicio"
+           }
+          ]
+         }
+        ]
+       }
+      ],
+      "style": "emphasis",
+      "spacing": "large"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "ColumnSet",
+        "columns": [
+         {
+          "type": "Column",
+          "width": "stretch",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Cartões",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true
+           }
+          ]
+         },
+         {
+          "type": "Column",
+          "width": "auto",
+          "items": [
+           {
+            "type": "okmigoEtiqueta",
+            "texto": "parcial",
+            "tom": "atencao",
+            "fallback": {
+             "type": "TextBlock",
+             "text": "parcial",
+             "wrap": true,
+             "size": "small",
+             "isSubtle": true
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "TextBlock",
+        "text": "{cartoes_abertas_texto}",
+        "wrap": true,
+        "size": "large",
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "{cartoes_abertas_frase}",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "Container",
+        "items": [
+         {
+          "type": "ActionSet",
+          "actions": [
+           {
+            "type": "Action.ToggleVisibility",
+            "title": "Ver os cartões",
+            "targetElements": [
+             "cartoes_do_inicio"
+            ]
+           }
+          ],
+          "okmigoExpansivel": true
+         },
+         {
+          "type": "Container",
+          "id": "cartoes_do_inicio",
+          "isVisible": false,
+          "items": [
+           {
+            "_repetir_lista": {
+             "type": "Container",
+             "items": [
+              {
+               "type": "ColumnSet",
+               "columns": [
+                {
+                 "type": "Column",
+                 "width": "auto",
+                 "items": [
+                  {
+                   "type": "Image",
+                   "url": "{logo}",
+                   "altText": "{nome}",
+                   "height": "small",
+                   "fallback": {
+                    "type": "TextBlock",
+                    "text": "💳",
+                    "wrap": true
+                   }
+                  }
+                 ],
+                 "verticalContentAlignment": "center"
+                },
+                {
+                 "type": "Column",
+                 "width": "stretch",
+                 "items": [
+                  {
+                   "type": "TextBlock",
+                   "text": "{nome}",
+                   "wrap": true,
+                   "weight": "bolder"
+                  },
+                  {
+                   "type": "TextBlock",
+                   "text": "{detalhe}",
+                   "wrap": true,
+                   "size": "small",
+                   "isSubtle": true
+                  }
+                 ]
+                },
+                {
+                 "type": "Column",
+                 "width": "auto",
+                 "items": [
+                  {
+                   "type": "TextBlock",
+                   "text": "{valor_texto}",
+                   "wrap": true,
+                   "horizontalAlignment": "right",
+                   "weight": "bolder"
+                  }
+                 ]
+                }
+               ],
+               "spacing": "medium"
+              },
+              {
+               "type": "Container",
+               "items": [
+                {
+                 "type": "TextBlock",
+                 "text": "{gasto_frase}",
+                 "wrap": true,
+                 "size": "small",
+                 "isSubtle": true
+                },
+                {
+                 "_repetir_lista": {
+                  "type": "ColumnSet",
+                  "columns": [
+                   {
+                    "type": "Column",
+                    "width": "stretch",
+                    "items": [
+                     {
+                      "type": "TextBlock",
+                      "text": "{descricao}",
+                      "wrap": true,
+                      "size": "small"
+                     },
+                     {
+                      "type": "TextBlock",
+                      "text": "{quando}",
+                      "wrap": true,
+                      "size": "small",
+                      "isSubtle": true
+                     }
+                    ]
+                   },
+                   {
+                    "type": "Column",
+                    "width": "auto",
+                    "items": [
+                     {
+                      "type": "TextBlock",
+                      "text": "{valor_texto}",
+                      "wrap": true,
+                      "horizontalAlignment": "right",
+                      "size": "small",
+                      "weight": "bolder"
+                     }
+                    ]
+                   }
+                  ]
+                 },
+                 "_de": "movimentos"
+                },
+                {
+                 "type": "ActionSet",
+                 "actions": [
+                  {
+                   "type": "Action.Execute",
+                   "title": "Ver tudo no Extrato",
+                   "data": {
+                    "okmigoNavegar": {
+                     "rota": "extrato_filtrado",
+                     "parametros": {
+                      "periodo": "mes",
+                      "conta": "{id}",
+                      "categoria": ""
+                     }
+                    }
+                   }
+                  }
+                 ]
+                }
+               ],
+               "id": "{alvo_id}",
+               "isVisible": false,
+               "separator": true
+              }
+             ],
+             "selectAction": {
+              "type": "Action.ToggleVisibility",
+              "targetElements": [
+               "{alvo_id}"
+              ]
+             }
+            },
+            "_de": "cartoes_do_inicio"
+           },
+           {
+            "type": "ActionSet",
+            "actions": [
+             {
+              "type": "Action.Execute",
+              "title": "Ver os detalhes na aba Cartões",
+              "data": {
+               "okmigoNavegar": {
+                "rota": "ver_cartoes",
+                "parametros": {}
+               }
+              }
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      ],
+      "style": "emphasis",
+      "spacing": "large"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "okmigoGrafico",
+        "forma": "linha",
+        "titulo": "Evolução do saldo",
+        "series": [
+         {
+          "rotulo": "Saldo",
+          "cor": "principal"
+         }
+        ],
+        "pontos": [
+         {
+          "_repetir_lista": {
+           "rotulo": "{rotulo}",
+           "valores": [
+            "{valor}"
+           ]
+          },
+          "_de": "evolucao_patrimonio"
+         }
+        ]
+       }
+      ],
+      "style": "emphasis",
+      "spacing": "large"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "okmigoGrafico",
+        "forma": "barras",
+        "titulo": "Fluxo de caixa",
+        "series": [
+         {
+          "rotulo": "Entradas",
+          "cor": "principal"
+         },
+         {
+          "rotulo": "Saídas",
+          "cor": "suave"
+         }
+        ],
+        "pontos": [
+         {
+          "_repetir_lista": {
+           "rotulo": "{rotulo}",
+           "valores": [
+            "{entradas}",
+            "{saidas}"
+           ]
+          },
+          "_de": "fluxo_caixa"
+         }
+        ]
+       }
+      ],
+      "style": "emphasis",
+      "spacing": "large"
+     },
+     {
+      "type": "okmigoListaFinanceira",
+      "titulo": "Últimas transações",
+      "busca": false,
+      "filtros": [
+       "todas"
+      ],
+      "itens": [
+       {
+        "_repetir_lista": {
+         "id": "{id}",
+         "grupo": "{grupo_data}",
+         "tipo": "{tipo_tela}",
+         "icone": "{icone}",
+         "titulo": "{descricao}",
+         "subtitulo": "{categoria} · {de_onde}",
+         "valor": "{valor_texto}",
+         "semantica": "{valor_semantica}"
+        }
+       }
+      ]
+     }
+    ],
+    "okmigoTema": "financeiro-violeta",
+    "okmigoNavegacao": "inferior",
+    "okmigoDesktop": {
+     "type": "AdaptiveCard",
+     "version": "1.6",
+     "body": [
+      {
+       "type": "ColumnSet",
+       "columns": [
+        {
+         "type": "Column",
+         "width": "stretch",
+         "items": [
+          {
+           "type": "TextBlock",
+           "text": "Visão geral",
+           "wrap": true,
+           "spacing": "none",
+           "size": "large",
+           "weight": "bolder"
+          },
+          {
+           "type": "TextBlock",
+           "text": "Suas contas, seus cartões e o movimento do mês em um só lugar.",
+           "wrap": true,
+           "size": "small",
+           "isSubtle": true
+          }
+         ]
+        },
+        {
+         "type": "Column",
+         "width": "auto",
+         "items": [
+          {
+           "type": "TextBlock",
+           "text": "Atualizado pelo Open Finance",
+           "wrap": true,
+           "horizontalAlignment": "right",
+           "size": "small",
+           "isSubtle": true
+          }
+         ]
+        }
+       ],
+       "spacing": "medium"
+      },
+      {
+       "type": "Container",
+       "items": [
+        {
+         "type": "TextBlock",
+         "text": "Saldo do mês",
+         "wrap": true,
+         "size": "small",
+         "isSubtle": true
+        },
+        {
+         "type": "TextBlock",
+         "text": "{saldo_liquido_texto}",
+         "wrap": true,
+         "size": "extraLarge",
+         "weight": "bolder"
+        },
+        {
+         "type": "TextBlock",
+         "text": "{sobra_prevista_frase}",
+         "wrap": true,
+         "size": "small",
+         "isSubtle": true
+        }
+       ],
+       "style": "accent",
+       "spacing": "large"
+      },
+      {
+       "type": "Container",
+       "style": "default",
+       "items": [
+        {
+         "type": "Container",
+         "style": "default",
+         "items": [
+          {
+           "type": "TextBlock",
+           "text": "Entradas no mês",
+           "wrap": true,
+           "size": "small",
+           "isSubtle": true
+          },
+          {
+           "type": "TextBlock",
+           "text": "{entradas_mes_texto}",
+           "wrap": true,
+           "size": "large",
+           "weight": "bolder"
+          },
+          {
+           "type": "TextBlock",
+           "text": "receitas confirmadas",
+           "wrap": true,
+           "size": "small",
+           "isSubtle": true
+          }
+         ]
+        },
+        {
+         "type": "Container",
+         "style": "default",
+         "items": [
+          {
+           "type": "TextBlock",
+           "text": "Saídas no mês",
+           "wrap": true,
+           "size": "small",
+           "isSubtle": true
+          },
+          {
+           "type": "TextBlock",
+           "text": "{saidas_mes_texto}",
+           "wrap": true,
+           "size": "large",
+           "weight": "bolder"
+          },
+          {
+           "type": "TextBlock",
+           "text": "despesas confirmadas",
+           "wrap": true,
+           "size": "small",
+           "isSubtle": true
+          }
+         ]
+        }
+       ],
+       "okmigoGrade": true
+      },
+      {
+       "type": "Container",
+       "items": [
+        {
+         "type": "TextBlock",
+         "text": "Contas",
+         "wrap": true,
+         "size": "small",
+         "isSubtle": true
+        },
+        {
+         "type": "TextBlock",
+         "text": "{contas_total_texto}",
+         "wrap": true,
+         "size": "large",
+         "weight": "bolder"
+        },
+        {
+         "type": "TextBlock",
+         "text": "{contas_frase}",
+         "wrap": true,
+         "size": "small",
+         "isSubtle": true
+        },
+        {
+         "type": "Container",
+         "items": [
+          {
+           "type": "ActionSet",
+           "actions": [
+            {
+             "type": "Action.ToggleVisibility",
+             "title": "Ver as contas",
+             "targetElements": [
+              "contas_do_inicio"
+             ]
+            }
+           ],
+           "okmigoExpansivel": true
+          },
+          {
+           "type": "Container",
+           "id": "contas_do_inicio",
+           "isVisible": false,
+           "items": [
+            {
+             "_repetir_lista": {
+              "type": "Container",
+              "items": [
+               {
+                "type": "ColumnSet",
+                "columns": [
+                 {
+                  "type": "Column",
+                  "width": "auto",
+                  "items": [
+                   {
+                    "type": "Image",
+                    "url": "{logo}",
+                    "altText": "{banco}",
+                    "height": "small",
+                    "fallback": {
+                     "type": "TextBlock",
+                     "text": "{icone}",
+                     "wrap": true
+                    }
+                   }
+                  ],
+                  "verticalContentAlignment": "center"
+                 },
+                 {
+                  "type": "Column",
+                  "width": "stretch",
+                  "items": [
+                   {
+                    "type": "TextBlock",
+                    "text": "{banco}",
+                    "wrap": true,
+                    "weight": "bolder"
+                   },
+                   {
+                    "type": "TextBlock",
+                    "text": "{tipo_frase}",
+                    "wrap": true,
+                    "size": "small",
+                    "isSubtle": true
+                   }
+                  ]
+                 },
+                 {
+                  "type": "Column",
+                  "width": "auto",
+                  "items": [
+                   {
+                    "type": "TextBlock",
+                    "text": "{saldo_texto}",
+                    "wrap": true,
+                    "horizontalAlignment": "right",
+                    "weight": "bolder"
+                   }
+                  ]
+                 }
+                ],
+                "spacing": "medium"
+               },
+               {
+                "type": "Container",
+                "items": [
+                 {
+                  "type": "TextBlock",
+                  "text": "{gasto_frase}",
+                  "wrap": true,
+                  "size": "small",
+                  "isSubtle": true
+                 },
+                 {
+                  "_repetir_lista": {
+                   "type": "ColumnSet",
+                   "columns": [
+                    {
+                     "type": "Column",
+                     "width": "stretch",
+                     "items": [
+                      {
+                       "type": "TextBlock",
+                       "text": "{descricao}",
+                       "wrap": true,
+                       "size": "small"
+                      },
+                      {
+                       "type": "TextBlock",
+                       "text": "{quando}",
+                       "wrap": true,
+                       "size": "small",
+                       "isSubtle": true
+                      }
+                     ]
+                    },
+                    {
+                     "type": "Column",
+                     "width": "auto",
+                     "items": [
+                      {
+                       "type": "TextBlock",
+                       "text": "{valor_texto}",
+                       "wrap": true,
+                       "horizontalAlignment": "right",
+                       "size": "small",
+                       "weight": "bolder"
+                      }
+                     ]
+                    }
+                   ]
+                  },
+                  "_de": "movimentos"
+                 },
+                 {
+                  "type": "ActionSet",
+                  "actions": [
+                   {
+                    "type": "Action.Execute",
+                    "title": "Ver tudo no Extrato",
+                    "data": {
+                     "okmigoNavegar": {
+                      "rota": "extrato_filtrado",
+                      "parametros": {
+                       "periodo": "mes",
+                       "conta": "{id}",
+                       "categoria": ""
+                      }
+                     }
+                    }
+                   }
+                  ]
+                 }
+                ],
+                "id": "{alvo_id}",
+                "isVisible": false,
+                "separator": true
+               }
+              ],
+              "selectAction": {
+               "type": "Action.ToggleVisibility",
+               "targetElements": [
+                "{alvo_id}"
+               ]
+              }
+             },
+             "_de": "contas_do_inicio"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "style": "emphasis",
+       "spacing": "large"
+      },
+      {
+       "type": "Container",
+       "items": [
+        {
+         "type": "ColumnSet",
+         "columns": [
+          {
+           "type": "Column",
+           "width": "stretch",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "Cartões",
+             "wrap": true,
+             "size": "small",
+             "isSubtle": true
+            }
+           ]
+          },
+          {
+           "type": "Column",
+           "width": "auto",
+           "items": [
+            {
+             "type": "okmigoEtiqueta",
+             "texto": "parcial",
+             "tom": "atencao",
+             "fallback": {
+              "type": "TextBlock",
+              "text": "parcial",
+              "wrap": true,
+              "size": "small",
+              "isSubtle": true
+             }
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "type": "TextBlock",
+         "text": "{cartoes_abertas_texto}",
+         "wrap": true,
+         "size": "large",
+         "weight": "bolder"
+        },
+        {
+         "type": "TextBlock",
+         "text": "{cartoes_abertas_frase}",
+         "wrap": true,
+         "size": "small",
+         "isSubtle": true
+        },
+        {
+         "type": "Container",
+         "items": [
+          {
+           "type": "ActionSet",
+           "actions": [
+            {
+             "type": "Action.ToggleVisibility",
+             "title": "Ver os cartões",
+             "targetElements": [
+              "cartoes_do_inicio"
+             ]
+            }
+           ],
+           "okmigoExpansivel": true
+          },
+          {
+           "type": "Container",
+           "id": "cartoes_do_inicio",
+           "isVisible": false,
+           "items": [
+            {
+             "_repetir_lista": {
+              "type": "Container",
+              "items": [
+               {
+                "type": "ColumnSet",
+                "columns": [
+                 {
+                  "type": "Column",
+                  "width": "auto",
+                  "items": [
+                   {
+                    "type": "Image",
+                    "url": "{logo}",
+                    "altText": "{nome}",
+                    "height": "small",
+                    "fallback": {
+                     "type": "TextBlock",
+                     "text": "💳",
+                     "wrap": true
+                    }
+                   }
+                  ],
+                  "verticalContentAlignment": "center"
+                 },
+                 {
+                  "type": "Column",
+                  "width": "stretch",
+                  "items": [
+                   {
+                    "type": "TextBlock",
+                    "text": "{nome}",
+                    "wrap": true,
+                    "weight": "bolder"
+                   },
+                   {
+                    "type": "TextBlock",
+                    "text": "{detalhe}",
+                    "wrap": true,
+                    "size": "small",
+                    "isSubtle": true
+                   }
+                  ]
+                 },
+                 {
+                  "type": "Column",
+                  "width": "auto",
+                  "items": [
+                   {
+                    "type": "TextBlock",
+                    "text": "{valor_texto}",
+                    "wrap": true,
+                    "horizontalAlignment": "right",
+                    "weight": "bolder"
+                   }
+                  ]
+                 }
+                ],
+                "spacing": "medium"
+               },
+               {
+                "type": "Container",
+                "items": [
+                 {
+                  "type": "TextBlock",
+                  "text": "{gasto_frase}",
+                  "wrap": true,
+                  "size": "small",
+                  "isSubtle": true
+                 },
+                 {
+                  "_repetir_lista": {
+                   "type": "ColumnSet",
+                   "columns": [
+                    {
+                     "type": "Column",
+                     "width": "stretch",
+                     "items": [
+                      {
+                       "type": "TextBlock",
+                       "text": "{descricao}",
+                       "wrap": true,
+                       "size": "small"
+                      },
+                      {
+                       "type": "TextBlock",
+                       "text": "{quando}",
+                       "wrap": true,
+                       "size": "small",
+                       "isSubtle": true
+                      }
+                     ]
+                    },
+                    {
+                     "type": "Column",
+                     "width": "auto",
+                     "items": [
+                      {
+                       "type": "TextBlock",
+                       "text": "{valor_texto}",
+                       "wrap": true,
+                       "horizontalAlignment": "right",
+                       "size": "small",
+                       "weight": "bolder"
+                      }
+                     ]
+                    }
+                   ]
+                  },
+                  "_de": "movimentos"
+                 },
+                 {
+                  "type": "ActionSet",
+                  "actions": [
+                   {
+                    "type": "Action.Execute",
+                    "title": "Ver tudo no Extrato",
+                    "data": {
+                     "okmigoNavegar": {
+                      "rota": "extrato_filtrado",
+                      "parametros": {
+                       "periodo": "mes",
+                       "conta": "{id}",
+                       "categoria": ""
+                      }
+                     }
+                    }
+                   }
+                  ]
+                 }
+                ],
+                "id": "{alvo_id}",
+                "isVisible": false,
+                "separator": true
+               }
+              ],
+              "selectAction": {
+               "type": "Action.ToggleVisibility",
+               "targetElements": [
+                "{alvo_id}"
+               ]
+              }
+             },
+             "_de": "cartoes_do_inicio"
+            },
+            {
+             "type": "ActionSet",
+             "actions": [
+              {
+               "type": "Action.Execute",
+               "title": "Ver os detalhes na aba Cartões",
+               "data": {
+                "okmigoNavegar": {
+                 "rota": "ver_cartoes",
+                 "parametros": {}
+                }
+               }
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "style": "emphasis",
+       "spacing": "large"
+      },
+      {
+       "type": "ColumnSet",
+       "columns": [
+        {
+         "type": "Column",
+         "width": "stretch",
+         "items": [
+          {
+           "type": "Container",
+           "items": [
+            {
+             "type": "okmigoGrafico",
+             "forma": "linha",
+             "titulo": "Evolução do saldo",
+             "series": [
+              {
+               "rotulo": "Saldo",
+               "cor": "principal"
+              }
+             ],
+             "pontos": [
+              {
+               "_repetir_lista": {
+                "rotulo": "{rotulo}",
+                "valores": [
+                 "{valor}"
+                ]
+               },
+               "_de": "evolucao_patrimonio"
+              }
+             ]
+            }
+           ],
+           "style": "emphasis",
+           "spacing": "large"
+          }
+         ]
+        },
+        {
+         "type": "Column",
+         "width": "stretch",
+         "items": [
+          {
+           "type": "Container",
+           "items": [
+            {
+             "type": "okmigoGrafico",
+             "forma": "barras",
+             "titulo": "Fluxo de caixa",
+             "series": [
+              {
+               "rotulo": "Entradas",
+               "cor": "principal"
+              },
+              {
+               "rotulo": "Saídas",
+               "cor": "suave"
+              }
+             ],
+             "pontos": [
+              {
+               "_repetir_lista": {
+                "rotulo": "{rotulo}",
+                "valores": [
+                 "{entradas}",
+                 "{saidas}"
+                ]
+               },
+               "_de": "fluxo_caixa"
+              }
+             ]
+            }
+           ],
+           "style": "emphasis",
+           "spacing": "large"
+          }
+         ]
+        }
+       ],
+       "spacing": "medium"
+      },
+      {
+       "type": "okmigoListaFinanceira",
+       "titulo": "Últimas transações",
+       "busca": false,
+       "filtros": [
+        "todas"
+       ],
+       "itens": [
+        {
+         "_repetir_lista": {
+          "id": "{id}",
+          "grupo": "{grupo_data}",
+          "tipo": "{tipo_tela}",
+          "icone": "{icone}",
+          "titulo": "{descricao}",
+          "subtitulo": "{categoria} · {de_onde}",
+          "valor": "{valor_texto}",
+          "semantica": "{valor_semantica}"
+         }
+        }
+       ]
+      }
+     ],
+     "okmigoTema": "financeiro-violeta",
+     "okmigoNavegacao": "inferior"
+    }
+   },
+   "rotulo": "Início",
+   "icone": "inicio"
+  },
+  {
+   "nome": "cartoes",
+   "titulo": "Cartões",
+   "hint": "fatura, limite, parcelas e lançamentos recentes por cartão",
+   "fonte": {
+    "resumo": {
+     "operacao": "cartoes",
+     "pedido": {
+      "com_lancamentos": true
+     }
+    },
+    "lista": {
+     "operacao": "cartoes",
+     "pedido": {
+      "com_lancamentos": true
+     },
+     "caminho": "cartoes"
+    }
+   },
+   "cartao": {
+    "type": "AdaptiveCard",
+    "version": "1.5",
+    "body": [
+     {
+      "type": "TextBlock",
+      "text": "Cartões",
+      "wrap": true,
+      "spacing": "none",
+      "size": "extraLarge",
+      "weight": "bolder"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Faturas em aberto",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "TextBlock",
+        "text": "{cartoes_abertas_texto}",
+        "wrap": true,
+        "size": "extraLarge",
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "{cartoes_abertas_frase}",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       }
+      ],
+      "style": "accent",
+      "spacing": "large"
+     },
+     {
+      "_repetir_lista": {
+       "type": "Container",
+       "items": [
+        {
+         "type": "Container",
+         "items": [
+          {
+           "type": "ColumnSet",
+           "columns": [
+            {
+             "type": "Column",
+             "width": "auto",
+             "items": [
+              {
+               "type": "Image",
+               "url": "{logo}",
+               "altText": "{titulo_da_linha}",
+               "height": "small",
+               "fallback": {
+                "type": "TextBlock",
+                "text": "💳",
+                "wrap": true
+               }
+              }
+             ],
+             "verticalContentAlignment": "center"
+            },
+            {
+             "type": "Column",
+             "width": "stretch",
+             "items": [
+              {
+               "type": "TextBlock",
+               "text": "{titulo_da_linha}",
+               "wrap": true,
+               "weight": "bolder"
+              },
+              {
+               "type": "TextBlock",
+               "text": "{cabecalho_frase}",
+               "wrap": true,
+               "size": "small",
+               "isSubtle": true
+              }
+             ]
+            },
+            {
+             "type": "Column",
+             "width": "auto",
+             "items": [
+              {
+               "type": "TextBlock",
+               "text": "{fatura_aberta_texto}",
+               "wrap": true,
+               "horizontalAlignment": "right",
+               "weight": "bolder"
+              }
+             ]
+            }
+           ],
+           "spacing": "medium"
+          },
+          {
+           "type": "TextBlock",
+           "text": "toque para ver fatura, limite, parcelas e adicionais",
+           "wrap": true,
+           "size": "small",
+           "isSubtle": true
+          }
+         ],
+         "selectAction": {
+          "type": "Action.ToggleVisibility",
+          "targetElements": [
+           "{alvo_cartao}"
+          ]
+         }
+        },
+        {
+         "type": "Container",
+         "items": [
+          {
+           "type": "ColumnSet",
+           "columns": [
+            {
+             "type": "Column",
+             "width": "stretch",
+             "items": [
+              {
+               "type": "TextBlock",
+               "text": "Limite utilizado",
+               "wrap": true,
+               "size": "small"
+              }
+             ]
+            },
+            {
+             "type": "Column",
+             "width": "auto",
+             "items": [
+              {
+               "type": "TextBlock",
+               "text": "{limite_utilizado_pct}%",
+               "wrap": true,
+               "horizontalAlignment": "right",
+               "size": "small",
+               "weight": "bolder"
+              }
+             ]
+            }
+           ]
+          },
+          {
+           "type": "okmigoProgresso",
+           "feito": "{limite_utilizado_feito}",
+           "de": "{limite_utilizado_de}",
+           "tom": "principal"
+          },
+          {
+           "type": "TextBlock",
+           "text": "{limite_disponivel_texto} · limite total {limite_total_texto}",
+           "wrap": true,
+           "size": "small",
+           "isSubtle": true
+          },
+          {
+           "_repetir_lista": {
+            "type": "ColumnSet",
+            "columns": [
+             {
+              "type": "Column",
+              "width": "stretch",
+              "items": [
+               {
+                "type": "TextBlock",
+                "text": "{rotulo}",
+                "wrap": true,
+                "weight": "bolder"
+               },
+               {
+                "type": "TextBlock",
+                "text": "{frase}",
+                "wrap": true,
+                "size": "small",
+                "isSubtle": true
+               }
+              ]
+             },
+             {
+              "type": "Column",
+              "width": "auto",
+              "items": [
+               {
+                "type": "TextBlock",
+                "text": "{valor_texto}",
+                "wrap": true,
+                "horizontalAlignment": "right",
+                "weight": "bolder"
+               }
+              ]
+             }
+            ],
+            "spacing": "medium"
+           },
+           "_de": "fatura_linhas"
+          },
+          {
+           "type": "TextBlock",
+           "text": "{comprometido_frase}",
+           "wrap": true,
+           "size": "small",
+           "isSubtle": true
+          },
+          {
+           "_repetir_lista": {
+            "type": "okmigoGrafico",
+            "forma": "barras",
+            "titulo": "Últimas faturas",
+            "series": [
+             {
+              "rotulo": "Fatura",
+              "cor": "principal"
+             }
+            ],
+            "pontos": [
+             {
+              "_repetir_lista": {
+               "rotulo": "{rotulo}",
+               "valores": [
+                "{valor}"
+               ]
+              },
+              "_de": "pontos"
+             }
+            ]
+           },
+           "_de": "graficos_de_fatura"
+          },
+          {
+           "type": "ColumnSet",
+           "columns": [
+            {
+             "type": "Column",
+             "width": "stretch",
+             "items": [
+              {
+               "type": "TextBlock",
+               "text": "Parcelas futuras",
+               "wrap": true,
+               "weight": "bolder"
+              },
+              {
+               "type": "TextBlock",
+               "text": "{parcelas_frase}",
+               "wrap": true,
+               "size": "small",
+               "isSubtle": true
+              }
+             ]
+            },
+            {
+             "type": "Column",
+             "width": "auto",
+             "items": [
+              {
+               "type": "TextBlock",
+               "text": "{parcelas_total_texto}",
+               "wrap": true,
+               "horizontalAlignment": "right",
+               "weight": "bolder"
+              }
+             ]
+            }
+           ],
+           "spacing": "medium"
+          },
+          {
+           "_repetir_lista": {
+            "type": "ColumnSet",
+            "columns": [
+             {
+              "type": "Column",
+              "width": "stretch",
+              "items": [
+               {
+                "type": "TextBlock",
+                "text": "{descricao}",
+                "wrap": true,
+                "size": "small"
+               },
+               {
+                "type": "TextBlock",
+                "text": "{detalhe}",
+                "wrap": true,
+                "size": "small",
+                "isSubtle": true
+               }
+              ]
+             },
+             {
+              "type": "Column",
+              "width": "auto",
+              "items": [
+               {
+                "type": "TextBlock",
+                "text": "{valor_texto}",
+                "wrap": true,
+                "horizontalAlignment": "right",
+                "size": "small",
+                "weight": "bolder"
+               }
+              ]
+             }
+            ]
+           },
+           "_de": "parcelas"
+          },
+          {
+           "type": "Container",
+           "items": [
+            {
+             "type": "ColumnSet",
+             "columns": [
+              {
+               "type": "Column",
+               "width": "stretch",
+               "items": [
+                {
+                 "type": "TextBlock",
+                 "text": "{plasticos_titulo}",
+                 "wrap": true,
+                 "weight": "bolder"
+                },
+                {
+                 "type": "TextBlock",
+                 "text": "{plasticos_frase}",
+                 "wrap": true,
+                 "size": "small",
+                 "isSubtle": true
+                },
+                {
+                 "type": "TextBlock",
+                 "text": "{mes_a_mes_frase}",
+                 "wrap": true,
+                 "size": "small"
+                }
+               ]
+              },
+              {
+               "type": "Column",
+               "width": "auto",
+               "items": [
+                {
+                 "type": "TextBlock",
+                 "text": "{plasticos_total_texto}",
+                 "wrap": true,
+                 "horizontalAlignment": "right",
+                 "weight": "bolder"
+                }
+               ]
+              }
+             ]
+            },
+            {
+             "_repetir_lista": {
+              "type": "Container",
+              "items": [
+               {
+                "type": "Container",
+                "items": [
+                 {
+                  "type": "ColumnSet",
+                  "columns": [
+                   {
+                    "type": "Column",
+                    "width": "stretch",
+                    "items": [
+                     {
+                      "type": "TextBlock",
+                      "text": "{plastico_nome}",
+                      "wrap": true,
+                      "weight": "bolder"
+                     },
+                     {
+                      "type": "TextBlock",
+                      "text": "{plastico_final_texto}",
+                      "wrap": true,
+                      "size": "small",
+                      "isSubtle": true
+                     }
+                    ]
+                   },
+                   {
+                    "type": "Column",
+                    "width": "auto",
+                    "items": [
+                     {
+                      "type": "TextBlock",
+                      "text": "{valor_da_secao_texto}",
+                      "wrap": true,
+                      "horizontalAlignment": "right",
+                      "weight": "bolder"
+                     }
+                    ]
+                   }
+                  ]
+                 },
+                 {
+                  "type": "okmigoProgresso",
+                  "feito": "{fatia_feito}",
+                  "de": 100,
+                  "tom": "principal"
+                 },
+                 {
+                  "type": "TextBlock",
+                  "text": "{plastico_frase}",
+                  "wrap": true,
+                  "size": "small"
+                 },
+                 {
+                  "type": "TextBlock",
+                  "text": "{toque_frase}",
+                  "wrap": true,
+                  "size": "small",
+                  "isSubtle": true
+                 }
+                ],
+                "selectAction": {
+                 "type": "Action.ToggleVisibility",
+                 "targetElements": [
+                  "{alvo_id}"
+                 ]
+                }
+               },
+               {
+                "type": "Container",
+                "items": [
+                 {
+                  "type": "TextBlock",
+                  "text": "{lancamentos_frase}",
+                  "wrap": true,
+                  "size": "small",
+                  "isSubtle": true
+                 },
+                 {
+                  "_repetir_lista": {
+                   "type": "ColumnSet",
+                   "columns": [
+                    {
+                     "type": "Column",
+                     "width": "stretch",
+                     "items": [
+                      {
+                       "type": "TextBlock",
+                       "text": "{descricao}",
+                       "wrap": true,
+                       "size": "small"
+                      },
+                      {
+                       "type": "TextBlock",
+                       "text": "{detalhe}",
+                       "wrap": true,
+                       "size": "small",
+                       "isSubtle": true
+                      }
+                     ]
+                    },
+                    {
+                     "type": "Column",
+                     "width": "auto",
+                     "items": [
+                      {
+                       "type": "TextBlock",
+                       "text": "{valor_texto}",
+                       "wrap": true,
+                       "horizontalAlignment": "right",
+                       "size": "small",
+                       "weight": "bolder"
+                      }
+                     ]
+                    }
+                   ]
+                  },
+                  "_de": "lancamentos_do_cartao"
+                 },
+                 {
+                  "_repetir_lista": {
+                   "type": "Container",
+                   "items": [
+                    {
+                     "type": "Input.Text",
+                     "id": "nome_{alvo_id}",
+                     "label": "De quem é este cartão?",
+                     "campo": "nome",
+                     "isRequired": false,
+                     "isMultiline": false,
+                     "placeholder": "ex.: Maria, meu, adicional do João",
+                     "value": "{nome}",
+                     "maxLength": 40
+                    },
+                    {
+                     "type": "Input.Text",
+                     "id": "ref_{alvo_id}",
+                     "label": "",
+                     "campo": "cartao",
+                     "isRequired": false,
+                     "isMultiline": false,
+                     "value": "{ref}",
+                     "isVisible": false
+                    },
+                    {
+                     "type": "ActionSet",
+                     "actions": [
+                      {
+                       "type": "Action.Submit",
+                       "title": "Salvar nome",
+                       "data": {
+                        "operacao": "nomear_cartao"
+                       }
+                      }
+                     ]
+                    }
+                   ]
+                  },
+                  "_de": "nomear"
+                 }
+                ],
+                "id": "{alvo_id}",
+                "isVisible": false
+               }
+              ],
+              "spacing": "medium",
+              "separator": true
+             },
+             "_de": "plasticos_lista"
+            }
+           ],
+           "separator": true
+          }
+         ],
+         "id": "{alvo_cartao}",
+         "isVisible": false,
+         "separator": true
+        }
+       ],
+       "style": "emphasis",
+       "spacing": "large"
+      }
+     }
+    ],
+    "okmigoTema": "financeiro-violeta",
+    "okmigoNavegacao": "inferior"
+   },
+   "rotulo": "Cartões",
+   "icone": "cartoes"
+  },
+  {
+   "nome": "contas",
+   "titulo": "Contas",
+   "hint": "saldo por conta e distribuição do patrimônio",
+   "fonte": {
+    "resumo": {
+     "operacao": "contas_resumo"
+    },
+    "lista": {
+     "operacao": "contas",
+     "caminho": "contas"
+    }
+   },
+   "cartao": {
+    "type": "AdaptiveCard",
+    "version": "1.5",
+    "body": [
+     {
+      "type": "TextBlock",
+      "text": "Contas",
+      "wrap": true,
+      "spacing": "none",
+      "size": "extraLarge",
+      "weight": "bolder"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Total em contas",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "TextBlock",
+        "text": "{total_em_contas_texto}",
+        "wrap": true,
+        "size": "extraLarge",
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "{contas_ativas_texto}",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       }
+      ],
+      "style": "accent",
+      "spacing": "large"
+     },
+     {
+      "type": "okmigoDistribuicao",
+      "titulo": "Distribuição",
+      "itens": [
+       {
+        "_repetir_lista": {
+         "rotulo": "{rotulo}",
+         "valor": "{valor}",
+         "texto": "{texto}",
+         "tom": "{tom}"
+        },
+        "_de": "distribuicao_contas"
+       }
+      ]
+     },
+     {
+      "_repetir_lista": {
+       "type": "Container",
+       "items": [
+        {
+         "type": "ColumnSet",
+         "columns": [
+          {
+           "type": "Column",
+           "width": "auto",
+           "items": [
+            {
+             "type": "Image",
+             "url": "{logo}",
+             "altText": "{banco}",
+             "height": "small",
+             "fallback": {
+              "type": "TextBlock",
+              "text": "{icone}",
+              "wrap": true,
+              "size": "large"
+             }
+            }
+           ]
+          },
+          {
+           "type": "Column",
+           "width": "stretch",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{nome}",
+             "wrap": true,
+             "weight": "bolder"
+            },
+            {
+             "type": "TextBlock",
+             "text": "{banco} · {tipo_frase}",
+             "wrap": true,
+             "size": "small"
+            }
+           ]
+          },
+          {
+           "type": "Column",
+           "width": "auto",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{saldo_texto}",
+             "wrap": true,
+             "horizontalAlignment": "right",
+             "weight": "bolder"
+            },
+            {
+             "type": "TextBlock",
+             "text": "{percentual_total_texto}",
+             "wrap": true,
+             "horizontalAlignment": "right",
+             "size": "small"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "style": "emphasis",
+       "spacing": "medium"
+      },
+      "_quando": {
+       "campo": "tipo",
+       "em": [
+        "BANK"
+       ]
+      }
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Conectar banco",
+        "wrap": true,
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "A autorização acontece no banco. A senha não passa por aqui.",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "_repetir_lista": {
+         "type": "Container",
+         "items": [
+          {
+           "type": "TextBlock",
+           "text": "Falta autorizar no {banco}",
+           "wrap": true,
+           "size": "medium",
+           "weight": "bolder"
+          },
+          {
+           "type": "okmigoAutorizar",
+           "rotulo": "Terminar no {banco}",
+           "motivo": "Você já deu o seu documento. Agora o banco precisa autorizar a leitura — o link vale 20 minutos.",
+           "url": "{autorizar_em}"
+          }
+         ],
+         "style": "emphasis"
+        },
+        "_de": "falta_autorizar"
+       },
+       {
+        "_repetir_lista": {
+         "type": "Container",
+         "items": [
+          {
+           "type": "TextBlock",
+           "text": "Falando com o {banco}…",
+           "wrap": true,
+           "size": "medium",
+           "weight": "bolder"
+          },
+          {
+           "type": "TextBlock",
+           "text": "O banco ainda não devolveu o endereço para você autorizar. Costuma levar alguns segundos.",
+           "wrap": true,
+           "size": "small",
+           "isSubtle": true
+          },
+          {
+           "type": "ActionSet",
+           "actions": [
+            {
+             "type": "Action.Submit",
+             "title": "Ver se já dá para autorizar",
+             "data": {
+              "operacao": "conferir_autorizacao"
+             }
+            }
+           ]
+          }
+         ],
+         "style": "emphasis"
+        },
+        "_de": "falando_com_o_banco"
+       },
+       {
+        "type": "Container",
+        "items": [
+         {
+          "_repetir_lista": {
+           "type": "okmigoAutorizar",
+           "rotulo": "Conectar meu banco",
+           "motivo": "Você escolhe o banco e autoriza a leitura no site dele. A senha não passa pelo okmigo.",
+           "url": "{conectar_em}"
+          },
+          "_de": "conectar_outro"
+         },
+         {
+          "type": "ActionSet",
+          "actions": [
+           {
+            "type": "Action.ToggleVisibility",
+            "title": "ou digitar os dados aqui",
+            "targetElements": [
+             "escolher_banco"
+            ]
+           },
+           {
+            "type": "Action.Submit",
+            "title": "buscar agora",
+            "data": {
+             "operacao": "sincronizar"
+            }
+           }
+          ]
+         },
+         {
+          "type": "Container",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Escolha o seu banco. A senha dele não passa por aqui: quem a pede é o banco, na página dele.",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true
+           },
+           {
+            "type": "Input.ChoiceSet",
+            "id": "banco_busca",
+            "campo": "conector",
+            "label": "O seu banco",
+            "placeholder": "Digite Itaú, Nubank, Inter...",
+            "isRequired": true,
+            "style": "filtered",
+            "okmigoBuscar": "buscar_banco",
+            "choices": []
+           },
+           {
+            "type": "ActionSet",
+            "actions": [
+             {
+              "type": "Action.Execute",
+              "title": "Continuar",
+              "data": {
+               "operacao": "formulario_do_banco"
+              },
+              "style": "positive"
+             }
+            ]
+           }
+          ],
+          "id": "escolher_banco",
+          "isVisible": false
+         }
+        ],
+        "spacing": "large"
+       }
+      ],
+      "style": "emphasis",
+      "spacing": "large"
+     }
+    ],
+    "okmigoTema": "financeiro-violeta",
+    "okmigoNavegacao": "inferior"
+   },
+   "rotulo": "Contas",
+   "icone": "contas"
+  },
+  {
+   "nome": "extrato",
+   "titulo": "Extrato",
+   "hint": "busca e filtros por período, conta, categoria, entradas ou saídas",
+   "fonte": {
+    "resumo": {
+     "operacao": "extrato_resumo",
+     "pedido": {
+      "periodo": "{rota.periodo}",
+      "conta": "{rota.conta}",
+      "categoria": "{rota.categoria}",
+      "para_tela": true
+     }
+    },
+    "lista": {
+     "operacao": "extrato",
+     "pedido": {
+      "periodo": "{rota.periodo}",
+      "conta": "{rota.conta}",
+      "categoria": "{rota.categoria}",
+      "dias": 90,
+      "limite": 120
+     },
+     "caminho": "lancamentos"
+    }
+   },
+   "cartao": {
+    "type": "AdaptiveCard",
+    "version": "1.5",
+    "body": [
+     {
+      "type": "TextBlock",
+      "text": "Extrato",
+      "wrap": true,
+      "spacing": "none",
+      "size": "extraLarge",
+      "weight": "bolder"
+     },
+     {
+      "type": "ColumnSet",
+      "columns": [
+       {
+        "type": "Column",
+        "width": "stretch",
+        "items": [
+         {
+          "type": "TextBlock",
+          "text": "Entradas",
+          "wrap": true,
+          "size": "small"
+         },
+         {
+          "type": "TextBlock",
+          "text": "{entradas_texto}",
+          "wrap": true,
+          "size": "medium",
+          "weight": "bolder"
+         }
+        ]
+       },
+       {
+        "type": "Column",
+        "width": "stretch",
+        "items": [
+         {
+          "type": "TextBlock",
+          "text": "Saídas",
+          "wrap": true,
+          "size": "small"
+         },
+         {
+          "type": "TextBlock",
+          "text": "{saidas_texto}",
+          "wrap": true,
+          "size": "medium",
+          "weight": "bolder"
+         }
+        ]
+       }
+      ],
+      "spacing": "large"
+     },
+     {
+      "type": "TextBlock",
+      "text": "{recorte_frase}",
+      "wrap": true,
+      "size": "small",
+      "isSubtle": true
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.ToggleVisibility",
+          "title": "Filtrar",
+          "targetElements": [
+           "filtros_do_extrato"
+          ]
+         }
+        ],
+        "okmigoExpansivel": true
+       },
+       {
+        "type": "Container",
+        "id": "filtros_do_extrato",
+        "isVisible": false,
+        "items": [
+         {
+          "type": "TextBlock",
+          "text": "Período",
+          "wrap": true,
+          "size": "small",
+          "weight": "bolder"
+         },
+         {
+          "type": "ActionSet",
+          "actions": [
+           {
+            "_repetir_lista": {
+             "type": "Action.Execute",
+             "title": "{rotulo}",
+             "data": {
+              "okmigoNavegar": {
+               "rota": "extrato_filtrado",
+               "parametros": {
+                "periodo": "{periodo}",
+                "conta": "{conta}",
+                "categoria": "{categoria}"
+               }
+              }
+             }
+            },
+            "_de": "filtro_periodos"
+           }
+          ]
+         },
+         {
+          "type": "TextBlock",
+          "text": "Conta ou cartão",
+          "wrap": true,
+          "size": "small",
+          "weight": "bolder"
+         },
+         {
+          "type": "ActionSet",
+          "actions": [
+           {
+            "_repetir_lista": {
+             "type": "Action.Execute",
+             "title": "{rotulo}",
+             "data": {
+              "okmigoNavegar": {
+               "rota": "extrato_filtrado",
+               "parametros": {
+                "periodo": "{periodo}",
+                "conta": "{conta}",
+                "categoria": "{categoria}"
+               }
+              }
+             }
+            },
+            "_de": "filtro_contas"
+           }
+          ]
+         },
+         {
+          "type": "TextBlock",
+          "text": "Categoria",
+          "wrap": true,
+          "size": "small",
+          "weight": "bolder"
+         },
+         {
+          "type": "ActionSet",
+          "actions": [
+           {
+            "_repetir_lista": {
+             "type": "Action.Execute",
+             "title": "{rotulo}",
+             "data": {
+              "okmigoNavegar": {
+               "rota": "extrato_filtrado",
+               "parametros": {
+                "periodo": "{periodo}",
+                "conta": "{conta}",
+                "categoria": "{categoria}"
+               }
+              }
+             }
+            },
+            "_de": "filtro_categorias"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "okmigoListaFinanceira",
+      "titulo": "",
+      "busca": true,
+      "filtros": [
+       "todas",
+       "entradas",
+       "saidas"
+      ],
+      "itens": [
+       {
+        "_repetir_lista": {
+         "id": "{id}",
+         "grupo": "{grupo_data}",
+         "tipo": "{tipo_tela}",
+         "icone": "{icone}",
+         "titulo": "{descricao}",
+         "subtitulo": "{categoria} · {de_onde}",
+         "valor": "{valor_texto}",
+         "semantica": "{valor_semantica}"
+        }
+       }
+      ]
+     }
+    ],
+    "okmigoTema": "financeiro-violeta",
+    "okmigoNavegacao": "inferior"
+   },
+   "rotulo": "Extrato",
+   "icone": "extrato"
+  },
+  {
+   "nome": "categorias",
+   "titulo": "Categorias",
+   "hint": "gastos do mês contra orçamento por categoria",
+   "fonte": {
+    "resumo": {
+     "operacao": "categorias_resumo"
+    },
+    "lista": {
+     "operacao": "para_onde_foi",
+     "pedido": {
+      "meses": 1,
+      "com_lancamentos": true
+     },
+     "caminho": "categorias"
+    }
+   },
+   "cartao": {
+    "type": "AdaptiveCard",
+    "version": "1.5",
+    "body": [
+     {
+      "type": "TextBlock",
+      "text": "Categorias",
+      "wrap": true,
+      "spacing": "none",
+      "size": "extraLarge",
+      "weight": "bolder"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Gasto total do mês",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "TextBlock",
+        "text": "{gasto_mes_texto}",
+        "wrap": true,
+        "size": "extraLarge",
+        "weight": "bolder"
+       },
+       {
+        "type": "ColumnSet",
+        "columns": [
+         {
+          "type": "Column",
+          "width": "stretch",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Orçamento mensal",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true
+           }
+          ]
+         },
+         {
+          "type": "Column",
+          "width": "auto",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "{orcamento_mensal_texto}",
+            "wrap": true,
+            "horizontalAlignment": "right",
+            "size": "small"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "okmigoProgresso",
+        "feito": "{orcamento_feito}",
+        "de": "{orcamento_de}",
+        "tom": "suave"
+       },
+       {
+        "type": "TextBlock",
+        "text": "{orcamento_utilizado_texto}",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       }
+      ],
+      "style": "accent",
+      "spacing": "large"
+     },
+     {
+      "type": "okmigoDistribuicao",
+      "titulo": "Distribuição por categoria",
+      "itens": [
+       {
+        "_repetir_lista": {
+         "rotulo": "{rotulo}",
+         "valor": "{valor}",
+         "texto": "{texto}",
+         "tom": "{tom}"
+        },
+        "_de": "distribuicao_categorias"
+       }
+      ]
+     },
+     {
+      "_repetir_lista": {
+       "type": "Container",
+       "items": [
+        {
+         "type": "ColumnSet",
+         "columns": [
+          {
+           "type": "Column",
+           "width": "auto",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{icone}",
+             "wrap": true,
+             "size": "large"
+            }
+           ]
+          },
+          {
+           "type": "Column",
+           "width": "stretch",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{categoria_limpa}",
+             "wrap": true,
+             "weight": "bolder"
+            },
+            {
+             "type": "TextBlock",
+             "text": "Orçamento: {orcamento_texto}",
+             "wrap": true,
+             "size": "small"
+            }
+           ]
+          },
+          {
+           "type": "Column",
+           "width": "auto",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{saiu_texto}",
+             "wrap": true,
+             "horizontalAlignment": "right",
+             "weight": "bolder"
+            },
+            {
+             "type": "TextBlock",
+             "text": "{restante_texto} restante",
+             "wrap": true,
+             "horizontalAlignment": "right",
+             "size": "small"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "type": "okmigoProgresso",
+         "feito": "{progresso_feito}",
+         "de": "{progresso_de}",
+         "tom": "{tom}"
+        },
+        {
+         "type": "TextBlock",
+         "text": "{percentual_orcamento_texto}",
+         "wrap": true,
+         "size": "small"
+        },
+        {
+         "type": "TextBlock",
+         "text": "{toque_frase}",
+         "wrap": true,
+         "size": "small",
+         "isSubtle": true
+        },
+        {
+         "type": "Container",
+         "items": [
+          {
+           "type": "TextBlock",
+           "text": "{lancamentos_frase}",
+           "wrap": true,
+           "size": "small",
+           "isSubtle": true
+          },
+          {
+           "_repetir_lista": {
+            "type": "ColumnSet",
+            "columns": [
+             {
+              "type": "Column",
+              "width": "stretch",
+              "items": [
+               {
+                "type": "TextBlock",
+                "text": "{descricao}",
+                "wrap": true,
+                "size": "small"
+               },
+               {
+                "type": "TextBlock",
+                "text": "{detalhe}",
+                "wrap": true,
+                "size": "small",
+                "isSubtle": true
+               }
+              ]
+             },
+             {
+              "type": "Column",
+              "width": "auto",
+              "items": [
+               {
+                "type": "TextBlock",
+                "text": "{valor_texto}",
+                "wrap": true,
+                "horizontalAlignment": "right",
+                "size": "small",
+                "weight": "bolder"
+               }
+              ]
+             }
+            ]
+           },
+           "_de": "lancamentos_do_mes"
+          }
+         ],
+         "id": "{alvo_id}",
+         "isVisible": false,
+         "separator": true
+        }
+       ],
+       "style": "emphasis",
+       "selectAction": {
+        "type": "Action.ToggleVisibility",
+        "targetElements": [
+         "{alvo_id}"
+        ]
+       },
+       "spacing": "medium"
+      }
+     }
+    ],
+    "okmigoTema": "financeiro-violeta",
+    "okmigoNavegacao": "inferior"
+   },
+   "rotulo": "Categorias",
+   "icone": "categorias"
+  },
+  {
+   "nome": "recorrentes",
+   "titulo": "Recorrentes",
+   "hint": "cobranças que voltam todo mês e para onde o mês está indo",
+   "fonte": {
+    "resumo": {
+     "operacao": "estimar_mes"
+    },
+    "lista": {
+     "operacao": "listar_recorrentes",
+     "caminho": "recorrentes"
+    }
+   },
+   "cartao": {
+    "type": "AdaptiveCard",
+    "version": "1.5",
+    "body": [
+     {
+      "type": "TextBlock",
+      "text": "Recorrentes",
+      "wrap": true,
+      "spacing": "none",
+      "size": "extraLarge",
+      "weight": "bolder"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Para onde o mês está indo",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "TextBlock",
+        "text": "{estimativa_texto}",
+        "wrap": true,
+        "size": "extraLarge",
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "{frase}",
+        "wrap": true,
+        "size": "small"
+       }
+      ],
+      "style": "accent",
+      "spacing": "large"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Como a conta foi feita",
+        "wrap": true,
+        "weight": "bolder"
+       },
+       {
+        "_repetir_lista": {
+         "type": "ColumnSet",
+         "columns": [
+          {
+           "type": "Column",
+           "width": "stretch",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{rotulo}",
+             "wrap": true,
+             "size": "small"
+            }
+           ]
+          },
+          {
+           "type": "Column",
+           "width": "auto",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{valor_texto}",
+             "wrap": true,
+             "horizontalAlignment": "right",
+             "size": "small",
+             "weight": "bolder"
+            }
+           ]
+          }
+         ]
+        },
+        "_de": "partes"
+       },
+       {
+        "type": "TextBlock",
+        "text": "Ficou de fora",
+        "wrap": true,
+        "size": "small",
+        "weight": "bolder",
+        "isSubtle": true
+       },
+       {
+        "_repetir_lista": {
+         "type": "TextBlock",
+         "text": "{frase}",
+         "wrap": true,
+         "size": "small",
+         "isSubtle": true
+        },
+        "_de": "fica_de_fora"
+       },
+       {
+        "type": "TextBlock",
+        "text": "{aviso}",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       }
+      ],
+      "style": "emphasis",
+      "spacing": "medium"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "ColumnSet",
+        "columns": [
+         {
+          "type": "Column",
+          "width": "stretch",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Cobranças que voltam todo mês",
+            "wrap": true,
+            "weight": "bolder"
+           },
+           {
+            "type": "TextBlock",
+            "text": "{recorrentes_regra}",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true
+           }
+          ]
+         },
+         {
+          "type": "Column",
+          "width": "auto",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "{recorrentes_total_texto}",
+            "wrap": true,
+            "horizontalAlignment": "right",
+            "weight": "bolder"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "TextBlock",
+        "text": "{recorrentes_vazio_frase}",
+        "wrap": true,
+        "size": "small"
+       }
+      ],
+      "spacing": "large"
+     },
+     {
+      "_repetir_lista": {
+       "type": "Container",
+       "items": [
+        {
+         "type": "ColumnSet",
+         "columns": [
+          {
+           "type": "Column",
+           "width": "auto",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{icone}",
+             "wrap": true,
+             "size": "large"
+            }
+           ]
+          },
+          {
+           "type": "Column",
+           "width": "stretch",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{descricao}",
+             "wrap": true,
+             "weight": "bolder"
+            },
+            {
+             "type": "TextBlock",
+             "text": "{motivo}",
+             "wrap": true,
+             "size": "small",
+             "isSubtle": true
+            }
+           ]
+          },
+          {
+           "type": "Column",
+           "width": "auto",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{valor_tipico_texto}",
+             "wrap": true,
+             "horizontalAlignment": "right",
+             "weight": "bolder"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "type": "TextBlock",
+         "text": "{situacao_icone} {situacao_frase}",
+         "wrap": true,
+         "size": "small"
+        }
+       ],
+       "style": "emphasis",
+       "spacing": "small"
+      }
+     }
+    ],
+    "okmigoTema": "financeiro-violeta",
+    "okmigoNavegacao": "inferior"
+   },
+   "rotulo": "Recorrentes",
+   "icone": "cobrancas"
+  }
+ ],
+ "conversa": [
+  "resumo",
+  "por_mes",
+  "contas",
+  "cartoes",
+  "extrato",
+  "para_onde_foi",
+  "recategorizar",
+  "prever_pagamento",
+  "prever_recebimento",
+  "listar_previstos",
+  "marcar_pago",
+  "remover_previsto",
+  "fluxo_de_caixa",
+  "listar_recorrentes",
+  "estimar_mes",
+  "nomear_cartao",
+  "bancos",
+  "renovar",
+  "sincronizar"
+ ],
+ "navegacao": {
+  "tipo": "agrupada",
+  "grupos": [
+   {
+    "nome": "inicio",
+    "rotulo": "Início",
+    "icone": "inicio",
+    "superficies": [
+     "visao"
+    ],
+    "inicial": "visao"
+   },
+   {
+    "nome": "patrimonio",
+    "rotulo": "Contas e cartões",
+    "icone": "contas",
+    "superficies": [
+     "contas",
+     "cartoes"
+    ],
+    "inicial": "contas"
+   },
+   {
+    "nome": "movimentacao",
+    "rotulo": "Movimentação",
+    "icone": "extrato",
+    "superficies": [
+     "extrato",
+     "categorias",
+     "recorrentes"
+    ],
+    "inicial": "extrato"
+   }
+  ]
+ },
+ "rotas": [
+  {
+   "nome": "ver_cartoes",
+   "superficie": "cartoes",
+   "parametros": [],
+   "compartilhavel": false,
+   "historico": false,
+   "favoritavel": false
+  },
+  {
+   "nome": "extrato_filtrado",
+   "superficie": "extrato",
+   "parametros": [
+    {
+     "nome": "periodo",
+     "tipo": "texto",
+     "obrigatorio": false
+    },
+    {
+     "nome": "conta",
+     "tipo": "texto",
+     "obrigatorio": false
+    },
+    {
+     "nome": "categoria",
+     "tipo": "texto",
+     "obrigatorio": false
+    }
+   ],
+   "compartilhavel": false,
+   "historico": true,
+   "favoritavel": false
+  }
+ ],
+ "descricao_humana": "O seu dinheiro: quanto tem, onde está, e o que entrou e saiu.",
+ "nome_visivel": "Financeiro",
+ "eventos": {
+  "operacao": "eventos",
+  "parametro": "dias"
+ },
+ "recebe_documento": [
+  {
+   "operacao": "conectar",
+   "campos": [
+    "cpf",
+    "cnpj"
+   ]
+  }
+ ],
+ "agente": {
+  "contrato": "1",
+  "modo": "declarado",
+  "competencias": [
+   "saldo em conta e dívida no cartão, com a data de atualização",
+   "extrato: o que entrou e o que saiu",
+   "para onde foi o dinheiro, por categoria, mês a mês e a estimativa do mês",
+   "fatura, limite e parcelas do cartão de crédito",
+   "contas a pagar e a receber, cobranças que voltam todo mês e o fluxo de caixa",
+   "bancos conectados e autorizações a renovar"
+  ],
+  "ferramentas": [
+   "resumo",
+   "contas",
+   "cartoes",
+   "extrato",
+   "para_onde_foi",
+   "por_mes",
+   "listar_previstos",
+   "fluxo_de_caixa",
+   "listar_recorrentes",
+   "estimar_mes",
+   "bancos",
+   "renovar"
+  ],
+  "orcamento": {
+   "chamadas": 3,
+   "tokens": 12000,
+   "segundos": 20
+  },
+  "instrucoes": "Você entende do dinheiro de quem instalou o Financeiro, lido do banco por Open Finance.\n⛔ Você SÓ LÊ. Não transfere, não paga, não faz Pix nem boleto, não investe: nenhuma ferramenta move dinheiro, e nenhuma acao_proposta pode mover. Pedido assim é indisponivel com codigo fora_do_dominio: o Financeiro mostra o dinheiro, quem move é o banco.\nUse as ferramentas assim:\n- «Quanto eu tenho?»: resumo(). em_conta é saldo em conta; no_cartao é o que se deve no cartão. Os dois NUNCA se somam. Não passe com_conexao.\n- O saldo de cada conta ou cartão: contas().\n- Fatura, limite e parcelas: cartoes().\n- Lançamentos: extrato(dias=N), com N pelo período da pergunta.\n- «Para onde foi o dinheiro?»: para_onde_foi(meses=N). A categoria é palpite do provedor de Open Finance, não classificação contábil: diga isso.\n- Entrou e saiu mês a mês: por_mes(meses=N). saiu vem negativo; não inverta o sinal.\n- Contas a pagar e a receber: listar_previstos(dias=N).\n- «Quanto sobra até o dia X?»: fluxo_de_caixa(ate=...). É projeção: repasse o «se o previsto acontecer».\n- Assinaturas, mensalidades, «o que eu pago todo mês?»: listar_recorrentes(). É o que o extrato mostra voltando, não assinatura confirmada: diga isso, com o motivo de cada item. Conta cadastrada à mão é listar_previstos; parcela de cartão é cartoes.\n- «Quanto vou gastar este mês?», «o mês vai fechar em quanto?»: estimar_mes(). É estimativa: diga o total com as partes e o que fica de fora, nunca o total sozinho.\n- Bancos conectados: bancos(). Autorização vencendo ou vencida: renovar(). Renovar é gesto da pessoa no app do banco; você só avisa.\nValores em R$ como vieram (os campos _texto já trazem o R$), sempre com a data-base: o atualizado_em do resumo, a data do lançamento ou o ate do fluxo. Sem banco conectado ou com erro, diga que não conseguiu consultar (indisponivel, dado_ausente ou fonte_indisponivel); nunca estime saldo.\n- «Quanto a Maria gastou no cartão?»: cartoes(). Em conta com adicionais, plasticos_lista tem o gasto de cada cartão físico com o nome que a pessoa deu; fatura e limite são da conta inteira.\nCadastrar um previsto, dar baixa («já paguei»), recategorizar ou dar nome a um cartão é ação: devolva acao_proposta, nunca diga que fez.\nVocabulário: saldo é o dinheiro em conta; lançamento é cada entrada ou saída do extrato; fatura é o que se deve no cartão; categoria é o rótulo do gasto; previsto é uma conta a pagar ou a receber cadastrada e ainda não baixada; fluxo de caixa é saldo + a receber − a pagar − fatura até uma data.",
+  "exemplos": [
+   {
+    "pedido": "quanto eu tenho em conta hoje?",
+    "espera": "respondido"
+   },
+   {
+    "pedido": "para onde foi meu dinheiro nos últimos 3 meses?",
+    "espera": "respondido"
+   },
+   {
+    "pedido": "vai sobrar dinheiro até o fim do mês?",
+    "espera": "respondido"
+   },
+   {
+    "pedido": "quais assinaturas eu pago todo mês?",
+    "espera": "respondido"
+   },
+   {
+    "pedido": "quanto eu vou gastar até o fim do mês?",
+    "espera": "respondido"
+   },
+   {
+    "pedido": "transfere 100 reais pro João",
+    "espera": "indisponivel"
+   }
+  ]
+ }
+}

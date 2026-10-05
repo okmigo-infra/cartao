@@ -1,0 +1,3760 @@
+{
+ "slug": "estoufit",
+ "endpoint": "http://SEU-HOST:8000/mcp/",
+ "forma": "do_operador",
+ "descricao": "O treino dos alunos de um personal trainer: quem treina, o que foi prescrito e o que cada um executou. O histórico é do ALUNO e sobrevive à troca de profissional. Prescrever exige assinatura de quem tem CREF — a IA rascunha, não prescreve.",
+ "versao": "0.31.0",
+ "superficies": [
+  {
+   "nome": "alunos",
+   "titulo": "Fitness Personal",
+   "hint": "quem treina com você, o treino de cada um e quem não apareceu",
+   "fonte": {
+    "resumo": {
+     "operacao": "meus_alunos"
+    },
+    "lista": {
+     "operacao": "meus_alunos",
+     "caminho": "alunos"
+    }
+   },
+   "cartao": {
+    "type": "AdaptiveCard",
+    "version": "1.5",
+    "body": [
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "ÁREA DO PERSONAL",
+        "wrap": true,
+        "size": "small",
+        "weight": "bolder",
+        "isSubtle": true
+       },
+       {
+        "type": "TextBlock",
+        "text": "Meus alunos",
+        "wrap": true,
+        "size": "extraLarge",
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "{hoje_frase}",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.ToggleVisibility",
+          "title": "perfil",
+          "targetElements": [
+           "perfil_profissional"
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Container",
+        "items": [
+         {
+          "type": "TextBlock",
+          "text": "Seu perfil público",
+          "wrap": true,
+          "weight": "bolder"
+         },
+         {
+          "type": "TextBlock",
+          "text": "É assim que alunos e novas pessoas encontram você no OkMigo.",
+          "wrap": true,
+          "size": "small",
+          "isSubtle": true
+         },
+         {
+          "type": "TextBlock",
+          "text": "Nome e @ vêm do perfil do sócio e não são alterados aqui.",
+          "wrap": true,
+          "size": "small",
+          "isSubtle": true
+         },
+         {
+          "type": "Input.Text",
+          "id": "pp_nome",
+          "label": "Seu nome profissional",
+          "campo": "nome",
+          "okmigoSomenteLeitura": true
+         },
+         {
+          "type": "Input.Text",
+          "id": "pp_handle",
+          "label": "seu @ no okmigo",
+          "campo": "handle",
+          "okmigoSomenteLeitura": true
+         },
+         {
+          "type": "Input.Text",
+          "id": "pp_onde",
+          "label": "Onde você atende?",
+          "campo": "onde_atende"
+         },
+         {
+          "type": "ActionSet",
+          "actions": [
+           {
+            "type": "Action.Submit",
+            "title": "publicar meu perfil",
+            "data": {
+             "operacao": "salvar_perfil_profissional"
+            },
+            "style": "positive"
+           }
+          ]
+         },
+         {
+          "type": "TextBlock",
+          "text": "NA SUA PÁGINA",
+          "wrap": true,
+          "size": "small",
+          "weight": "bolder",
+          "isSubtle": true
+         },
+         {
+          "type": "TextBlock",
+          "text": "O que você oferece e o seu horário aparecem na página do seu negócio, que é pública e entra em buscador. Nada de aluno ou paciente vai para lá.",
+          "wrap": true,
+          "size": "small",
+          "isSubtle": true
+         },
+         {
+          "type": "Input.Text",
+          "id": "oferta_nome",
+          "label": "O que você oferece",
+          "campo": "nome",
+          "placeholder": "Treino presencial"
+         },
+         {
+          "type": "Input.Number",
+          "id": "oferta_duracao",
+          "label": "Duração, em minutos",
+          "campo": "duracao_min",
+          "isRequired": false,
+          "min": 1,
+          "max": 600
+         },
+         {
+          "type": "Input.Number",
+          "id": "oferta_preco",
+          "label": "Preço em reais (vazio = sob consulta)",
+          "campo": "preco_reais",
+          "isRequired": false,
+          "min": 0,
+          "max": 100000
+         },
+         {
+          "type": "ActionSet",
+          "actions": [
+           {
+            "type": "Action.Submit",
+            "title": "pôr na minha página",
+            "data": {
+             "operacao": "guardar_servico"
+            }
+           }
+          ]
+         },
+         {
+          "type": "Input.ChoiceSet",
+          "id": "exp_dias",
+          "choices": [
+           {
+            "title": "de segunda a sexta",
+            "value": "1,2,3,4,5"
+           },
+           {
+            "title": "de segunda a sábado",
+            "value": "1,2,3,4,5,6"
+           },
+           {
+            "title": "todos os dias",
+            "value": "1,2,3,4,5,6,7"
+           },
+           {
+            "title": "segunda, quarta e sexta",
+            "value": "1,3,5"
+           },
+           {
+            "title": "terça e quinta",
+            "value": "2,4"
+           },
+           {
+            "title": "só o fim de semana",
+            "value": "6,7"
+           }
+          ],
+          "label": "Dias em que você atende",
+          "campo": "dias",
+          "isRequired": false,
+          "style": "expanded"
+         },
+         {
+          "type": "Input.Text",
+          "id": "exp_inicio",
+          "label": "Das",
+          "campo": "inicio",
+          "placeholder": "06:00"
+         },
+         {
+          "type": "Input.Text",
+          "id": "exp_fim",
+          "label": "Às",
+          "campo": "fim",
+          "placeholder": "22:00"
+         },
+         {
+          "type": "ActionSet",
+          "actions": [
+           {
+            "type": "Action.Submit",
+            "title": "guardar meu horário",
+            "data": {
+             "operacao": "guardar_expediente"
+            }
+           }
+          ]
+         }
+        ],
+        "style": "emphasis",
+        "id": "perfil_profissional",
+        "isVisible": false,
+        "spacing": "medium"
+       },
+       {
+        "type": "Container",
+        "items": [
+         {
+          "type": "Container",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "👥",
+            "wrap": true,
+            "size": "medium"
+           },
+           {
+            "type": "TextBlock",
+            "text": "{m_ativos}",
+            "wrap": true,
+            "size": "extraLarge",
+            "weight": "bolder"
+           },
+           {
+            "type": "TextBlock",
+            "text": "Alunos ativos",
+            "wrap": true,
+            "size": "small",
+            "weight": "bolder"
+           },
+           {
+            "type": "TextBlock",
+            "text": "{m_ativos_nota}",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true
+           }
+          ],
+          "style": "emphasis",
+          "spacing": "small"
+         },
+         {
+          "type": "Container",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "✅",
+            "wrap": true,
+            "size": "medium"
+           },
+           {
+            "type": "TextBlock",
+            "text": "{m_hoje}",
+            "wrap": true,
+            "size": "extraLarge",
+            "weight": "bolder"
+           },
+           {
+            "type": "TextBlock",
+            "text": "Treinaram hoje",
+            "wrap": true,
+            "size": "small",
+            "weight": "bolder"
+           },
+           {
+            "type": "TextBlock",
+            "text": "{m_hoje_nota}",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true
+           }
+          ],
+          "style": "good",
+          "selectAction": {
+           "type": "Action.ToggleVisibility",
+           "targetElements": [
+            {
+             "elementId": "lista_hoje",
+             "isVisible": true
+            },
+            {
+             "elementId": "lista_todos",
+             "isVisible": false
+            },
+            {
+             "elementId": "lista_risco",
+             "isVisible": false
+            },
+            {
+             "elementId": "lista_renovar",
+             "isVisible": false
+            }
+           ]
+          },
+          "spacing": "small"
+         },
+         {
+          "type": "Container",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "⚠️",
+            "wrap": true,
+            "size": "medium"
+           },
+           {
+            "type": "TextBlock",
+            "text": "{m_risco}",
+            "wrap": true,
+            "size": "extraLarge",
+            "weight": "bolder"
+           },
+           {
+            "type": "TextBlock",
+            "text": "Risco de abandono",
+            "wrap": true,
+            "size": "small",
+            "weight": "bolder"
+           },
+           {
+            "type": "TextBlock",
+            "text": "{m_risco_nota}",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true
+           }
+          ],
+          "style": "attention",
+          "selectAction": {
+           "type": "Action.ToggleVisibility",
+           "targetElements": [
+            {
+             "elementId": "lista_risco",
+             "isVisible": true
+            },
+            {
+             "elementId": "lista_todos",
+             "isVisible": false
+            },
+            {
+             "elementId": "lista_hoje",
+             "isVisible": false
+            },
+            {
+             "elementId": "lista_renovar",
+             "isVisible": false
+            }
+           ]
+          },
+          "spacing": "small"
+         },
+         {
+          "type": "Container",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "📋",
+            "wrap": true,
+            "size": "medium"
+           },
+           {
+            "type": "TextBlock",
+            "text": "{m_fichas}",
+            "wrap": true,
+            "size": "extraLarge",
+            "weight": "bolder"
+           },
+           {
+            "type": "TextBlock",
+            "text": "Fichas para renovar",
+            "wrap": true,
+            "size": "small",
+            "weight": "bolder"
+           },
+           {
+            "type": "TextBlock",
+            "text": "{m_fichas_nota}",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true
+           }
+          ],
+          "style": "warning",
+          "selectAction": {
+           "type": "Action.ToggleVisibility",
+           "targetElements": [
+            {
+             "elementId": "lista_renovar",
+             "isVisible": true
+            },
+            {
+             "elementId": "lista_todos",
+             "isVisible": false
+            },
+            {
+             "elementId": "lista_hoje",
+             "isVisible": false
+            },
+            {
+             "elementId": "lista_risco",
+             "isVisible": false
+            }
+           ]
+          },
+          "spacing": "small"
+         }
+        ],
+        "okmigoGrade": "compacta",
+        "spacing": "medium"
+       },
+       {
+        "type": "TextBlock",
+        "text": "{subtitulo}",
+        "wrap": true,
+        "spacing": "medium",
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "Container",
+        "items": [
+         {
+          "type": "ColumnSet",
+          "columns": [
+           {
+            "type": "Column",
+            "width": "stretch",
+            "items": [
+             {
+              "type": "TextBlock",
+              "text": "Todos os alunos",
+              "wrap": true,
+              "weight": "bolder"
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "_repetir_lista": {
+           "type": "Container",
+           "items": [
+            {
+             "type": "ColumnSet",
+             "columns": [
+              {
+               "type": "Column",
+               "width": "auto",
+               "items": [
+                {
+                 "type": "Container",
+                 "items": [
+                  {
+                   "type": "TextBlock",
+                   "text": "{iniciais}",
+                   "wrap": true,
+                   "weight": "bolder"
+                  }
+                 ],
+                 "okmigoGrade": "etiquetas",
+                 "spacing": "small"
+                }
+               ]
+              },
+              {
+               "type": "Column",
+               "width": "stretch",
+               "items": [
+                {
+                 "type": "TextBlock",
+                 "text": "{apelido}",
+                 "wrap": true,
+                 "weight": "bolder"
+                },
+                {
+                 "type": "Container",
+                 "items": [
+                  {
+                   "type": "TextBlock",
+                   "text": "{risco}",
+                   "wrap": true,
+                   "size": "small"
+                  },
+                  {
+                   "type": "TextBlock",
+                   "text": "{renovar}",
+                   "wrap": true,
+                   "size": "small"
+                  }
+                 ],
+                 "okmigoGrade": "etiquetas",
+                 "spacing": "small"
+                },
+                {
+                 "type": "TextBlock",
+                 "text": "{treino_frase}",
+                 "wrap": true,
+                 "size": "small",
+                 "isSubtle": true
+                },
+                {
+                 "type": "TextBlock",
+                 "text": "{linha_frase}",
+                 "wrap": true,
+                 "size": "small",
+                 "isSubtle": true
+                }
+               ]
+              },
+              {
+               "type": "Column",
+               "width": "auto",
+               "items": [
+                {
+                 "type": "TextBlock",
+                 "text": "›",
+                 "wrap": true,
+                 "size": "large",
+                 "isSubtle": true
+                }
+               ]
+              }
+             ]
+            }
+           ],
+           "style": "emphasis",
+           "selectAction": {
+            "type": "Action.ToggleVisibility",
+            "targetElements": [
+             {
+              "elementId": "aluno_{chave}",
+              "isVisible": true
+             },
+             {
+              "elementId": "home",
+              "isVisible": false
+             }
+            ]
+           },
+           "spacing": "small"
+          }
+         }
+        ],
+        "id": "lista_todos",
+        "spacing": "medium"
+       },
+       {
+        "type": "Container",
+        "items": [
+         {
+          "type": "ColumnSet",
+          "columns": [
+           {
+            "type": "Column",
+            "width": "stretch",
+            "items": [
+             {
+              "type": "TextBlock",
+              "text": "✅ Treinaram hoje",
+              "wrap": true,
+              "weight": "bolder"
+             }
+            ]
+           },
+           {
+            "type": "Column",
+            "width": "auto",
+            "items": [
+             {
+              "type": "ActionSet",
+              "actions": [
+               {
+                "type": "Action.ToggleVisibility",
+                "title": "Ver todos",
+                "targetElements": [
+                 {
+                  "elementId": "lista_todos",
+                  "isVisible": true
+                 },
+                 {
+                  "elementId": "lista_hoje",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "lista_risco",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "lista_renovar",
+                  "isVisible": false
+                 }
+                ],
+                "mode": "secondary"
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "TextBlock",
+          "text": "{vazio_hoje}",
+          "wrap": true,
+          "size": "small",
+          "isSubtle": true
+         },
+         {
+          "_repetir_lista": {
+           "type": "Container",
+           "items": [
+            {
+             "type": "ColumnSet",
+             "columns": [
+              {
+               "type": "Column",
+               "width": "auto",
+               "items": [
+                {
+                 "type": "Container",
+                 "items": [
+                  {
+                   "type": "TextBlock",
+                   "text": "{iniciais}",
+                   "wrap": true,
+                   "weight": "bolder"
+                  }
+                 ],
+                 "okmigoGrade": "etiquetas",
+                 "spacing": "small"
+                }
+               ]
+              },
+              {
+               "type": "Column",
+               "width": "stretch",
+               "items": [
+                {
+                 "type": "TextBlock",
+                 "text": "{apelido}",
+                 "wrap": true,
+                 "weight": "bolder"
+                },
+                {
+                 "type": "TextBlock",
+                 "text": "{linha_frase}",
+                 "wrap": true,
+                 "size": "small",
+                 "isSubtle": true
+                }
+               ]
+              },
+              {
+               "type": "Column",
+               "width": "auto",
+               "items": [
+                {
+                 "type": "TextBlock",
+                 "text": "›",
+                 "wrap": true,
+                 "size": "large",
+                 "isSubtle": true
+                }
+               ]
+              }
+             ]
+            }
+           ],
+           "style": "emphasis",
+           "selectAction": {
+            "type": "Action.ToggleVisibility",
+            "targetElements": [
+             {
+              "elementId": "aluno_{chave}",
+              "isVisible": true
+             },
+             {
+              "elementId": "home",
+              "isVisible": false
+             }
+            ]
+           },
+           "spacing": "small"
+          },
+          "_quando": {
+           "campo": "treinou_hoje",
+           "em": [
+            "sim"
+           ]
+          }
+         }
+        ],
+        "id": "lista_hoje",
+        "isVisible": false,
+        "spacing": "medium"
+       },
+       {
+        "type": "Container",
+        "items": [
+         {
+          "type": "ColumnSet",
+          "columns": [
+           {
+            "type": "Column",
+            "width": "stretch",
+            "items": [
+             {
+              "type": "TextBlock",
+              "text": "⚠️ Em risco de abandono",
+              "wrap": true,
+              "weight": "bolder"
+             }
+            ]
+           },
+           {
+            "type": "Column",
+            "width": "auto",
+            "items": [
+             {
+              "type": "ActionSet",
+              "actions": [
+               {
+                "type": "Action.ToggleVisibility",
+                "title": "Ver todos",
+                "targetElements": [
+                 {
+                  "elementId": "lista_todos",
+                  "isVisible": true
+                 },
+                 {
+                  "elementId": "lista_hoje",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "lista_risco",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "lista_renovar",
+                  "isVisible": false
+                 }
+                ],
+                "mode": "secondary"
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "TextBlock",
+          "text": "{vazio_risco}",
+          "wrap": true,
+          "size": "small",
+          "isSubtle": true
+         },
+         {
+          "_repetir_lista": {
+           "type": "Container",
+           "items": [
+            {
+             "type": "ColumnSet",
+             "columns": [
+              {
+               "type": "Column",
+               "width": "auto",
+               "items": [
+                {
+                 "type": "Container",
+                 "items": [
+                  {
+                   "type": "TextBlock",
+                   "text": "{iniciais}",
+                   "wrap": true,
+                   "weight": "bolder"
+                  }
+                 ],
+                 "okmigoGrade": "etiquetas",
+                 "spacing": "small"
+                }
+               ]
+              },
+              {
+               "type": "Column",
+               "width": "stretch",
+               "items": [
+                {
+                 "type": "TextBlock",
+                 "text": "{apelido}",
+                 "wrap": true,
+                 "weight": "bolder"
+                },
+                {
+                 "type": "TextBlock",
+                 "text": "{linha_frase}",
+                 "wrap": true,
+                 "size": "small",
+                 "isSubtle": true
+                }
+               ]
+              },
+              {
+               "type": "Column",
+               "width": "auto",
+               "items": [
+                {
+                 "type": "TextBlock",
+                 "text": "›",
+                 "wrap": true,
+                 "size": "large",
+                 "isSubtle": true
+                }
+               ]
+              }
+             ]
+            }
+           ],
+           "style": "emphasis",
+           "selectAction": {
+            "type": "Action.ToggleVisibility",
+            "targetElements": [
+             {
+              "elementId": "aluno_{chave}",
+              "isVisible": true
+             },
+             {
+              "elementId": "home",
+              "isVisible": false
+             }
+            ]
+           },
+           "spacing": "small"
+          },
+          "_quando": {
+           "campo": "risco",
+           "em": [
+            "risco"
+           ]
+          }
+         }
+        ],
+        "id": "lista_risco",
+        "isVisible": false,
+        "spacing": "medium"
+       },
+       {
+        "type": "Container",
+        "items": [
+         {
+          "type": "ColumnSet",
+          "columns": [
+           {
+            "type": "Column",
+            "width": "stretch",
+            "items": [
+             {
+              "type": "TextBlock",
+              "text": "📋 Fichas vencendo",
+              "wrap": true,
+              "weight": "bolder"
+             }
+            ]
+           },
+           {
+            "type": "Column",
+            "width": "auto",
+            "items": [
+             {
+              "type": "ActionSet",
+              "actions": [
+               {
+                "type": "Action.ToggleVisibility",
+                "title": "Ver todos",
+                "targetElements": [
+                 {
+                  "elementId": "lista_todos",
+                  "isVisible": true
+                 },
+                 {
+                  "elementId": "lista_hoje",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "lista_risco",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "lista_renovar",
+                  "isVisible": false
+                 }
+                ],
+                "mode": "secondary"
+               }
+              ]
+             }
+            ]
+           }
+          ]
+         },
+         {
+          "type": "TextBlock",
+          "text": "{vazio_renovar}",
+          "wrap": true,
+          "size": "small",
+          "isSubtle": true
+         },
+         {
+          "_repetir_lista": {
+           "type": "Container",
+           "items": [
+            {
+             "type": "ColumnSet",
+             "columns": [
+              {
+               "type": "Column",
+               "width": "auto",
+               "items": [
+                {
+                 "type": "Container",
+                 "items": [
+                  {
+                   "type": "TextBlock",
+                   "text": "{iniciais}",
+                   "wrap": true,
+                   "weight": "bolder"
+                  }
+                 ],
+                 "okmigoGrade": "etiquetas",
+                 "spacing": "small"
+                }
+               ]
+              },
+              {
+               "type": "Column",
+               "width": "stretch",
+               "items": [
+                {
+                 "type": "TextBlock",
+                 "text": "{apelido}",
+                 "wrap": true,
+                 "weight": "bolder"
+                },
+                {
+                 "type": "TextBlock",
+                 "text": "{linha_frase}",
+                 "wrap": true,
+                 "size": "small",
+                 "isSubtle": true
+                }
+               ]
+              },
+              {
+               "type": "Column",
+               "width": "auto",
+               "items": [
+                {
+                 "type": "TextBlock",
+                 "text": "›",
+                 "wrap": true,
+                 "size": "large",
+                 "isSubtle": true
+                }
+               ]
+              }
+             ]
+            }
+           ],
+           "style": "emphasis",
+           "selectAction": {
+            "type": "Action.ToggleVisibility",
+            "targetElements": [
+             {
+              "elementId": "aluno_{chave}",
+              "isVisible": true
+             },
+             {
+              "elementId": "home",
+              "isVisible": false
+             }
+            ]
+           },
+           "spacing": "small"
+          },
+          "_quando": {
+           "campo": "renovar",
+           "em": [
+            "renovar"
+           ]
+          }
+         }
+        ],
+        "id": "lista_renovar",
+        "isVisible": false,
+        "spacing": "medium"
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.ToggleVisibility",
+          "title": "+ cadastrar um aluno",
+          "targetElements": [
+           "cadastrar"
+          ],
+          "mode": "secondary"
+         }
+        ],
+        "spacing": "medium"
+       },
+       {
+        "type": "Container",
+        "items": [
+         {
+          "type": "TextBlock",
+          "text": "Convidar um aluno",
+          "wrap": true,
+          "weight": "bolder"
+         },
+         {
+          "type": "TextBlock",
+          "text": "O convite aparece na conta dele. O vínculo só começa quando ele aceitar.",
+          "wrap": true,
+          "size": "small",
+          "isSubtle": true
+         },
+         {
+          "type": "Input.Text",
+          "id": "para_novo",
+          "label": "@ da pessoa no okmigo",
+          "campo": "para"
+         },
+         {
+          "type": "ActionSet",
+          "actions": [
+           {
+            "type": "Action.Submit",
+            "title": "enviar convite",
+            "data": {
+             "operacao": "convidar_aluno"
+            }
+           }
+          ]
+         }
+        ],
+        "style": "emphasis",
+        "id": "cadastrar",
+        "isVisible": false,
+        "spacing": "medium"
+       }
+      ],
+      "id": "home"
+     },
+     {
+      "_repetir_lista": {
+       "type": "Container",
+       "items": [
+        {
+         "type": "ActionSet",
+         "actions": [
+          {
+           "type": "Action.ToggleVisibility",
+           "title": "‹ alunos",
+           "targetElements": [
+            {
+             "elementId": "home",
+             "isVisible": true
+            },
+            {
+             "elementId": "aluno_{chave}",
+             "isVisible": false
+            }
+           ],
+           "mode": "secondary"
+          }
+         ]
+        },
+        {
+         "type": "ColumnSet",
+         "columns": [
+          {
+           "type": "Column",
+           "width": "auto",
+           "items": [
+            {
+             "type": "Container",
+             "items": [
+              {
+               "type": "TextBlock",
+               "text": "{iniciais}",
+               "wrap": true,
+               "size": "medium",
+               "weight": "bolder"
+              }
+             ],
+             "okmigoGrade": "etiquetas",
+             "spacing": "small"
+            }
+           ]
+          },
+          {
+           "type": "Column",
+           "width": "stretch",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{apelido}",
+             "wrap": true,
+             "size": "extraLarge",
+             "weight": "bolder"
+            },
+            {
+             "type": "Container",
+             "items": [
+              {
+               "type": "TextBlock",
+               "text": "{selo}",
+               "wrap": true,
+               "size": "small"
+              },
+              {
+               "type": "TextBlock",
+               "text": "{treino_frase}",
+               "wrap": true,
+               "size": "small"
+              },
+              {
+               "type": "TextBlock",
+               "text": "{renovar}",
+               "wrap": true,
+               "size": "small"
+              }
+             ],
+             "okmigoGrade": "etiquetas",
+             "spacing": "small"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "_repetir_lista": {
+          "type": "Container",
+          "items": [
+           {
+            "type": "ColumnSet",
+            "columns": [
+             {
+              "type": "Column",
+              "width": "auto",
+              "items": [
+               {
+                "type": "TextBlock",
+                "text": "⚠️",
+                "wrap": true
+               }
+              ]
+             },
+             {
+              "type": "Column",
+              "width": "stretch",
+              "items": [
+               {
+                "type": "TextBlock",
+                "text": "{frase}",
+                "wrap": true,
+                "size": "small"
+               }
+              ]
+             }
+            ]
+           }
+          ],
+          "style": "attention",
+          "spacing": "small"
+         },
+         "_de": "alertas"
+        },
+        {
+         "_repetir_lista": {
+          "type": "Container",
+          "items": [
+           {
+            "type": "ColumnSet",
+            "columns": [
+             {
+              "type": "Column",
+              "width": "auto",
+              "items": [
+               {
+                "type": "TextBlock",
+                "text": "💪",
+                "wrap": true
+               }
+              ]
+             },
+             {
+              "type": "Column",
+              "width": "stretch",
+              "items": [
+               {
+                "type": "TextBlock",
+                "text": "{frase}",
+                "wrap": true,
+                "size": "small"
+               }
+              ]
+             }
+            ]
+           }
+          ],
+          "style": "warning",
+          "spacing": "small"
+         },
+         "_de": "esforco_alerta"
+        },
+        {
+         "_repetir_lista": {
+          "type": "Container",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "✦ {titulo} com a IA",
+            "wrap": true,
+            "weight": "bolder"
+           },
+           {
+            "type": "TextBlock",
+            "text": "A IA monta um rascunho pela biblioteca. Nada vale até você conferir e assinar — e dá para corrigir, tirar e pôr exercício antes.",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true
+           },
+           {
+            "type": "Input.Text",
+            "id": "pv_{chave}",
+            "label": "",
+            "campo": "para_vinculo",
+            "value": "{vinculo_id}",
+            "isVisible": false
+           },
+           {
+            "type": "ActionSet",
+            "actions": [
+             {
+              "type": "Action.ToggleVisibility",
+              "title": "ajustar área, nível e equipamento ▾",
+              "targetElements": [
+               "iaopc_{chave}"
+              ],
+              "mode": "secondary"
+             }
+            ]
+           },
+           {
+            "type": "Container",
+            "items": [
+             {
+              "type": "Input.ChoiceSet",
+              "id": "iaf_{chave}",
+              "choices": [
+               {
+                "title": "corpo inteiro",
+                "value": "corpo inteiro",
+                "okmigoIcone": "⚡"
+               },
+               {
+                "title": "pernas e glúteos",
+                "value": "pernas e glúteos",
+                "okmigoIcone": "🦵"
+               },
+               {
+                "title": "abdômen",
+                "value": "abdômen",
+                "okmigoIcone": "🎯"
+               },
+               {
+                "title": "peito",
+                "value": "peito",
+                "okmigoIcone": "🏋️"
+               },
+               {
+                "title": "costas",
+                "value": "costas",
+                "okmigoIcone": "🧗"
+               },
+               {
+                "title": "braços",
+                "value": "braços",
+                "okmigoIcone": "💪"
+               },
+               {
+                "title": "ombros",
+                "value": "ombros",
+                "okmigoIcone": "🤸"
+               }
+              ],
+              "label": "Área",
+              "campo": "foco",
+              "isRequired": true,
+              "style": "expanded",
+              "value": "corpo inteiro"
+             },
+             {
+              "type": "Input.ChoiceSet",
+              "id": "ian_{chave}",
+              "choices": [
+               {
+                "title": "iniciante",
+                "value": "iniciante",
+                "okmigoNota": "começando"
+               },
+               {
+                "title": "intermediário",
+                "value": "intermediário",
+                "okmigoNota": "alguns meses"
+               },
+               {
+                "title": "avançado",
+                "value": "avançado",
+                "okmigoNota": "anos, sem pausa"
+               },
+               {
+                "title": "rato de academia",
+                "value": "rato de academia",
+                "okmigoNota": "mais série"
+               }
+              ],
+              "label": "Nível",
+              "campo": "nivel",
+              "isRequired": true,
+              "style": "expanded",
+              "value": "iniciante"
+             },
+             {
+              "type": "Input.ChoiceSet",
+              "id": "iae_{chave}",
+              "choices": [
+               {
+                "title": "só peso do corpo",
+                "value": "só peso do corpo",
+                "okmigoNota": "em casa"
+               },
+               {
+                "title": "halteres",
+                "value": "halteres",
+                "okmigoNota": "um par"
+               },
+               {
+                "title": "academia",
+                "value": "academia",
+                "okmigoNota": "máquinas e barra"
+               }
+              ],
+              "label": "Equipamento",
+              "campo": "equipamento",
+              "isRequired": true,
+              "style": "expanded",
+              "value": "halteres"
+             }
+            ],
+            "id": "iaopc_{chave}",
+            "isVisible": false,
+            "spacing": "small"
+           },
+           {
+            "type": "ActionSet",
+            "actions": [
+             {
+              "type": "Action.Submit",
+              "title": "✦ Criar ficha com a IA",
+              "data": {
+               "operacao": "sugerir_treino"
+              },
+              "style": "positive"
+             }
+            ]
+           }
+          ],
+          "style": "emphasis",
+          "spacing": "medium"
+         },
+         "_de": "ia"
+        },
+        {
+         "_repetir_lista": {
+          "type": "Container",
+          "items": [
+           {
+            "type": "ColumnSet",
+            "columns": [
+             {
+              "type": "Column",
+              "width": "stretch",
+              "items": [
+               {
+                "type": "TextBlock",
+                "text": "Rascunho · {nome}",
+                "wrap": true,
+                "weight": "bolder"
+               },
+               {
+                "type": "TextBlock",
+                "text": "{quantos_frase} · não vale nada até você assinar",
+                "wrap": true,
+                "size": "small",
+                "isSubtle": true
+               }
+              ]
+             },
+             {
+              "type": "Column",
+              "width": "auto",
+              "items": [
+               {
+                "type": "ActionSet",
+                "actions": [
+                 {
+                  "type": "Action.ToggleVisibility",
+                  "title": "+ exercício",
+                  "targetElements": [
+                   "novo_{chave}"
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Container",
+            "items": [
+             {
+              "type": "TextBlock",
+              "text": "Novo exercício",
+              "wrap": true,
+              "weight": "bolder"
+             },
+             {
+              "type": "TextBlock",
+              "text": "Escolha a área e busque na biblioteca — o que entra é o exercício cadastrado, nunca um nome digitado. Ele entra com 3× 12 e 60s de descanso; ajuste no «editar» do item.",
+              "wrap": true,
+              "size": "small",
+              "isSubtle": true
+             },
+             {
+              "type": "ActionSet",
+              "actions": [
+               {
+                "type": "Action.ToggleVisibility",
+                "title": "⚡ corpo inteiro",
+                "targetElements": [
+                 {
+                  "elementId": "nx_{chave}_0",
+                  "isVisible": true
+                 },
+                 {
+                  "elementId": "nx_{chave}_1",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "nx_{chave}_2",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "nx_{chave}_3",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "nx_{chave}_4",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "nx_{chave}_5",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "nx_{chave}_6",
+                  "isVisible": false
+                 }
+                ]
+               },
+               {
+                "type": "Action.ToggleVisibility",
+                "title": "🦵 pernas e glúteos",
+                "targetElements": [
+                 {
+                  "elementId": "nx_{chave}_0",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "nx_{chave}_1",
+                  "isVisible": true
+                 },
+                 {
+                  "elementId": "nx_{chave}_2",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "nx_{chave}_3",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "nx_{chave}_4",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "nx_{chave}_5",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "nx_{chave}_6",
+                  "isVisible": false
+                 }
+                ]
+               },
+               {
+                "type": "Action.ToggleVisibility",
+                "title": "🎯 abdômen",
+                "targetElements": [
+                 {
+                  "elementId": "nx_{chave}_0",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "nx_{chave}_1",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "nx_{chave}_2",
+                  "isVisible": true
+                 },
+                 {
+                  "elementId": "nx_{chave}_3",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "nx_{chave}_4",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "nx_{chave}_5",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "nx_{chave}_6",
+                  "isVisible": false
+                 }
+                ]
+               },
+               {
+                "type": "Action.ToggleVisibility",
+                "title": "🏋️ peito",
+                "targetElements": [
+                 {
+                  "elementId": "nx_{chave}_0",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "nx_{chave}_1",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "nx_{chave}_2",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "nx_{chave}_3",
+                  "isVisible": true
+                 },
+                 {
+                  "elementId": "nx_{chave}_4",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "nx_{chave}_5",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "nx_{chave}_6",
+                  "isVisible": false
+                 }
+                ]
+               },
+               {
+                "type": "Action.ToggleVisibility",
+                "title": "🧗 costas",
+                "targetElements": [
+                 {
+                  "elementId": "nx_{chave}_0",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "nx_{chave}_1",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "nx_{chave}_2",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "nx_{chave}_3",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "nx_{chave}_4",
+                  "isVisible": true
+                 },
+                 {
+                  "elementId": "nx_{chave}_5",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "nx_{chave}_6",
+                  "isVisible": false
+                 }
+                ]
+               },
+               {
+                "type": "Action.ToggleVisibility",
+                "title": "💪 braços",
+                "targetElements": [
+                 {
+                  "elementId": "nx_{chave}_0",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "nx_{chave}_1",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "nx_{chave}_2",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "nx_{chave}_3",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "nx_{chave}_4",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "nx_{chave}_5",
+                  "isVisible": true
+                 },
+                 {
+                  "elementId": "nx_{chave}_6",
+                  "isVisible": false
+                 }
+                ]
+               },
+               {
+                "type": "Action.ToggleVisibility",
+                "title": "🤸 ombros",
+                "targetElements": [
+                 {
+                  "elementId": "nx_{chave}_0",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "nx_{chave}_1",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "nx_{chave}_2",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "nx_{chave}_3",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "nx_{chave}_4",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "nx_{chave}_5",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "nx_{chave}_6",
+                  "isVisible": true
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Container",
+              "items": [
+               {
+                "type": "Container",
+                "items": [
+                 {
+                  "type": "Input.Text",
+                  "id": "nv_{chave}_corpo",
+                  "label": "",
+                  "campo": "vinculo_id",
+                  "value": "{vinculo_id}",
+                  "isVisible": false
+                 },
+                 {
+                  "type": "Input.Text",
+                  "id": "no_{chave}_corpo",
+                  "label": "",
+                  "campo": "onde",
+                  "value": "rascunho",
+                  "isVisible": false
+                 },
+                 {
+                  "type": "Input.ChoiceSet",
+                  "id": "nxe_{chave}_corpo",
+                  "choices": [
+                   {
+                    "_repetir_lista": {
+                     "title": "{nome}",
+                     "value": "{id}"
+                    },
+                    "_de": "bib_corpo"
+                   }
+                  ],
+                  "label": "Exercício",
+                  "campo": "exercicio_id",
+                  "isRequired": true,
+                  "style": "filtered",
+                  "okmigoEstrito": true,
+                  "placeholder": "digite para buscar",
+                  "value": ""
+                 },
+                 {
+                  "type": "ActionSet",
+                  "actions": [
+                   {
+                    "type": "Action.Submit",
+                    "title": "Adicionar",
+                    "data": {
+                     "operacao": "adicionar_item"
+                    }
+                   }
+                  ]
+                 }
+                ],
+                "spacing": "small"
+               }
+              ],
+              "id": "nx_{chave}_0",
+              "spacing": "medium"
+             },
+             {
+              "type": "Container",
+              "items": [
+               {
+                "type": "Container",
+                "items": [
+                 {
+                  "type": "Input.Text",
+                  "id": "nv_{chave}_pernas",
+                  "label": "",
+                  "campo": "vinculo_id",
+                  "value": "{vinculo_id}",
+                  "isVisible": false
+                 },
+                 {
+                  "type": "Input.Text",
+                  "id": "no_{chave}_pernas",
+                  "label": "",
+                  "campo": "onde",
+                  "value": "rascunho",
+                  "isVisible": false
+                 },
+                 {
+                  "type": "Input.ChoiceSet",
+                  "id": "nxe_{chave}_pernas",
+                  "choices": [
+                   {
+                    "_repetir_lista": {
+                     "title": "{nome}",
+                     "value": "{id}"
+                    },
+                    "_de": "bib_pernas"
+                   }
+                  ],
+                  "label": "Exercício",
+                  "campo": "exercicio_id",
+                  "isRequired": true,
+                  "style": "filtered",
+                  "okmigoEstrito": true,
+                  "placeholder": "digite para buscar",
+                  "value": ""
+                 },
+                 {
+                  "type": "ActionSet",
+                  "actions": [
+                   {
+                    "type": "Action.Submit",
+                    "title": "Adicionar",
+                    "data": {
+                     "operacao": "adicionar_item"
+                    }
+                   }
+                  ]
+                 }
+                ],
+                "spacing": "small"
+               }
+              ],
+              "id": "nx_{chave}_1",
+              "isVisible": false,
+              "spacing": "medium"
+             },
+             {
+              "type": "Container",
+              "items": [
+               {
+                "type": "Container",
+                "items": [
+                 {
+                  "type": "Input.Text",
+                  "id": "nv_{chave}_abdomen",
+                  "label": "",
+                  "campo": "vinculo_id",
+                  "value": "{vinculo_id}",
+                  "isVisible": false
+                 },
+                 {
+                  "type": "Input.Text",
+                  "id": "no_{chave}_abdomen",
+                  "label": "",
+                  "campo": "onde",
+                  "value": "rascunho",
+                  "isVisible": false
+                 },
+                 {
+                  "type": "Input.ChoiceSet",
+                  "id": "nxe_{chave}_abdomen",
+                  "choices": [
+                   {
+                    "_repetir_lista": {
+                     "title": "{nome}",
+                     "value": "{id}"
+                    },
+                    "_de": "bib_abdomen"
+                   }
+                  ],
+                  "label": "Exercício",
+                  "campo": "exercicio_id",
+                  "isRequired": true,
+                  "style": "filtered",
+                  "okmigoEstrito": true,
+                  "placeholder": "digite para buscar",
+                  "value": ""
+                 },
+                 {
+                  "type": "ActionSet",
+                  "actions": [
+                   {
+                    "type": "Action.Submit",
+                    "title": "Adicionar",
+                    "data": {
+                     "operacao": "adicionar_item"
+                    }
+                   }
+                  ]
+                 }
+                ],
+                "spacing": "small"
+               }
+              ],
+              "id": "nx_{chave}_2",
+              "isVisible": false,
+              "spacing": "medium"
+             },
+             {
+              "type": "Container",
+              "items": [
+               {
+                "type": "Container",
+                "items": [
+                 {
+                  "type": "Input.Text",
+                  "id": "nv_{chave}_peito",
+                  "label": "",
+                  "campo": "vinculo_id",
+                  "value": "{vinculo_id}",
+                  "isVisible": false
+                 },
+                 {
+                  "type": "Input.Text",
+                  "id": "no_{chave}_peito",
+                  "label": "",
+                  "campo": "onde",
+                  "value": "rascunho",
+                  "isVisible": false
+                 },
+                 {
+                  "type": "Input.ChoiceSet",
+                  "id": "nxe_{chave}_peito",
+                  "choices": [
+                   {
+                    "_repetir_lista": {
+                     "title": "{nome}",
+                     "value": "{id}"
+                    },
+                    "_de": "bib_peito"
+                   }
+                  ],
+                  "label": "Exercício",
+                  "campo": "exercicio_id",
+                  "isRequired": true,
+                  "style": "filtered",
+                  "okmigoEstrito": true,
+                  "placeholder": "digite para buscar",
+                  "value": ""
+                 },
+                 {
+                  "type": "ActionSet",
+                  "actions": [
+                   {
+                    "type": "Action.Submit",
+                    "title": "Adicionar",
+                    "data": {
+                     "operacao": "adicionar_item"
+                    }
+                   }
+                  ]
+                 }
+                ],
+                "spacing": "small"
+               }
+              ],
+              "id": "nx_{chave}_3",
+              "isVisible": false,
+              "spacing": "medium"
+             },
+             {
+              "type": "Container",
+              "items": [
+               {
+                "type": "Container",
+                "items": [
+                 {
+                  "type": "Input.Text",
+                  "id": "nv_{chave}_costas",
+                  "label": "",
+                  "campo": "vinculo_id",
+                  "value": "{vinculo_id}",
+                  "isVisible": false
+                 },
+                 {
+                  "type": "Input.Text",
+                  "id": "no_{chave}_costas",
+                  "label": "",
+                  "campo": "onde",
+                  "value": "rascunho",
+                  "isVisible": false
+                 },
+                 {
+                  "type": "Input.ChoiceSet",
+                  "id": "nxe_{chave}_costas",
+                  "choices": [
+                   {
+                    "_repetir_lista": {
+                     "title": "{nome}",
+                     "value": "{id}"
+                    },
+                    "_de": "bib_costas"
+                   }
+                  ],
+                  "label": "Exercício",
+                  "campo": "exercicio_id",
+                  "isRequired": true,
+                  "style": "filtered",
+                  "okmigoEstrito": true,
+                  "placeholder": "digite para buscar",
+                  "value": ""
+                 },
+                 {
+                  "type": "ActionSet",
+                  "actions": [
+                   {
+                    "type": "Action.Submit",
+                    "title": "Adicionar",
+                    "data": {
+                     "operacao": "adicionar_item"
+                    }
+                   }
+                  ]
+                 }
+                ],
+                "spacing": "small"
+               }
+              ],
+              "id": "nx_{chave}_4",
+              "isVisible": false,
+              "spacing": "medium"
+             },
+             {
+              "type": "Container",
+              "items": [
+               {
+                "type": "Container",
+                "items": [
+                 {
+                  "type": "Input.Text",
+                  "id": "nv_{chave}_bracos",
+                  "label": "",
+                  "campo": "vinculo_id",
+                  "value": "{vinculo_id}",
+                  "isVisible": false
+                 },
+                 {
+                  "type": "Input.Text",
+                  "id": "no_{chave}_bracos",
+                  "label": "",
+                  "campo": "onde",
+                  "value": "rascunho",
+                  "isVisible": false
+                 },
+                 {
+                  "type": "Input.ChoiceSet",
+                  "id": "nxe_{chave}_bracos",
+                  "choices": [
+                   {
+                    "_repetir_lista": {
+                     "title": "{nome}",
+                     "value": "{id}"
+                    },
+                    "_de": "bib_bracos"
+                   }
+                  ],
+                  "label": "Exercício",
+                  "campo": "exercicio_id",
+                  "isRequired": true,
+                  "style": "filtered",
+                  "okmigoEstrito": true,
+                  "placeholder": "digite para buscar",
+                  "value": ""
+                 },
+                 {
+                  "type": "ActionSet",
+                  "actions": [
+                   {
+                    "type": "Action.Submit",
+                    "title": "Adicionar",
+                    "data": {
+                     "operacao": "adicionar_item"
+                    }
+                   }
+                  ]
+                 }
+                ],
+                "spacing": "small"
+               }
+              ],
+              "id": "nx_{chave}_5",
+              "isVisible": false,
+              "spacing": "medium"
+             },
+             {
+              "type": "Container",
+              "items": [
+               {
+                "type": "Container",
+                "items": [
+                 {
+                  "type": "Input.Text",
+                  "id": "nv_{chave}_ombros",
+                  "label": "",
+                  "campo": "vinculo_id",
+                  "value": "{vinculo_id}",
+                  "isVisible": false
+                 },
+                 {
+                  "type": "Input.Text",
+                  "id": "no_{chave}_ombros",
+                  "label": "",
+                  "campo": "onde",
+                  "value": "rascunho",
+                  "isVisible": false
+                 },
+                 {
+                  "type": "Input.ChoiceSet",
+                  "id": "nxe_{chave}_ombros",
+                  "choices": [
+                   {
+                    "_repetir_lista": {
+                     "title": "{nome}",
+                     "value": "{id}"
+                    },
+                    "_de": "bib_ombros"
+                   }
+                  ],
+                  "label": "Exercício",
+                  "campo": "exercicio_id",
+                  "isRequired": true,
+                  "style": "filtered",
+                  "okmigoEstrito": true,
+                  "placeholder": "digite para buscar",
+                  "value": ""
+                 },
+                 {
+                  "type": "ActionSet",
+                  "actions": [
+                   {
+                    "type": "Action.Submit",
+                    "title": "Adicionar",
+                    "data": {
+                     "operacao": "adicionar_item"
+                    }
+                   }
+                  ]
+                 }
+                ],
+                "spacing": "small"
+               }
+              ],
+              "id": "nx_{chave}_6",
+              "isVisible": false,
+              "spacing": "medium"
+             }
+            ],
+            "style": "emphasis",
+            "id": "novo_{chave}",
+            "isVisible": false,
+            "spacing": "small"
+           },
+           {
+            "_repetir_lista": {
+             "type": "Container",
+             "items": [
+              {
+               "type": "ColumnSet",
+               "columns": [
+                {
+                 "type": "Column",
+                 "width": "auto",
+                 "items": [
+                  {
+                   "type": "Container",
+                   "items": [
+                    {
+                     "type": "TextBlock",
+                     "text": "{passo}",
+                     "wrap": true,
+                     "weight": "bolder"
+                    }
+                   ],
+                   "okmigoGrade": "etiquetas",
+                   "spacing": "small"
+                  }
+                 ]
+                },
+                {
+                 "type": "Column",
+                 "width": "stretch",
+                 "items": [
+                  {
+                   "type": "TextBlock",
+                   "text": "{exercicio}",
+                   "wrap": true,
+                   "weight": "bolder"
+                  },
+                  {
+                   "type": "TextBlock",
+                   "text": "{musculo}",
+                   "wrap": true,
+                   "size": "small",
+                   "isSubtle": true
+                  },
+                  {
+                   "type": "TextBlock",
+                   "text": "{prescrito}",
+                   "wrap": true,
+                   "size": "small"
+                  }
+                 ]
+                },
+                {
+                 "type": "Column",
+                 "width": "auto",
+                 "items": [
+                  {
+                   "type": "TextBlock",
+                   "text": "editar ▾",
+                   "wrap": true,
+                   "size": "small",
+                   "weight": "bolder",
+                   "isSubtle": true
+                  }
+                 ]
+                }
+               ]
+              },
+              {
+               "type": "Container",
+               "items": [
+                {
+                 "type": "Input.Text",
+                 "id": "ip_{chave}",
+                 "label": "",
+                 "campo": "item_par",
+                 "value": "{item_par}",
+                 "isVisible": false
+                },
+                {
+                 "type": "ColumnSet",
+                 "columns": [
+                  {
+                   "type": "Column",
+                   "width": "stretch",
+                   "items": [
+                    {
+                     "type": "Input.Number",
+                     "id": "se_{chave}",
+                     "label": "Séries",
+                     "campo": "series",
+                     "value": "{series_atual}",
+                     "min": 1,
+                     "max": 10
+                    }
+                   ]
+                  },
+                  {
+                   "type": "Column",
+                   "width": "stretch",
+                   "items": [
+                    {
+                     "type": "Input.Text",
+                     "id": "re_{chave}",
+                     "label": "Repetições",
+                     "campo": "repeticoes",
+                     "placeholder": "10-12",
+                     "value": "{reps_atual}"
+                    }
+                   ]
+                  },
+                  {
+                   "type": "Column",
+                   "width": "stretch",
+                   "items": [
+                    {
+                     "type": "Input.Number",
+                     "id": "cg_{chave}",
+                     "label": "Carga (kg)",
+                     "campo": "carga_kg",
+                     "value": "{carga_atual}",
+                     "min": 0,
+                     "max": 500
+                    }
+                   ]
+                  }
+                 ]
+                },
+                {
+                 "type": "Input.ChoiceSet",
+                 "id": "tr_{chave}",
+                 "choices": [
+                  {
+                   "_repetir_lista": {
+                    "title": "{nome}",
+                    "value": "{id}"
+                   },
+                   "_de": "opcoes"
+                  }
+                 ],
+                 "label": "Trocar por outro exercício",
+                 "campo": "exercicio_id",
+                 "style": "filtered",
+                 "okmigoEstrito": true,
+                 "placeholder": "digite para buscar",
+                 "value": ""
+                },
+                {
+                 "type": "TextBlock",
+                 "text": "Deixe em branco o que não quiser mudar. Carga ZERO é peso do corpo.",
+                 "wrap": true,
+                 "size": "small",
+                 "isSubtle": true
+                },
+                {
+                 "type": "ActionSet",
+                 "actions": [
+                  {
+                   "type": "Action.Submit",
+                   "title": "salvar este exercício",
+                   "data": {
+                    "operacao": "ajustar_item"
+                   }
+                  }
+                 ]
+                },
+                {
+                 "type": "Container",
+                 "items": [
+                  {
+                   "type": "Input.Text",
+                   "id": "rm_{chave}",
+                   "label": "",
+                   "campo": "item_par",
+                   "value": "{item_par}",
+                   "isVisible": false
+                  },
+                  {
+                   "type": "ActionSet",
+                   "actions": [
+                    {
+                     "type": "Action.Submit",
+                     "title": "remover do rascunho",
+                     "data": {
+                      "operacao": "remover_item"
+                     },
+                     "style": "destructive"
+                    }
+                   ]
+                  }
+                 ],
+                 "spacing": "small"
+                }
+               ],
+               "id": "aj_{chave}",
+               "isVisible": false,
+               "spacing": "small"
+              }
+             ],
+             "style": "emphasis",
+             "selectAction": {
+              "type": "Action.ToggleVisibility",
+              "targetElements": [
+               "aj_{chave}"
+              ]
+             },
+             "spacing": "small"
+            },
+            "_de": "itens"
+           },
+           {
+            "type": "Container",
+            "items": [
+             {
+              "type": "Input.Text",
+              "id": "pv2_{chave}",
+              "label": "",
+              "campo": "para_vinculo",
+              "value": "{vinculo_id}",
+              "isVisible": false
+             },
+             {
+              "type": "ActionSet",
+              "actions": [
+               {
+                "type": "Action.Submit",
+                "title": "✦ refazer com a IA (troca o rascunho)",
+                "data": {
+                 "operacao": "sugerir_treino"
+                },
+                "mode": "secondary"
+               }
+              ]
+             }
+            ],
+            "spacing": "small"
+           },
+           {
+            "type": "Container",
+            "items": [
+             {
+              "type": "Input.Text",
+              "id": "cref_{chave}",
+              "label": "Quem assina — nome e registro no conselho",
+              "campo": "assinado_por",
+              "isRequired": true
+             },
+             {
+              "type": "Input.Text",
+              "id": "va_{chave}",
+              "label": "",
+              "campo": "vinculo_id",
+              "value": "{vinculo_id}",
+              "isVisible": false
+             },
+             {
+              "type": "ActionSet",
+              "actions": [
+               {
+                "type": "Action.Submit",
+                "title": "Salvar e assinar a ficha",
+                "data": {
+                 "operacao": "prescrever_treino"
+                },
+                "style": "positive"
+               }
+              ],
+              "okmigoRodape": true
+             }
+            ],
+            "style": "emphasis",
+            "spacing": "medium"
+           }
+          ],
+          "spacing": "medium"
+         },
+         "_de": "rascunho_bloco"
+        },
+        {
+         "type": "TextBlock",
+         "text": "{ficha_titulo}",
+         "wrap": true,
+         "spacing": "medium",
+         "weight": "bolder"
+        },
+        {
+         "_repetir_lista": {
+          "type": "Container",
+          "items": [
+           {
+            "type": "ColumnSet",
+            "columns": [
+             {
+              "type": "Column",
+              "width": "stretch",
+              "items": [
+               {
+                "type": "TextBlock",
+                "text": "{titulo}",
+                "wrap": true,
+                "weight": "bolder"
+               },
+               {
+                "type": "TextBlock",
+                "text": "{nota}",
+                "wrap": true,
+                "size": "small",
+                "isSubtle": true
+               }
+              ]
+             },
+             {
+              "type": "Column",
+              "width": "auto",
+              "items": [
+               {
+                "type": "ActionSet",
+                "actions": [
+                 {
+                  "type": "Action.ToggleVisibility",
+                  "title": "+ exercício",
+                  "targetElements": [
+                   "novof_{chave}"
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "Container",
+            "items": [
+             {
+              "type": "TextBlock",
+              "text": "Novo exercício na ficha",
+              "wrap": true,
+              "weight": "bolder"
+             },
+             {
+              "type": "TextBlock",
+              "text": "Entra na hora com 3× 12 e 60s (ajuste no «editar» do item), e reafirma a sua assinatura.",
+              "wrap": true,
+              "size": "small",
+              "isSubtle": true
+             },
+             {
+              "type": "ActionSet",
+              "actions": [
+               {
+                "type": "Action.ToggleVisibility",
+                "title": "⚡ corpo inteiro",
+                "targetElements": [
+                 {
+                  "elementId": "fx_{chave}_0",
+                  "isVisible": true
+                 },
+                 {
+                  "elementId": "fx_{chave}_1",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "fx_{chave}_2",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "fx_{chave}_3",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "fx_{chave}_4",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "fx_{chave}_5",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "fx_{chave}_6",
+                  "isVisible": false
+                 }
+                ]
+               },
+               {
+                "type": "Action.ToggleVisibility",
+                "title": "🦵 pernas e glúteos",
+                "targetElements": [
+                 {
+                  "elementId": "fx_{chave}_0",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "fx_{chave}_1",
+                  "isVisible": true
+                 },
+                 {
+                  "elementId": "fx_{chave}_2",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "fx_{chave}_3",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "fx_{chave}_4",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "fx_{chave}_5",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "fx_{chave}_6",
+                  "isVisible": false
+                 }
+                ]
+               },
+               {
+                "type": "Action.ToggleVisibility",
+                "title": "🎯 abdômen",
+                "targetElements": [
+                 {
+                  "elementId": "fx_{chave}_0",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "fx_{chave}_1",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "fx_{chave}_2",
+                  "isVisible": true
+                 },
+                 {
+                  "elementId": "fx_{chave}_3",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "fx_{chave}_4",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "fx_{chave}_5",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "fx_{chave}_6",
+                  "isVisible": false
+                 }
+                ]
+               },
+               {
+                "type": "Action.ToggleVisibility",
+                "title": "🏋️ peito",
+                "targetElements": [
+                 {
+                  "elementId": "fx_{chave}_0",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "fx_{chave}_1",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "fx_{chave}_2",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "fx_{chave}_3",
+                  "isVisible": true
+                 },
+                 {
+                  "elementId": "fx_{chave}_4",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "fx_{chave}_5",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "fx_{chave}_6",
+                  "isVisible": false
+                 }
+                ]
+               },
+               {
+                "type": "Action.ToggleVisibility",
+                "title": "🧗 costas",
+                "targetElements": [
+                 {
+                  "elementId": "fx_{chave}_0",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "fx_{chave}_1",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "fx_{chave}_2",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "fx_{chave}_3",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "fx_{chave}_4",
+                  "isVisible": true
+                 },
+                 {
+                  "elementId": "fx_{chave}_5",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "fx_{chave}_6",
+                  "isVisible": false
+                 }
+                ]
+               },
+               {
+                "type": "Action.ToggleVisibility",
+                "title": "💪 braços",
+                "targetElements": [
+                 {
+                  "elementId": "fx_{chave}_0",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "fx_{chave}_1",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "fx_{chave}_2",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "fx_{chave}_3",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "fx_{chave}_4",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "fx_{chave}_5",
+                  "isVisible": true
+                 },
+                 {
+                  "elementId": "fx_{chave}_6",
+                  "isVisible": false
+                 }
+                ]
+               },
+               {
+                "type": "Action.ToggleVisibility",
+                "title": "🤸 ombros",
+                "targetElements": [
+                 {
+                  "elementId": "fx_{chave}_0",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "fx_{chave}_1",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "fx_{chave}_2",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "fx_{chave}_3",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "fx_{chave}_4",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "fx_{chave}_5",
+                  "isVisible": false
+                 },
+                 {
+                  "elementId": "fx_{chave}_6",
+                  "isVisible": true
+                 }
+                ]
+               }
+              ]
+             },
+             {
+              "type": "Container",
+              "items": [
+               {
+                "type": "Container",
+                "items": [
+                 {
+                  "type": "Input.Text",
+                  "id": "nv_{chave}_corpo",
+                  "label": "",
+                  "campo": "vinculo_id",
+                  "value": "{vinculo_id}",
+                  "isVisible": false
+                 },
+                 {
+                  "type": "Input.Text",
+                  "id": "no_{chave}_corpo",
+                  "label": "",
+                  "campo": "onde",
+                  "value": "ficha",
+                  "isVisible": false
+                 },
+                 {
+                  "type": "Input.ChoiceSet",
+                  "id": "nxe_{chave}_corpo",
+                  "choices": [
+                   {
+                    "_repetir_lista": {
+                     "title": "{nome}",
+                     "value": "{id}"
+                    },
+                    "_de": "bib_corpo"
+                   }
+                  ],
+                  "label": "Exercício",
+                  "campo": "exercicio_id",
+                  "isRequired": true,
+                  "style": "filtered",
+                  "okmigoEstrito": true,
+                  "placeholder": "digite para buscar",
+                  "value": ""
+                 },
+                 {
+                  "type": "ActionSet",
+                  "actions": [
+                   {
+                    "type": "Action.Submit",
+                    "title": "Adicionar",
+                    "data": {
+                     "operacao": "adicionar_item"
+                    }
+                   }
+                  ]
+                 }
+                ],
+                "spacing": "small"
+               }
+              ],
+              "id": "fx_{chave}_0",
+              "spacing": "medium"
+             },
+             {
+              "type": "Container",
+              "items": [
+               {
+                "type": "Container",
+                "items": [
+                 {
+                  "type": "Input.Text",
+                  "id": "nv_{chave}_pernas",
+                  "label": "",
+                  "campo": "vinculo_id",
+                  "value": "{vinculo_id}",
+                  "isVisible": false
+                 },
+                 {
+                  "type": "Input.Text",
+                  "id": "no_{chave}_pernas",
+                  "label": "",
+                  "campo": "onde",
+                  "value": "ficha",
+                  "isVisible": false
+                 },
+                 {
+                  "type": "Input.ChoiceSet",
+                  "id": "nxe_{chave}_pernas",
+                  "choices": [
+                   {
+                    "_repetir_lista": {
+                     "title": "{nome}",
+                     "value": "{id}"
+                    },
+                    "_de": "bib_pernas"
+                   }
+                  ],
+                  "label": "Exercício",
+                  "campo": "exercicio_id",
+                  "isRequired": true,
+                  "style": "filtered",
+                  "okmigoEstrito": true,
+                  "placeholder": "digite para buscar",
+                  "value": ""
+                 },
+                 {
+                  "type": "ActionSet",
+                  "actions": [
+                   {
+                    "type": "Action.Submit",
+                    "title": "Adicionar",
+                    "data": {
+                     "operacao": "adicionar_item"
+                    }
+                   }
+                  ]
+                 }
+                ],
+                "spacing": "small"
+               }
+              ],
+              "id": "fx_{chave}_1",
+              "isVisible": false,
+              "spacing": "medium"
+             },
+             {
+              "type": "Container",
+              "items": [
+               {
+                "type": "Container",
+                "items": [
+                 {
+                  "type": "Input.Text",
+                  "id": "nv_{chave}_abdomen",
+                  "label": "",
+                  "campo": "vinculo_id",
+                  "value": "{vinculo_id}",
+                  "isVisible": false
+                 },
+                 {
+                  "type": "Input.Text",
+                  "id": "no_{chave}_abdomen",
+                  "label": "",
+                  "campo": "onde",
+                  "value": "ficha",
+                  "isVisible": false
+                 },
+                 {
+                  "type": "Input.ChoiceSet",
+                  "id": "nxe_{chave}_abdomen",
+                  "choices": [
+                   {
+                    "_repetir_lista": {
+                     "title": "{nome}",
+                     "value": "{id}"
+                    },
+                    "_de": "bib_abdomen"
+                   }
+                  ],
+                  "label": "Exercício",
+                  "campo": "exercicio_id",
+                  "isRequired": true,
+                  "style": "filtered",
+                  "okmigoEstrito": true,
+                  "placeholder": "digite para buscar",
+                  "value": ""
+                 },
+                 {
+                  "type": "ActionSet",
+                  "actions": [
+                   {
+                    "type": "Action.Submit",
+                    "title": "Adicionar",
+                    "data": {
+                     "operacao": "adicionar_item"
+                    }
+                   }
+                  ]
+                 }
+                ],
+                "spacing": "small"
+               }
+              ],
+              "id": "fx_{chave}_2",
+              "isVisible": false,
+              "spacing": "medium"
+             },
+             {
+              "type": "Container",
+              "items": [
+               {
+                "type": "Container",
+                "items": [
+                 {
+                  "type": "Input.Text",
+                  "id": "nv_{chave}_peito",
+                  "label": "",
+                  "campo": "vinculo_id",
+                  "value": "{vinculo_id}",
+                  "isVisible": false
+                 },
+                 {
+                  "type": "Input.Text",
+                  "id": "no_{chave}_peito",
+                  "label": "",
+                  "campo": "onde",
+                  "value": "ficha",
+                  "isVisible": false
+                 },
+                 {
+                  "type": "Input.ChoiceSet",
+                  "id": "nxe_{chave}_peito",
+                  "choices": [
+                   {
+                    "_repetir_lista": {
+                     "title": "{nome}",
+                     "value": "{id}"
+                    },
+                    "_de": "bib_peito"
+                   }
+                  ],
+                  "label": "Exercício",
+                  "campo": "exercicio_id",
+                  "isRequired": true,
+                  "style": "filtered",
+                  "okmigoEstrito": true,
+                  "placeholder": "digite para buscar",
+                  "value": ""
+                 },
+                 {
+                  "type": "ActionSet",
+                  "actions": [
+                   {
+                    "type": "Action.Submit",
+                    "title": "Adicionar",
+                    "data": {
+                     "operacao": "adicionar_item"
+                    }
+                   }
+                  ]
+                 }
+                ],
+                "spacing": "small"
+               }
+              ],
+              "id": "fx_{chave}_3",
+              "isVisible": false,
+              "spacing": "medium"
+             },
+             {
+              "type": "Container",
+              "items": [
+               {
+                "type": "Container",
+                "items": [
+                 {
+                  "type": "Input.Text",
+                  "id": "nv_{chave}_costas",
+                  "label": "",
+                  "campo": "vinculo_id",
+                  "value": "{vinculo_id}",
+                  "isVisible": false
+                 },
+                 {
+                  "type": "Input.Text",
+                  "id": "no_{chave}_costas",
+                  "label": "",
+                  "campo": "onde",
+                  "value": "ficha",
+                  "isVisible": false
+                 },
+                 {
+                  "type": "Input.ChoiceSet",
+                  "id": "nxe_{chave}_costas",
+                  "choices": [
+                   {
+                    "_repetir_lista": {
+                     "title": "{nome}",
+                     "value": "{id}"
+                    },
+                    "_de": "bib_costas"
+                   }
+                  ],
+                  "label": "Exercício",
+                  "campo": "exercicio_id",
+                  "isRequired": true,
+                  "style": "filtered",
+                  "okmigoEstrito": true,
+                  "placeholder": "digite para buscar",
+                  "value": ""
+                 },
+                 {
+                  "type": "ActionSet",
+                  "actions": [
+                   {
+                    "type": "Action.Submit",
+                    "title": "Adicionar",
+                    "data": {
+                     "operacao": "adicionar_item"
+                    }
+                   }
+                  ]
+                 }
+                ],
+                "spacing": "small"
+               }
+              ],
+              "id": "fx_{chave}_4",
+              "isVisible": false,
+              "spacing": "medium"
+             },
+             {
+              "type": "Container",
+              "items": [
+               {
+                "type": "Container",
+                "items": [
+                 {
+                  "type": "Input.Text",
+                  "id": "nv_{chave}_bracos",
+                  "label": "",
+                  "campo": "vinculo_id",
+                  "value": "{vinculo_id}",
+                  "isVisible": false
+                 },
+                 {
+                  "type": "Input.Text",
+                  "id": "no_{chave}_bracos",
+                  "label": "",
+                  "campo": "onde",
+                  "value": "ficha",
+                  "isVisible": false
+                 },
+                 {
+                  "type": "Input.ChoiceSet",
+                  "id": "nxe_{chave}_bracos",
+                  "choices": [
+                   {
+                    "_repetir_lista": {
+                     "title": "{nome}",
+                     "value": "{id}"
+                    },
+                    "_de": "bib_bracos"
+                   }
+                  ],
+                  "label": "Exercício",
+                  "campo": "exercicio_id",
+                  "isRequired": true,
+                  "style": "filtered",
+                  "okmigoEstrito": true,
+                  "placeholder": "digite para buscar",
+                  "value": ""
+                 },
+                 {
+                  "type": "ActionSet",
+                  "actions": [
+                   {
+                    "type": "Action.Submit",
+                    "title": "Adicionar",
+                    "data": {
+                     "operacao": "adicionar_item"
+                    }
+                   }
+                  ]
+                 }
+                ],
+                "spacing": "small"
+               }
+              ],
+              "id": "fx_{chave}_5",
+              "isVisible": false,
+              "spacing": "medium"
+             },
+             {
+              "type": "Container",
+              "items": [
+               {
+                "type": "Container",
+                "items": [
+                 {
+                  "type": "Input.Text",
+                  "id": "nv_{chave}_ombros",
+                  "label": "",
+                  "campo": "vinculo_id",
+                  "value": "{vinculo_id}",
+                  "isVisible": false
+                 },
+                 {
+                  "type": "Input.Text",
+                  "id": "no_{chave}_ombros",
+                  "label": "",
+                  "campo": "onde",
+                  "value": "ficha",
+                  "isVisible": false
+                 },
+                 {
+                  "type": "Input.ChoiceSet",
+                  "id": "nxe_{chave}_ombros",
+                  "choices": [
+                   {
+                    "_repetir_lista": {
+                     "title": "{nome}",
+                     "value": "{id}"
+                    },
+                    "_de": "bib_ombros"
+                   }
+                  ],
+                  "label": "Exercício",
+                  "campo": "exercicio_id",
+                  "isRequired": true,
+                  "style": "filtered",
+                  "okmigoEstrito": true,
+                  "placeholder": "digite para buscar",
+                  "value": ""
+                 },
+                 {
+                  "type": "ActionSet",
+                  "actions": [
+                   {
+                    "type": "Action.Submit",
+                    "title": "Adicionar",
+                    "data": {
+                     "operacao": "adicionar_item"
+                    }
+                   }
+                  ]
+                 }
+                ],
+                "spacing": "small"
+               }
+              ],
+              "id": "fx_{chave}_6",
+              "isVisible": false,
+              "spacing": "medium"
+             }
+            ],
+            "style": "emphasis",
+            "id": "novof_{chave}",
+            "isVisible": false,
+            "spacing": "small"
+           },
+           {
+            "_repetir_lista": {
+             "type": "Container",
+             "items": [
+              {
+               "type": "ColumnSet",
+               "columns": [
+                {
+                 "type": "Column",
+                 "width": "auto",
+                 "items": [
+                  {
+                   "type": "Container",
+                   "items": [
+                    {
+                     "type": "TextBlock",
+                     "text": "{passo}",
+                     "wrap": true,
+                     "weight": "bolder"
+                    }
+                   ],
+                   "okmigoGrade": "etiquetas",
+                   "spacing": "small"
+                  }
+                 ]
+                },
+                {
+                 "type": "Column",
+                 "width": "stretch",
+                 "items": [
+                  {
+                   "type": "TextBlock",
+                   "text": "{exercicio}",
+                   "wrap": true,
+                   "weight": "bolder"
+                  },
+                  {
+                   "type": "TextBlock",
+                   "text": "{musculo}",
+                   "wrap": true,
+                   "size": "small",
+                   "isSubtle": true
+                  },
+                  {
+                   "type": "Container",
+                   "items": [
+                    {
+                     "type": "TextBlock",
+                     "text": "{series_frase}",
+                     "wrap": true,
+                     "size": "small"
+                    },
+                    {
+                     "type": "TextBlock",
+                     "text": "{reps_frase}",
+                     "wrap": true,
+                     "size": "small"
+                    },
+                    {
+                     "type": "TextBlock",
+                     "text": "{descanso_frase}",
+                     "wrap": true,
+                     "size": "small"
+                    }
+                   ],
+                   "okmigoGrade": "etiquetas",
+                   "spacing": "small"
+                  }
+                 ]
+                },
+                {
+                 "type": "Column",
+                 "width": "auto",
+                 "items": [
+                  {
+                   "type": "TextBlock",
+                   "text": "editar ▾",
+                   "wrap": true,
+                   "size": "small",
+                   "weight": "bolder",
+                   "isSubtle": true
+                  }
+                 ]
+                }
+               ]
+              },
+              {
+               "type": "Container",
+               "items": [
+                {
+                 "type": "Input.Text",
+                 "id": "ip_{chave}",
+                 "label": "",
+                 "campo": "item_par",
+                 "value": "{item_par}",
+                 "isVisible": false
+                },
+                {
+                 "type": "ColumnSet",
+                 "columns": [
+                  {
+                   "type": "Column",
+                   "width": "stretch",
+                   "items": [
+                    {
+                     "type": "Input.Number",
+                     "id": "se_{chave}",
+                     "label": "Séries",
+                     "campo": "series",
+                     "value": "{series_atual}",
+                     "min": 1,
+                     "max": 10
+                    }
+                   ]
+                  },
+                  {
+                   "type": "Column",
+                   "width": "stretch",
+                   "items": [
+                    {
+                     "type": "Input.Text",
+                     "id": "re_{chave}",
+                     "label": "Repetições",
+                     "campo": "repeticoes",
+                     "placeholder": "10-12",
+                     "value": "{reps_atual}"
+                    }
+                   ]
+                  },
+                  {
+                   "type": "Column",
+                   "width": "stretch",
+                   "items": [
+                    {
+                     "type": "Input.Number",
+                     "id": "cg_{chave}",
+                     "label": "Carga (kg)",
+                     "campo": "carga_kg",
+                     "value": "{carga_atual}",
+                     "min": 0,
+                     "max": 500
+                    }
+                   ]
+                  }
+                 ]
+                },
+                {
+                 "type": "Input.ChoiceSet",
+                 "id": "tr_{chave}",
+                 "choices": [
+                  {
+                   "_repetir_lista": {
+                    "title": "{nome}",
+                    "value": "{id}"
+                   },
+                   "_de": "opcoes"
+                  }
+                 ],
+                 "label": "Trocar por outro exercício",
+                 "campo": "exercicio_id",
+                 "style": "filtered",
+                 "okmigoEstrito": true,
+                 "placeholder": "digite para buscar",
+                 "value": ""
+                },
+                {
+                 "type": "TextBlock",
+                 "text": "Deixe em branco o que não quiser mudar. Carga ZERO é peso do corpo.",
+                 "wrap": true,
+                 "size": "small",
+                 "isSubtle": true
+                },
+                {
+                 "type": "ActionSet",
+                 "actions": [
+                  {
+                   "type": "Action.Submit",
+                   "title": "salvar este exercício",
+                   "data": {
+                    "operacao": "ajustar_item"
+                   }
+                  }
+                 ]
+                },
+                {
+                 "type": "Container",
+                 "items": [
+                  {
+                   "type": "Input.Text",
+                   "id": "rm_{chave}",
+                   "label": "",
+                   "campo": "item_par",
+                   "value": "{item_par}",
+                   "isVisible": false
+                  },
+                  {
+                   "type": "ActionSet",
+                   "actions": [
+                    {
+                     "type": "Action.Submit",
+                     "title": "remover da ficha",
+                     "data": {
+                      "operacao": "remover_item"
+                     },
+                     "style": "destructive"
+                    }
+                   ]
+                  }
+                 ],
+                 "spacing": "small"
+                }
+               ],
+               "id": "aj_{chave}",
+               "isVisible": false,
+               "spacing": "small"
+              }
+             ],
+             "style": "emphasis",
+             "selectAction": {
+              "type": "Action.ToggleVisibility",
+              "targetElements": [
+               "aj_{chave}"
+              ]
+             },
+             "spacing": "small"
+            },
+            "_de": "itens"
+           }
+          ],
+          "spacing": "medium"
+         },
+         "_de": "ficha_bloco"
+        },
+        {
+         "type": "TextBlock",
+         "text": "{ultima_titulo}",
+         "wrap": true,
+         "spacing": "medium",
+         "weight": "bolder"
+        },
+        {
+         "type": "TextBlock",
+         "text": "{cumpriu}",
+         "wrap": true,
+         "size": "small",
+         "isSubtle": true
+        },
+        {
+         "_repetir_lista": {
+          "type": "Container",
+          "items": [
+           {
+            "type": "ColumnSet",
+            "columns": [
+             {
+              "type": "Column",
+              "width": "stretch",
+              "items": [
+               {
+                "type": "TextBlock",
+                "text": "{exercicio}",
+                "wrap": true,
+                "size": "small",
+                "weight": "bolder"
+               },
+               {
+                "type": "TextBlock",
+                "text": "prescrito: {prescrito}",
+                "wrap": true,
+                "size": "small",
+                "isSubtle": true
+               }
+              ]
+             },
+             {
+              "type": "Column",
+              "width": "auto",
+              "items": [
+               {
+                "type": "TextBlock",
+                "text": "fez: {fez}",
+                "wrap": true,
+                "horizontalAlignment": "right",
+                "size": "small"
+               },
+               {
+                "type": "TextBlock",
+                "text": "{marca}",
+                "wrap": true,
+                "horizontalAlignment": "right",
+                "size": "small",
+                "weight": "bolder"
+               }
+              ]
+             }
+            ]
+           },
+           {
+            "type": "TextBlock",
+            "text": "{nota}",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true
+           }
+          ],
+          "spacing": "small"
+         },
+         "_de": "ultimo"
+        },
+        {
+         "type": "okmigoGrafico",
+         "forma": "barras",
+         "titulo": "Consistência",
+         "series": [
+          {
+           "rotulo": "treinos na semana",
+           "cor": "positivo"
+          }
+         ],
+         "pontos": [
+          {
+           "rotulo": "{r1}",
+           "valores": [
+            "{s1}"
+           ]
+          },
+          {
+           "rotulo": "{r2}",
+           "valores": [
+            "{s2}"
+           ]
+          },
+          {
+           "rotulo": "{r3}",
+           "valores": [
+            "{s3}"
+           ]
+          },
+          {
+           "rotulo": "{r4}",
+           "valores": [
+            "{s4}"
+           ]
+          },
+          {
+           "rotulo": "{r5}",
+           "valores": [
+            "{s5}"
+           ]
+          },
+          {
+           "rotulo": "{r6}",
+           "valores": [
+            "{s6}"
+           ]
+          }
+         ]
+        },
+        {
+         "type": "Container",
+         "items": [
+          {
+           "type": "Input.Text",
+           "id": "encerrar_{chave}",
+           "label": "",
+           "campo": "vinculo_id",
+           "value": "{vinculo_id}",
+           "isVisible": false
+          },
+          {
+           "type": "TextBlock",
+           "text": "Encerrar remove o acesso ao seu treino, sem apagar o histórico.",
+           "wrap": true,
+           "size": "small",
+           "isSubtle": true
+          },
+          {
+           "type": "ActionSet",
+           "actions": [
+            {
+             "type": "Action.Submit",
+             "title": "remover aluno",
+             "data": {
+              "operacao": "encerrar_aluno"
+             },
+             "style": "destructive"
+            }
+           ]
+          }
+         ],
+         "spacing": "medium"
+        }
+       ],
+       "id": "aluno_{chave}",
+       "isVisible": false,
+       "spacing": "medium"
+      }
+     }
+    ],
+    "okmigoTema": "jornada-ativa",
+    "okmigoNavegacao": "inferior"
+   },
+   "icone": "alunos",
+   "rotulo_superficie": "Alunos"
+  },
+  {
+   "nome": "perfil",
+   "titulo": "Meu perfil profissional",
+   "hint": "como alunos encontram e reconhecem você",
+   "fonte": {
+    "resumo": {
+     "operacao": "meus_alunos"
+    }
+   },
+   "cartao": {
+    "type": "AdaptiveCard",
+    "version": "1.5",
+    "body": [
+     {
+      "type": "TextBlock",
+      "text": "ÁREA DO PERSONAL",
+      "wrap": true,
+      "size": "small",
+      "weight": "bolder",
+      "isSubtle": true
+     },
+     {
+      "type": "TextBlock",
+      "text": "Meu perfil profissional",
+      "wrap": true,
+      "size": "extraLarge",
+      "weight": "bolder"
+     },
+     {
+      "type": "TextBlock",
+      "text": "Mantenha o local de atendimento atualizado para seus alunos.",
+      "wrap": true,
+      "size": "small",
+      "isSubtle": true
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Seu perfil público",
+        "wrap": true,
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "É assim que alunos e novas pessoas encontram você no OkMigo.",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "TextBlock",
+        "text": "Nome e @ vêm do perfil do sócio e não são alterados aqui.",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "Input.Text",
+        "id": "pp_nome",
+        "label": "Seu nome profissional",
+        "campo": "nome",
+        "okmigoSomenteLeitura": true
+       },
+       {
+        "type": "Input.Text",
+        "id": "pp_handle",
+        "label": "seu @ no okmigo",
+        "campo": "handle",
+        "okmigoSomenteLeitura": true
+       },
+       {
+        "type": "Input.Text",
+        "id": "pp_onde",
+        "label": "Onde você atende?",
+        "campo": "onde_atende"
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.Submit",
+          "title": "publicar meu perfil",
+          "data": {
+           "operacao": "salvar_perfil_profissional"
+          },
+          "style": "positive"
+         }
+        ]
+       }
+      ],
+      "style": "emphasis",
+      "id": "perfil_profissional_direto",
+      "isVisible": true,
+      "spacing": "medium"
+     }
+    ],
+    "okmigoTema": "jornada-ativa",
+    "okmigoNavegacao": "inferior"
+   },
+   "icone": "perfil",
+   "rotulo_superficie": "Perfil"
+  }
+ ],
+ "conversa": [
+  "meus_alunos",
+  "treino_do_aluno",
+  "cadastrar_aluno",
+  "convidar_aluno",
+  "prescrever_treino",
+  "ajustar_item",
+  "adicionar_item",
+  "remover_item",
+  "buscar_exercicios",
+  "encerrar_aluno",
+  "salvar_perfil_profissional",
+  "guardar_servico",
+  "remover_servico",
+  "guardar_expediente"
+ ],
+ "para_tipo": "socio",
+ "descricao_humana": "Os seus alunos: quem treina com você, o treino de cada um, o que já foi feito e quem não apareceu.",
+ "nome_visivel": "Fitness Personal",
+ "eventos": {
+  "operacao": "eventos",
+  "parametro": "dias"
+ },
+ "convite": {
+  "operacao": "aceitar_convite",
+  "parametro": "de",
+  "par": "estoufit-aluno"
+ },
+ "publico": {
+  "ofertas": "listar_servicos",
+  "expediente": "ver_expediente"
+ },
+ "agente": {
+  "contrato": "1",
+  "modo": "declarado",
+  "competencias": [
+   "quem são os alunos e quem não apareceu",
+   "o treino prescrito de um aluno e o que ele executou",
+   "como é um exercício"
+  ],
+  "ferramentas": [
+   "meus_alunos",
+   "treino_do_aluno",
+   "buscar_exercicios"
+  ],
+  "orcamento": {
+   "chamadas": 3,
+   "tokens": 12000,
+   "segundos": 20
+  },
+  "instrucoes": "Você ajuda um personal trainer a consultar os alunos DELE.\n- Lista e presença: meus_alunos. O treino de um aluno: treino_do_aluno(vinculo_id=...), com o id que meus_alunos devolveu; nunca invente um id.\n- Aluno citado por nome ambíguo: precisa_esclarecer com os nomes como opções.\n- Prescrever, ajustar ou remover item é gesto DELE: devolva acao_proposta. Você não prescreve por conta própria, só redige o que ele pediu.\nVocabulário: série, repetição, carga (kg), descanso; vínculo = a relação personal × aluno.",
+  "exemplos": [
+   {
+    "pedido": "quem não treinou essa semana?",
+    "espera": "respondido"
+   },
+   {
+    "pedido": "como está o treino dos meus alunos?",
+    "espera": "respondido"
+   }
+  ]
+ }
+}

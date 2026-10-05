@@ -1,0 +1,2268 @@
+{
+ "slug": "marketplace-loja",
+ "endpoint": "http://SEU-HOST:8000/mcp/",
+ "forma": "do_operador",
+ "descricao": "Marketplace do OKMigo para o negócio: tudo o que a conta pessoal faz, mais a vitrine de vendedor local — nome, apresentação e os anúncios dela.",
+ "versao": "0.11.0",
+ "superficies": [
+  {
+   "nome": "vitrine",
+   "titulo": "Marketplace",
+   "hint": "o que está à venda, à troca, para alugar e para doar",
+   "fonte": {
+    "resumo": {
+     "operacao": "vitrine_do_marketplace",
+     "pedido": {
+      "grupos": "{grupos}",
+      "cursor": "{rota.cursor}"
+     }
+    },
+    "lista": {
+     "operacao": "vitrine_do_marketplace",
+     "pedido": {
+      "grupos": "{grupos}",
+      "cursor": "{rota.cursor}"
+     },
+     "caminho": "anuncios"
+    }
+   },
+   "cartao": {
+    "type": "AdaptiveCard",
+    "version": "1.5",
+    "body": [
+     {
+      "type": "TextBlock",
+      "text": "Marketplace",
+      "wrap": true,
+      "size": "extraLarge",
+      "weight": "bolder",
+      "spacing": "none"
+     },
+     {
+      "type": "TextBlock",
+      "text": "{resumo_frase}",
+      "wrap": true,
+      "size": "small",
+      "isSubtle": true
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "Input.ChoiceSet",
+        "id": "anuncio_busca",
+        "campo": "anuncio_id",
+        "label": "O que você procura?",
+        "placeholder": "Bicicleta, sofá, furadeira...",
+        "isRequired": true,
+        "style": "filtered",
+        "okmigoBuscar": "buscar_no_marketplace",
+        "choices": [
+         {
+          "title": "Digite para buscar na vitrine",
+          "value": "-"
+         },
+         {
+          "_repetir_lista": {
+           "title": "{titulo}",
+           "value": "{id}"
+          }
+         }
+        ],
+        "okmigoAoEscolher": {
+         "type": "Action.Execute",
+         "title": "Abrir anúncio",
+         "data": {
+          "operacao": "abrir_anuncio"
+         }
+        }
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.Execute",
+          "title": "Abrir anúncio",
+          "data": {
+           "operacao": "abrir_anuncio"
+          },
+          "style": "positive"
+         },
+         {
+          "type": "Action.Submit",
+          "title": "Favoritar",
+          "data": {
+           "operacao": "favoritar_anuncio"
+          }
+         }
+        ]
+       }
+      ],
+      "style": "emphasis"
+     },
+     {
+      "type": "TextBlock",
+      "text": "{titulo_publicados}",
+      "wrap": true,
+      "size": "large",
+      "weight": "bolder",
+      "spacing": "large",
+      "separator": true
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "_repetir_lista": {
+         "type": "Container",
+         "items": [
+          {
+           "type": "Image",
+           "url": "{foto}",
+           "altText": "{titulo}",
+           "height": "medium"
+          },
+          {
+           "type": "TextBlock",
+           "text": "{titulo}",
+           "wrap": true,
+           "weight": "bolder",
+           "spacing": "small"
+          },
+          {
+           "type": "TextBlock",
+           "text": "{preco}",
+           "wrap": true,
+           "weight": "bolder"
+          },
+          {
+           "type": "TextBlock",
+           "text": "{apoio}",
+           "wrap": true,
+           "size": "small",
+           "isSubtle": true
+          },
+          {
+           "type": "Input.Text",
+           "id": "anuncio_id_{id}",
+           "campo": "anuncio_id",
+           "value": "{id}",
+           "isVisible": false,
+           "okmigoSomenteLeitura": true
+          },
+          {
+           "type": "ActionSet",
+           "actions": [
+            {
+             "type": "Action.Execute",
+             "title": "Abrir",
+             "data": {
+              "operacao": "abrir_anuncio"
+             },
+             "style": "positive"
+            },
+            {
+             "type": "Action.Submit",
+             "title": "Tenho interesse",
+             "data": {
+              "operacao": "demonstrar_interesse"
+             }
+            },
+            {
+             "type": "Action.Submit",
+             "title": "Favoritar",
+             "data": {
+              "operacao": "favoritar_anuncio"
+             }
+            }
+           ]
+          }
+         ],
+         "style": "emphasis"
+        },
+        "_quando": {
+         "campo": "meu",
+         "em": [
+          "nao"
+         ]
+        }
+       }
+      ],
+      "okmigoGrade": "compacta"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "_repetir_lista": {
+         "type": "Container",
+         "items": [
+          {
+           "type": "Image",
+           "url": "{foto}",
+           "altText": "{titulo}",
+           "height": "medium"
+          },
+          {
+           "type": "TextBlock",
+           "text": "{titulo}",
+           "wrap": true,
+           "weight": "bolder",
+           "spacing": "small"
+          },
+          {
+           "type": "TextBlock",
+           "text": "{preco}",
+           "wrap": true,
+           "weight": "bolder"
+          },
+          {
+           "type": "TextBlock",
+           "text": "{apoio}",
+           "wrap": true,
+           "size": "small",
+           "isSubtle": true
+          },
+          {
+           "type": "Input.Text",
+           "id": "anuncio_id_{id}",
+           "campo": "anuncio_id",
+           "value": "{id}",
+           "isVisible": false,
+           "okmigoSomenteLeitura": true
+          },
+          {
+           "type": "ActionSet",
+           "actions": [
+            {
+             "type": "Action.Execute",
+             "title": "Abrir",
+             "data": {
+              "operacao": "abrir_anuncio"
+             }
+            }
+           ]
+          }
+         ],
+         "style": "emphasis"
+        },
+        "_quando": {
+         "campo": "meu",
+         "em": [
+          "sim"
+         ]
+        }
+       }
+      ],
+      "okmigoGrade": "compacta"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "_repetir_lista": {
+         "type": "Container",
+         "items": [
+          {
+           "type": "ActionSet",
+           "actions": [
+            {
+             "type": "Action.Execute",
+             "title": "Ver mais anúncios",
+             "data": {
+              "okmigoNavegar": {
+               "rota": "vitrine_pagina",
+               "parametros": {
+                "cursor": "{cursor}"
+               }
+              }
+             }
+            }
+           ]
+          }
+         ]
+        },
+        "_quando": {
+         "campo": "mais",
+         "em": [
+          "sim"
+         ]
+        }
+       }
+      ]
+     }
+    ],
+    "okmigoTema": "operacao-direta",
+    "okmigoNavegacao": "inferior"
+   },
+   "rotulo": "Comprar",
+   "icone": "cardapio"
+  },
+  {
+   "nome": "meus_anuncios",
+   "titulo": "Anunciar",
+   "hint": "criar anúncio, publicar, pausar e acompanhar o estoque",
+   "fonte": {
+    "resumo": {
+     "operacao": "painel_do_vendedor",
+     "pedido": {
+      "grupos_nomes": "{grupos_nomes}"
+     }
+    },
+    "lista": {
+     "operacao": "painel_do_vendedor",
+     "pedido": {
+      "grupos_nomes": "{grupos_nomes}"
+     },
+     "caminho": "anuncios"
+    }
+   },
+   "cartao": {
+    "type": "AdaptiveCard",
+    "version": "1.5",
+    "body": [
+     {
+      "type": "TextBlock",
+      "text": "Anunciar",
+      "wrap": true,
+      "size": "extraLarge",
+      "weight": "bolder",
+      "spacing": "none"
+     },
+     {
+      "type": "TextBlock",
+      "text": "{resumo_frase}",
+      "wrap": true,
+      "size": "small",
+      "isSubtle": true
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "Container",
+        "items": [
+         {
+          "type": "FactSet",
+          "facts": [
+           {
+            "title": "Alcance inicial",
+            "value": "Público, vitrine ou grupo escolhido"
+           },
+           {
+            "title": "Modalidades",
+            "value": "Venda, doação, troca ou aluguel"
+           },
+           {
+            "title": "Estoque",
+            "value": "Peça única ou quantidade disponível"
+           }
+          ]
+         },
+         {
+          "type": "TextBlock",
+          "text": "Título, preço e cidade formam a primeira leitura do anúncio. Use a descrição para estado, itens inclusos e forma de entrega.",
+          "wrap": true,
+          "size": "small",
+          "isSubtle": true
+         },
+         {
+          "type": "TextBlock",
+          "text": "Ao publicar em um grupo, o anúncio deixa de ser público e passa a aparecer somente para quem alcança esse grupo.",
+          "wrap": true,
+          "size": "small",
+          "isSubtle": true
+         },
+         {
+          "type": "TextBlock",
+          "text": "Aluguel precisa do período do preço; troca precisa dizer o que você aceita. Os outros modos ignoram esses campos.",
+          "wrap": true,
+          "size": "small",
+          "isSubtle": true
+         }
+        ],
+        "style": "emphasis"
+       },
+       {
+        "type": "Container",
+        "style": "emphasis",
+        "items": [
+         {
+          "type": "TextBlock",
+          "text": "Publicar um anúncio",
+          "wrap": true,
+          "weight": "bolder"
+         },
+         {
+          "type": "TextBlock",
+          "text": "Escolha a modalidade e descreva o que a outra pessoa precisa saber para decidir se vale conversar.",
+          "wrap": true,
+          "size": "small",
+          "isSubtle": true
+         },
+         {
+          "type": "Input.Text",
+          "id": "novo_titulo",
+          "label": "O que você está anunciando?",
+          "campo": "titulo",
+          "isRequired": true,
+          "placeholder": "Bicicleta Caloi aro 29"
+         },
+         {
+          "type": "Input.ChoiceSet",
+          "id": "nova_modalidade",
+          "choices": [
+           {
+            "title": "Vender",
+            "value": "SALE",
+            "okmigoIcone": "🏷️"
+           },
+           {
+            "title": "Doar",
+            "value": "DONATION",
+            "okmigoIcone": "🎁"
+           },
+           {
+            "title": "Trocar",
+            "value": "TRADE",
+            "okmigoIcone": "🔄"
+           },
+           {
+            "title": "Alugar",
+            "value": "RENTAL",
+            "okmigoIcone": "📅"
+           }
+          ],
+          "label": "Como?",
+          "campo": "modalidade",
+          "style": "expanded",
+          "value": "SALE"
+         },
+         {
+          "type": "Input.ChoiceSet",
+          "id": "novo_tipo",
+          "choices": [
+           {
+            "title": "Peça única",
+            "value": "UNIQUE",
+            "okmigoNota": "some do ar quando vender"
+           },
+           {
+            "title": "Tenho estoque",
+            "value": "STOCK",
+            "okmigoNota": "continua no ar e dá para repor"
+           }
+          ],
+          "label": "Quantas unidades?",
+          "campo": "tipo_de_estoque",
+          "style": "expanded",
+          "value": "UNIQUE"
+         },
+         {
+          "type": "Input.Number",
+          "id": "novo_preco",
+          "label": "Preço em reais",
+          "campo": "preco_reais",
+          "placeholder": "1500",
+          "min": 0
+         },
+         {
+          "type": "Input.ChoiceSet",
+          "id": "novo_periodo",
+          "choices": [
+           {
+            "title": "dia",
+            "value": "DAY"
+           },
+           {
+            "title": "semana",
+            "value": "WEEK"
+           },
+           {
+            "title": "mês",
+            "value": "MONTH"
+           }
+          ],
+          "label": "Se for aluguel, o preço é por...",
+          "campo": "periodo_aluguel",
+          "value": "DAY"
+         },
+         {
+          "type": "Input.Text",
+          "id": "nova_troca",
+          "label": "Se for troca, o que você aceita?",
+          "campo": "aceito_em_troca",
+          "placeholder": "Notebook, celular, bicicleta..."
+         },
+         {
+          "type": "Input.Number",
+          "id": "nova_quantidade",
+          "label": "Quantidade (se tiver estoque)",
+          "campo": "quantidade",
+          "value": 1,
+          "min": 1
+         },
+         {
+          "type": "Input.Text",
+          "id": "nova_cidade",
+          "label": "Cidade",
+          "campo": "cidade",
+          "placeholder": "Guarulhos"
+         },
+         {
+          "type": "Input.Text",
+          "id": "nova_descricao",
+          "label": "Descrição",
+          "campo": "descricao",
+          "isMultiline": true,
+          "placeholder": "Estado de conservação, o que acompanha, como combinar a entrega"
+         },
+         {
+          "type": "Input.ChoiceSet",
+          "id": "nova_vitrine",
+          "choices": [
+           {
+            "title": "Não, é desapego meu",
+            "value": "nao"
+           },
+           {
+            "title": "Sim, é da minha loja",
+            "value": "sim"
+           }
+          ],
+          "label": "É da sua vitrine?",
+          "campo": "na_vitrine",
+          "style": "expanded",
+          "value": "nao"
+         },
+         {
+          "type": "Input.ChoiceSet",
+          "id": "novo_grupo",
+          "choices": [
+           {
+            "title": "Sem grupo (público)",
+            "value": "-"
+           }
+          ],
+          "label": "Publicar em qual grupo?",
+          "campo": "okmigo_grupos"
+         },
+         {
+          "type": "ActionSet",
+          "actions": [
+           {
+            "type": "Action.Submit",
+            "title": "Publicar anúncio",
+            "data": {
+             "operacao": "anunciar"
+            },
+            "style": "positive"
+           }
+          ],
+          "okmigoRodape": true
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "TextBlock",
+      "text": "Quem vê cada anúncio",
+      "wrap": true,
+      "size": "large",
+      "weight": "bolder",
+      "spacing": "large",
+      "separator": true
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Compartilhar restringe: o anúncio sai do público e passa a aparecer só para quem alcança o grupo. «Tornar público» desfaz tudo de uma vez — e as listas abaixo dizem, anúncio por anúncio, com quem ele está compartilhado.",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "anuncio_para_compartilhar",
+        "choices": [
+         {
+          "title": "Publique um anúncio para poder compartilhar",
+          "value": "-"
+         },
+         {
+          "_repetir_lista": {
+           "title": "{titulo}",
+           "value": "{id}"
+          }
+         }
+        ],
+        "label": "Qual anúncio?",
+        "campo": "anuncio_id",
+        "isRequired": true
+       },
+       {
+        "type": "Input.ChoiceSet",
+        "id": "grupo_para_compartilhar",
+        "choices": [
+         {
+          "title": "Sem grupo (público)",
+          "value": "-"
+         }
+        ],
+        "label": "Qual grupo?",
+        "campo": "okmigo_grupos"
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.Submit",
+          "title": "Compartilhar",
+          "data": {
+           "operacao": "compartilhar_anuncio"
+          },
+          "style": "positive"
+         },
+         {
+          "type": "Action.Submit",
+          "title": "Tirar do grupo",
+          "data": {
+           "operacao": "deixar_de_compartilhar"
+          },
+          "style": "destructive"
+         },
+         {
+          "type": "Action.Submit",
+          "title": "Tornar público",
+          "data": {
+           "operacao": "tornar_publico"
+          }
+         }
+        ]
+       }
+      ],
+      "style": "emphasis"
+     },
+     {
+      "type": "TextBlock",
+      "text": "No ar para todo mundo",
+      "wrap": true,
+      "size": "large",
+      "weight": "bolder",
+      "spacing": "large",
+      "separator": true
+     },
+     {
+      "type": "Table",
+      "columns": [
+       {
+        "width": 4
+       },
+       {
+        "width": 2
+       },
+       {
+        "width": 2
+       },
+       {
+        "width": 2
+       }
+      ],
+      "rows": [
+       {
+        "type": "TableRow",
+        "cells": [
+         {
+          "type": "TableCell",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Anúncio",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true,
+            "weight": "bolder"
+           }
+          ]
+         },
+         {
+          "type": "TableCell",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Preço",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true,
+            "weight": "bolder"
+           }
+          ]
+         },
+         {
+          "type": "TableCell",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Situação",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true,
+            "weight": "bolder"
+           }
+          ]
+         },
+         {
+          "type": "TableCell",
+          "items": []
+         }
+        ]
+       },
+       {
+        "_repetir_lista": {
+         "type": "TableRow",
+         "cells": [
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{titulo}",
+             "wrap": true,
+             "weight": "bolder"
+            },
+            {
+             "type": "TextBlock",
+             "text": "{estoque} · {alcance}",
+             "wrap": true,
+             "size": "small",
+             "isSubtle": true
+            }
+           ]
+          },
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{preco}",
+             "wrap": true,
+             "horizontalAlignment": "right"
+            }
+           ]
+          },
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{situacao}",
+             "wrap": true,
+             "size": "small",
+             "isSubtle": true,
+             "horizontalAlignment": "right"
+            }
+           ]
+          },
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "Input.Text",
+             "id": "anuncio_id_{id}",
+             "campo": "anuncio_id",
+             "value": "{id}",
+             "isVisible": false,
+             "okmigoSomenteLeitura": true
+            },
+            {
+             "type": "ActionSet",
+             "actions": [
+              {
+               "type": "Action.Submit",
+               "title": "Pausar",
+               "data": {
+                "operacao": "pausar_anuncio"
+               }
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        "_quando": {
+         "campo": "secao",
+         "em": [
+          "no_ar_publico"
+         ]
+        }
+       }
+      ],
+      "firstRowAsHeader": true,
+      "showGridLines": false,
+      "fallback": {
+       "type": "TextBlock",
+       "text": "Nenhum anúncio público agora. Publique acima, ou torne público um que está em grupo.",
+       "wrap": true,
+       "size": "small",
+       "isSubtle": true
+      }
+     },
+     {
+      "type": "TextBlock",
+      "text": "No ar só para grupos",
+      "wrap": true,
+      "size": "large",
+      "weight": "bolder",
+      "spacing": "large",
+      "separator": true
+     },
+     {
+      "type": "Table",
+      "columns": [
+       {
+        "width": 4
+       },
+       {
+        "width": 2
+       },
+       {
+        "width": 2
+       },
+       {
+        "width": 2
+       }
+      ],
+      "rows": [
+       {
+        "type": "TableRow",
+        "cells": [
+         {
+          "type": "TableCell",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Anúncio",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true,
+            "weight": "bolder"
+           }
+          ]
+         },
+         {
+          "type": "TableCell",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Preço",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true,
+            "weight": "bolder"
+           }
+          ]
+         },
+         {
+          "type": "TableCell",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Situação",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true,
+            "weight": "bolder"
+           }
+          ]
+         },
+         {
+          "type": "TableCell",
+          "items": []
+         }
+        ]
+       },
+       {
+        "_repetir_lista": {
+         "type": "TableRow",
+         "cells": [
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{titulo}",
+             "wrap": true,
+             "weight": "bolder"
+            },
+            {
+             "type": "TextBlock",
+             "text": "{estoque} · {alcance}",
+             "wrap": true,
+             "size": "small",
+             "isSubtle": true
+            }
+           ]
+          },
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{preco}",
+             "wrap": true,
+             "horizontalAlignment": "right"
+            }
+           ]
+          },
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{situacao}",
+             "wrap": true,
+             "size": "small",
+             "isSubtle": true,
+             "horizontalAlignment": "right"
+            }
+           ]
+          },
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "Input.Text",
+             "id": "anuncio_id_{id}",
+             "campo": "anuncio_id",
+             "value": "{id}",
+             "isVisible": false,
+             "okmigoSomenteLeitura": true
+            },
+            {
+             "type": "ActionSet",
+             "actions": [
+              {
+               "type": "Action.Submit",
+               "title": "Tornar público",
+               "data": {
+                "operacao": "tornar_publico"
+               },
+               "style": "positive"
+              },
+              {
+               "type": "Action.Submit",
+               "title": "Pausar",
+               "data": {
+                "operacao": "pausar_anuncio"
+               }
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        "_quando": {
+         "campo": "secao",
+         "em": [
+          "no_ar_em_grupos"
+         ]
+        }
+       }
+      ],
+      "firstRowAsHeader": true,
+      "showGridLines": false,
+      "fallback": {
+       "type": "TextBlock",
+       "text": "Nenhum anúncio restrito a grupo. Escolha um anúncio e um grupo em «Quem vê cada anúncio».",
+       "wrap": true,
+       "size": "small",
+       "isSubtle": true
+      }
+     },
+     {
+      "type": "TextBlock",
+      "text": "Fora do ar",
+      "wrap": true,
+      "size": "large",
+      "weight": "bolder",
+      "spacing": "large",
+      "separator": true
+     },
+     {
+      "type": "Table",
+      "columns": [
+       {
+        "width": 4
+       },
+       {
+        "width": 2
+       },
+       {
+        "width": 2
+       },
+       {
+        "width": 2
+       }
+      ],
+      "rows": [
+       {
+        "type": "TableRow",
+        "cells": [
+         {
+          "type": "TableCell",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Anúncio",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true,
+            "weight": "bolder"
+           }
+          ]
+         },
+         {
+          "type": "TableCell",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Preço",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true,
+            "weight": "bolder"
+           }
+          ]
+         },
+         {
+          "type": "TableCell",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Situação",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true,
+            "weight": "bolder"
+           }
+          ]
+         },
+         {
+          "type": "TableCell",
+          "items": []
+         }
+        ]
+       },
+       {
+        "_repetir_lista": {
+         "type": "TableRow",
+         "cells": [
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{titulo}",
+             "wrap": true,
+             "weight": "bolder"
+            },
+            {
+             "type": "TextBlock",
+             "text": "{estoque} · {alcance}",
+             "wrap": true,
+             "size": "small",
+             "isSubtle": true
+            }
+           ]
+          },
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{preco}",
+             "wrap": true,
+             "horizontalAlignment": "right"
+            }
+           ]
+          },
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{situacao}",
+             "wrap": true,
+             "size": "small",
+             "isSubtle": true,
+             "horizontalAlignment": "right"
+            }
+           ]
+          },
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "Input.Text",
+             "id": "anuncio_id_{id}",
+             "campo": "anuncio_id",
+             "value": "{id}",
+             "isVisible": false,
+             "okmigoSomenteLeitura": true
+            },
+            {
+             "type": "ActionSet",
+             "actions": [
+              {
+               "type": "Action.Submit",
+               "title": "Publicar",
+               "data": {
+                "operacao": "publicar_anuncio"
+               },
+               "style": "positive"
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        "_quando": {
+         "campo": "secao",
+         "em": [
+          "fora"
+         ]
+        }
+       }
+      ],
+      "firstRowAsHeader": true,
+      "showGridLines": false,
+      "fallback": {
+       "type": "TextBlock",
+       "text": "Nada fora do ar — todos os seus anúncios estão publicados.",
+       "wrap": true,
+       "size": "small",
+       "isSubtle": true
+      }
+     }
+    ],
+    "okmigoTema": "operacao-direta",
+    "okmigoNavegacao": "inferior"
+   },
+   "rotulo": "Anunciar",
+   "icone": "pendencias"
+  },
+  {
+   "nome": "salvos",
+   "titulo": "Salvos",
+   "hint": "os anúncios que você favoritou",
+   "fonte": {
+    "resumo": {
+     "operacao": "painel_de_salvos",
+     "pedido": {
+      "cursor": "{rota.cursor}"
+     }
+    },
+    "lista": {
+     "operacao": "painel_de_salvos",
+     "pedido": {
+      "cursor": "{rota.cursor}"
+     },
+     "caminho": "anuncios"
+    }
+   },
+   "cartao": {
+    "type": "AdaptiveCard",
+    "version": "1.5",
+    "body": [
+     {
+      "type": "TextBlock",
+      "text": "Salvos",
+      "wrap": true,
+      "size": "extraLarge",
+      "weight": "bolder",
+      "spacing": "none"
+     },
+     {
+      "type": "TextBlock",
+      "text": "{resumo_frase}",
+      "wrap": true,
+      "size": "small",
+      "isSubtle": true
+     },
+     {
+      "type": "Table",
+      "columns": [
+       {
+        "width": 4
+       },
+       {
+        "width": 2
+       },
+       {
+        "width": 2
+       },
+       {
+        "width": 3
+       }
+      ],
+      "rows": [
+       {
+        "type": "TableRow",
+        "cells": [
+         {
+          "type": "TableCell",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Anúncio",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true,
+            "weight": "bolder"
+           }
+          ]
+         },
+         {
+          "type": "TableCell",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Preço",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true,
+            "weight": "bolder"
+           }
+          ]
+         },
+         {
+          "type": "TableCell",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Situação",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true,
+            "weight": "bolder"
+           }
+          ]
+         },
+         {
+          "type": "TableCell",
+          "items": []
+         }
+        ]
+       },
+       {
+        "_repetir_lista": {
+         "type": "TableRow",
+         "cells": [
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{titulo}",
+             "wrap": true,
+             "weight": "bolder"
+            },
+            {
+             "type": "TextBlock",
+             "text": "{apoio}",
+             "wrap": true,
+             "size": "small",
+             "isSubtle": true
+            }
+           ]
+          },
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{preco}",
+             "wrap": true,
+             "weight": "bolder",
+             "horizontalAlignment": "right"
+            }
+           ]
+          },
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{situacao}",
+             "wrap": true,
+             "size": "small",
+             "isSubtle": true,
+             "horizontalAlignment": "right"
+            }
+           ]
+          },
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "Input.Text",
+             "id": "anuncio_id_{id}",
+             "campo": "anuncio_id",
+             "value": "{id}",
+             "isVisible": false,
+             "okmigoSomenteLeitura": true
+            },
+            {
+             "type": "ActionSet",
+             "actions": [
+              {
+               "type": "Action.Execute",
+               "title": "Abrir",
+               "data": {
+                "operacao": "abrir_anuncio"
+               },
+               "style": "positive"
+              },
+              {
+               "type": "Action.Submit",
+               "title": "Tenho interesse",
+               "data": {
+                "operacao": "demonstrar_interesse"
+               }
+              },
+              {
+               "type": "Action.Submit",
+               "title": "Tirar dos salvos",
+               "data": {
+                "operacao": "desfavoritar_anuncio"
+               }
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ],
+      "firstRowAsHeader": true,
+      "showGridLines": false,
+      "fallback": {
+       "type": "TextBlock",
+       "text": "Os anúncios que você salvar aparecem aqui, com o preço e a situação de cada um.",
+       "wrap": true,
+       "size": "small",
+       "isSubtle": true
+      }
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "_repetir_lista": {
+         "type": "Container",
+         "items": [
+          {
+           "type": "ActionSet",
+           "actions": [
+            {
+             "type": "Action.Execute",
+             "title": "Ver mais salvos",
+             "data": {
+              "okmigoNavegar": {
+               "rota": "salvos_pagina",
+               "parametros": {
+                "cursor": "{cursor}"
+               }
+              }
+             }
+            }
+           ]
+          }
+         ]
+        },
+        "_quando": {
+         "campo": "mais",
+         "em": [
+          "sim"
+         ]
+        }
+       }
+      ]
+     }
+    ],
+    "okmigoTema": "operacao-direta",
+    "okmigoNavegacao": "inferior"
+   },
+   "rotulo": "Salvos",
+   "icone": "arquivo"
+  },
+  {
+   "nome": "pedidos",
+   "titulo": "Pedidos",
+   "hint": "o que você comprou e o que esperam que você confirme",
+   "fonte": {
+    "resumo": {
+     "operacao": "painel_de_pedidos",
+     "pedido": {
+      "cursor": "{rota.cursor}"
+     }
+    },
+    "lista": {
+     "operacao": "painel_de_pedidos",
+     "pedido": {
+      "cursor": "{rota.cursor}"
+     },
+     "caminho": "pedidos"
+    }
+   },
+   "cartao": {
+    "type": "AdaptiveCard",
+    "version": "1.5",
+    "body": [
+     {
+      "type": "TextBlock",
+      "text": "Pedidos",
+      "wrap": true,
+      "size": "extraLarge",
+      "weight": "bolder",
+      "spacing": "none"
+     },
+     {
+      "type": "TextBlock",
+      "text": "{resumo_frase}",
+      "wrap": true,
+      "size": "small",
+      "isSubtle": true
+     },
+     {
+      "type": "TextBlock",
+      "text": "Esperando você confirmar",
+      "wrap": true,
+      "size": "large",
+      "weight": "bolder",
+      "spacing": "large",
+      "separator": true
+     },
+     {
+      "type": "Table",
+      "columns": [
+       {
+        "width": 4
+       },
+       {
+        "width": 2
+       },
+       {
+        "width": 2
+       },
+       {
+        "width": 3
+       }
+      ],
+      "rows": [
+       {
+        "type": "TableRow",
+        "cells": [
+         {
+          "type": "TableCell",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Pedido",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true,
+            "weight": "bolder"
+           }
+          ]
+         },
+         {
+          "type": "TableCell",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Total",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true,
+            "weight": "bolder"
+           }
+          ]
+         },
+         {
+          "type": "TableCell",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Situação",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true,
+            "weight": "bolder"
+           }
+          ]
+         },
+         {
+          "type": "TableCell",
+          "items": []
+         }
+        ]
+       },
+       {
+        "_repetir_lista": {
+         "type": "TableRow",
+         "cells": [
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{titulo}",
+             "wrap": true,
+             "weight": "bolder"
+            },
+            {
+             "type": "TextBlock",
+             "text": "{papel} · {quando} · {quantidade} un.",
+             "wrap": true,
+             "size": "small",
+             "isSubtle": true
+            }
+           ]
+          },
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{total}",
+             "wrap": true,
+             "weight": "bolder",
+             "horizontalAlignment": "right"
+            }
+           ]
+          },
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{situacao}",
+             "wrap": true,
+             "size": "small",
+             "isSubtle": true,
+             "horizontalAlignment": "right"
+            }
+           ]
+          },
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "Input.Text",
+             "id": "pedido_id_{id}",
+             "campo": "pedido_id",
+             "value": "{id}",
+             "isVisible": false,
+             "okmigoSomenteLeitura": true
+            },
+            {
+             "type": "ActionSet",
+             "actions": [
+              {
+               "type": "Action.Submit",
+               "title": "Recebi",
+               "data": {
+                "operacao": "confirmar_pedido"
+               },
+               "style": "positive"
+              },
+              {
+               "type": "Action.Submit",
+               "title": "Cancelar",
+               "data": {
+                "operacao": "cancelar_pedido"
+               },
+               "style": "destructive"
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        "_quando": {
+         "campo": "secao",
+         "em": [
+          "venda_aberta"
+         ]
+        }
+       }
+      ],
+      "firstRowAsHeader": true,
+      "showGridLines": false,
+      "fallback": {
+       "type": "TextBlock",
+       "text": "Ninguém esperando confirmação sua. Quando alguém reservar o seu anúncio, o pedido aparece aqui.",
+       "wrap": true,
+       "size": "small",
+       "isSubtle": true
+      }
+     },
+     {
+      "type": "TextBlock",
+      "text": "Suas compras em aberto",
+      "wrap": true,
+      "size": "large",
+      "weight": "bolder",
+      "spacing": "large",
+      "separator": true
+     },
+     {
+      "type": "Table",
+      "columns": [
+       {
+        "width": 4
+       },
+       {
+        "width": 2
+       },
+       {
+        "width": 2
+       },
+       {
+        "width": 3
+       }
+      ],
+      "rows": [
+       {
+        "type": "TableRow",
+        "cells": [
+         {
+          "type": "TableCell",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Pedido",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true,
+            "weight": "bolder"
+           }
+          ]
+         },
+         {
+          "type": "TableCell",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Total",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true,
+            "weight": "bolder"
+           }
+          ]
+         },
+         {
+          "type": "TableCell",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Situação",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true,
+            "weight": "bolder"
+           }
+          ]
+         },
+         {
+          "type": "TableCell",
+          "items": []
+         }
+        ]
+       },
+       {
+        "_repetir_lista": {
+         "type": "TableRow",
+         "cells": [
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{titulo}",
+             "wrap": true,
+             "weight": "bolder"
+            },
+            {
+             "type": "TextBlock",
+             "text": "{papel} · {quando} · {quantidade} un.",
+             "wrap": true,
+             "size": "small",
+             "isSubtle": true
+            }
+           ]
+          },
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{total}",
+             "wrap": true,
+             "weight": "bolder",
+             "horizontalAlignment": "right"
+            }
+           ]
+          },
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{situacao}",
+             "wrap": true,
+             "size": "small",
+             "isSubtle": true,
+             "horizontalAlignment": "right"
+            }
+           ]
+          },
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "Input.Text",
+             "id": "pedido_id_{id}",
+             "campo": "pedido_id",
+             "value": "{id}",
+             "isVisible": false,
+             "okmigoSomenteLeitura": true
+            },
+            {
+             "type": "ActionSet",
+             "actions": [
+              {
+               "type": "Action.Submit",
+               "title": "Cancelar",
+               "data": {
+                "operacao": "cancelar_pedido"
+               },
+               "style": "destructive"
+              }
+             ]
+            }
+           ]
+          }
+         ]
+        },
+        "_quando": {
+         "campo": "secao",
+         "em": [
+          "compra_aberta"
+         ]
+        }
+       }
+      ],
+      "firstRowAsHeader": true,
+      "showGridLines": false,
+      "fallback": {
+       "type": "TextBlock",
+       "text": "Você não tem compra em aberto. Reserve um anúncio em Comprar para abrir um pedido.",
+       "wrap": true,
+       "size": "small",
+       "isSubtle": true
+      }
+     },
+     {
+      "type": "TextBlock",
+      "text": "Encerrados",
+      "wrap": true,
+      "size": "large",
+      "weight": "bolder",
+      "spacing": "large",
+      "separator": true
+     },
+     {
+      "type": "Table",
+      "columns": [
+       {
+        "width": 4
+       },
+       {
+        "width": 2
+       },
+       {
+        "width": 2
+       }
+      ],
+      "rows": [
+       {
+        "type": "TableRow",
+        "cells": [
+         {
+          "type": "TableCell",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Pedido",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true,
+            "weight": "bolder"
+           }
+          ]
+         },
+         {
+          "type": "TableCell",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Total",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true,
+            "weight": "bolder"
+           }
+          ]
+         },
+         {
+          "type": "TableCell",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "Situação",
+            "wrap": true,
+            "size": "small",
+            "isSubtle": true,
+            "weight": "bolder"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "_repetir_lista": {
+         "type": "TableRow",
+         "cells": [
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{titulo}",
+             "wrap": true,
+             "weight": "bolder"
+            },
+            {
+             "type": "TextBlock",
+             "text": "{papel} · {quando} · {quantidade} un.",
+             "wrap": true,
+             "size": "small",
+             "isSubtle": true
+            }
+           ]
+          },
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{total}",
+             "wrap": true,
+             "weight": "bolder",
+             "horizontalAlignment": "right"
+            }
+           ]
+          },
+          {
+           "type": "TableCell",
+           "items": [
+            {
+             "type": "TextBlock",
+             "text": "{situacao}",
+             "wrap": true,
+             "size": "small",
+             "isSubtle": true,
+             "horizontalAlignment": "right"
+            }
+           ]
+          }
+         ]
+        },
+        "_quando": {
+         "campo": "secao",
+         "em": [
+          "encerrado"
+         ]
+        }
+       }
+      ],
+      "firstRowAsHeader": true,
+      "showGridLines": false,
+      "fallback": {
+       "type": "TextBlock",
+       "text": "Nenhum pedido encerrado ainda.",
+       "wrap": true,
+       "size": "small",
+       "isSubtle": true
+      }
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "_repetir_lista": {
+         "type": "Container",
+         "items": [
+          {
+           "type": "ActionSet",
+           "actions": [
+            {
+             "type": "Action.Execute",
+             "title": "Ver mais pedidos",
+             "data": {
+              "okmigoNavegar": {
+               "rota": "pedidos_pagina",
+               "parametros": {
+                "cursor": "{cursor}"
+               }
+              }
+             }
+            }
+           ]
+          }
+         ]
+        },
+        "_quando": {
+         "campo": "mais",
+         "em": [
+          "sim"
+         ]
+        }
+       }
+      ]
+     }
+    ],
+    "okmigoTema": "operacao-direta",
+    "okmigoNavegacao": "inferior"
+   },
+   "rotulo": "Pedidos",
+   "icone": "extrato"
+  },
+  {
+   "nome": "loja",
+   "titulo": "Minha loja",
+   "hint": "a sua vitrine de vendedor local: nome, apresentação e os anúncios dela",
+   "fonte": {
+    "resumo": {
+     "operacao": "painel_da_loja"
+    },
+    "lista": {
+     "operacao": "painel_da_loja",
+     "caminho": "anuncios"
+    }
+   },
+   "cartao": {
+    "type": "AdaptiveCard",
+    "version": "1.5",
+    "body": [
+     {
+      "type": "TextBlock",
+      "text": "Minha loja",
+      "wrap": true,
+      "size": "extraLarge",
+      "weight": "bolder",
+      "spacing": "none"
+     },
+     {
+      "type": "TextBlock",
+      "text": "{resumo_frase}",
+      "wrap": true,
+      "size": "small",
+      "isSubtle": true
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "Image",
+        "url": "{logo}",
+        "altText": "{nome}",
+        "height": "small"
+       },
+       {
+        "type": "TextBlock",
+        "text": "{numeros}",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "Input.Text",
+        "id": "loja_nome",
+        "label": "Nome da vitrine",
+        "campo": "nome",
+        "isRequired": true,
+        "placeholder": "Bicicletaria do Bairro",
+        "value": "{nome}"
+       },
+       {
+        "type": "Input.Text",
+        "id": "loja_descricao",
+        "label": "Apresentação",
+        "campo": "descricao",
+        "isMultiline": true,
+        "placeholder": "O que você vende, onde fica, como combinar",
+        "value": "{descricao}"
+       },
+       {
+        "type": "TextBlock",
+        "text": "Para pôr um logo, mande a foto na conversa com o OkMigo e peça para usá-la como logo da sua vitrine.",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.Submit",
+          "title": "Salvar vitrine",
+          "data": {
+           "operacao": "salvar_vitrine"
+          },
+          "style": "positive"
+         }
+        ]
+       }
+      ],
+      "style": "emphasis"
+     },
+     {
+      "type": "TextBlock",
+      "text": "{titulo_nesta_vitrine}",
+      "wrap": true,
+      "size": "large",
+      "weight": "bolder",
+      "spacing": "large",
+      "separator": true
+     },
+     {
+      "type": "TextBlock",
+      "text": "{dica_da_vitrine}",
+      "wrap": true,
+      "size": "small",
+      "isSubtle": true
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "_repetir_lista": {
+         "type": "Container",
+         "items": [
+          {
+           "type": "Image",
+           "url": "{foto}",
+           "altText": "{titulo}",
+           "height": "medium"
+          },
+          {
+           "type": "TextBlock",
+           "text": "{titulo}",
+           "wrap": true,
+           "weight": "bolder",
+           "spacing": "small"
+          },
+          {
+           "type": "TextBlock",
+           "text": "{preco}",
+           "wrap": true,
+           "weight": "bolder"
+          },
+          {
+           "type": "TextBlock",
+           "text": "{situacao} · {apoio}",
+           "wrap": true,
+           "size": "small",
+           "isSubtle": true
+          },
+          {
+           "type": "Input.Text",
+           "id": "anuncio_id_{id}",
+           "campo": "anuncio_id",
+           "value": "{id}",
+           "isVisible": false,
+           "okmigoSomenteLeitura": true
+          },
+          {
+           "type": "ActionSet",
+           "actions": [
+            {
+             "type": "Action.Execute",
+             "title": "Abrir",
+             "data": {
+              "operacao": "abrir_anuncio"
+             }
+            },
+            {
+             "type": "Action.Submit",
+             "title": "Tirar da vitrine",
+             "data": {
+              "operacao": "tirar_da_vitrine"
+             }
+            }
+           ]
+          }
+         ],
+         "style": "emphasis"
+        }
+       }
+      ],
+      "okmigoGrade": "compacta"
+     }
+    ],
+    "okmigoTema": "operacao-direta",
+    "okmigoNavegacao": "inferior"
+   },
+   "rotulo": "Minha loja",
+   "icone": "salao"
+  }
+ ],
+ "conversa": [
+  "buscar_anuncios",
+  "detalhar_anuncio",
+  "categorias_do_marketplace",
+  "meus_favoritos",
+  "favoritar_anuncio",
+  "desfavoritar_anuncio",
+  "demonstrar_interesse",
+  "comprar",
+  "meus_pedidos",
+  "cancelar_pedido",
+  "criar_anuncio",
+  "publicar_anuncio",
+  "pausar_anuncio",
+  "cancelar_anuncio",
+  "ajustar_estoque",
+  "compartilhar_anuncio",
+  "deixar_de_compartilhar",
+  "tornar_publico",
+  "meus_anuncios",
+  "interessados_no_anuncio",
+  "pedidos_a_confirmar",
+  "confirmar_pedido",
+  "salvar_vitrine",
+  "minhas_vitrines",
+  "por_na_vitrine",
+  "tirar_da_vitrine",
+  "adicionar_foto"
+ ],
+ "rotas": [
+  {
+   "nome": "vitrine_pagina",
+   "superficie": "vitrine",
+   "parametros": [
+    {
+     "nome": "cursor",
+     "tipo": "texto",
+     "obrigatorio": false
+    }
+   ],
+   "compartilhavel": false,
+   "historico": true,
+   "favoritavel": false
+  },
+  {
+   "nome": "salvos_pagina",
+   "superficie": "salvos",
+   "parametros": [
+    {
+     "nome": "cursor",
+     "tipo": "texto",
+     "obrigatorio": false
+    }
+   ],
+   "compartilhavel": false,
+   "historico": true,
+   "favoritavel": false
+  },
+  {
+   "nome": "pedidos_pagina",
+   "superficie": "pedidos",
+   "parametros": [
+    {
+     "nome": "cursor",
+     "tipo": "texto",
+     "obrigatorio": false
+    }
+   ],
+   "compartilhavel": false,
+   "historico": true,
+   "favoritavel": false
+  }
+ ],
+ "para_tipo": "socio",
+ "descricao_humana": "Sua loja no marketplace: anuncie, venda e receba pedidos.",
+ "nome_visivel": "Loja no Marketplace",
+ "agente": {
+  "contrato": "1",
+  "modo": "declarado",
+  "competencias": [
+   "encontrar o que está à venda, em doação, troca ou aluguel",
+   "explicar se um anúncio serve, pelo que o anunciante declarou",
+   "traduzir o que a pessoa procura nas categorias do marketplace",
+   "acompanhar os anúncios, favoritos e pedidos de quem pergunta",
+   "propor demonstrar interesse, comprar ou recusar um anúncio"
+  ],
+  "ferramentas": [
+   "buscar_anuncios",
+   "detalhar_anuncio",
+   "categorias_do_marketplace",
+   "meus_anuncios",
+   "meus_favoritos",
+   "meus_pedidos",
+   "interessados_no_anuncio",
+   "pedidos_a_confirmar",
+   "minhas_vitrines"
+  ],
+  "orcamento": {
+   "chamadas": 3,
+   "tokens": 12000,
+   "segundos": 20
+  },
+  "instrucoes": "Você atende dentro do Marketplace do OkMigo: um mercado de pessoas que se\nconhecem, não um classificado aberto. Ajude quem pergunta a encontrar o que\nprecisa e a entender se um anúncio serve.\n\nVOCABULÁRIO DESTE DOMÍNIO\n- `modalidade` é como o item sai: venda, doação, troca ou aluguel. São quatro\n  coisas diferentes, e doação NÃO é preço zero.\n- `item único` sai uma vez e acaba (vira vendido); `estoque` tem quantidade e\n  volta a ter quando o anunciante repõe.\n- `anúncio` é o que está oferecido; `vitrine` é o perfil público de um vendedor\n  local; `interesse` é o gesto de dizer «quero saber mais», e não compra nada.\n- `favorito` é lembrete privado de quem salvou, não sinal para o anunciante.\n- Preço vem em centavos inteiros e em reais. Nunca converta de cabeça: use o\n  valor formatado que a ferramenta devolveu.\n\nCOMO USAR AS FERRAMENTAS\n- Comece por `buscar_anuncios` quando a pessoa descreve o que quer, e por\n  `detalhar_anuncio` quando ela aponta um anúncio.\n- `categorias_do_marketplace` serve para traduzir a palavra dela na categoria\n  que a busca entende — use antes de concluir que não há nada.\n- `meus_anuncios`, `meus_pedidos`, `meus_favoritos`, `interessados_no_anuncio` e\n  `pedidos_a_confirmar` falam do lado de quem pergunta, não do mercado.\n- Não chame ferramenta para confirmar o que outra já disse.\n\nCOMO RESPONDER\n- Explique o encaixe por FATO DECLARADO pelo anunciante: estado, medida, preço,\n  modalidade, localização como ela foi escrita. Toda característica que você\n  citar tem de estar na resposta da ferramenta.\n- Todo número do seu texto vai em `fatos`, com rótulo. Número sem fato é número\n  que o amigo não pode repetir.\n- Não classifique pessoas, não ordene por «melhor» e não dê nota, pontuação nem\n  ranking de vendedor: este domínio não tem essa medida, e inventá-la é opaco.\n- Não infira nem comente característica de pessoa — renda, gênero, religião,\n  saúde, origem, orientação. Nem para «entender melhor a necessidade».\n- Você não tem contato, telefone, e-mail nem endereço, e não deve pedi-los: o\n  encontro acontece na conversa, depois do aceite.\n\nQUANDO NÃO RESPONDER DE UMA VEZ\n- Pedido vago — «quero comprar uma coisa», «tem algo barato?» — pede\n  `precisa_esclarecer`, com opções curtas tiradas das categorias reais.\n- Demonstrar interesse e comprar são sempre `acao_proposta`, com resumo do que\n  vai acontecer. Você nunca executa, e nunca diz que já fez.\n- Deixe a recusa sempre aberta: «não me interessa» é resposta legítima, não\n  precisa de justificativa, e para você é simplesmente não propor nada e seguir.\n- Não ofereça denúncia, moderação nem «reportar»: este serviço não tem esse\n  gesto. Prometer o que não existe é pior do que não oferecer.\n- Anúncio vendido, cancelado, pausado, expirado ou que a leitura não alcança é\n  `indisponivel` com `dado_ausente`. Não descreva de memória o que saiu do ar, e\n  não deduza por que saiu.\n- Pergunta fora do marketplace é `fora_do_dominio`. Não chute.",
+  "exemplos": [
+   {
+    "pedido": "procuro uma bicicleta usada até 500 reais",
+    "espera": "respondido"
+   },
+   {
+    "pedido": "quero comprar uma coisa",
+    "espera": "precisa_esclarecer"
+   },
+   {
+    "pedido": "tenho interesse no sofá do anúncio 1234",
+    "espera": "acao_proposta"
+   },
+   {
+    "pedido": "me passa o telefone de quem anunciou a geladeira",
+    "espera": "indisponivel"
+   },
+   {
+    "pedido": "e a geladeira que eu vi ontem, ainda dá?",
+    "espera": "indisponivel"
+   }
+  ]
+ }
+}

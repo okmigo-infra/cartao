@@ -1,0 +1,608 @@
+{
+ "slug": "agenda",
+ "endpoint": "http://SEU-HOST:8000/mcp/",
+ "descricao": "A linha do tempo central da pessoa: compromissos e eventos de todos os produtos instalados, reunidos por data e hora.",
+ "forma": "do_operador",
+ "descricao_humana": "Tudo o que ocupa seu tempo, em um único calendário.",
+ "versao": "3.11.0",
+ "rotas": [
+  {
+   "nome": "periodo_da_agenda",
+   "superficie": "agenda",
+   "parametros": [
+    {
+     "nome": "mes",
+     "tipo": "texto",
+     "obrigatorio": true
+    }
+   ],
+   "compartilhavel": false,
+   "historico": false,
+   "favoritavel": false
+  }
+ ],
+ "avisa_antes": {
+  "operacao": "a_avisar",
+  "parametro": "janela_minutos"
+ },
+ "relata_mudancas": {
+  "operacao": "o_que_mudou",
+  "parametro": "janela_minutos"
+ },
+ "eventos": {
+  "operacao": "eventos",
+  "parametro": "dias"
+ },
+ "marca_horario": {
+  "operacao": "pedir_horario",
+  "ofertas": "listar_servicos"
+ },
+ "conversa": [
+  "listar_servicos",
+  "criar_servico",
+  "consultar_disponibilidade",
+  "listar_agenda_do_dia",
+  "resumo_do_mes",
+  "eventos",
+  "resumo_dos_doze_meses",
+  "criar_agendamento",
+  "listar_recursos",
+  "criar_recurso",
+  "listar_disponibilidade",
+  "definir_disponibilidade",
+  "anotar_compromisso",
+  "definir_compromisso_do_dia",
+  "listar_compromissos",
+  "a_avisar",
+  "o_que_mudou",
+  "remover_compromisso",
+  "pedir_horario",
+  "pedidos_de_horario",
+  "decidir_pedido_de_horario",
+  "remarcar_agendamento",
+  "cancelar_agendamento",
+  "interpretar_data",
+  "agenda_da_semana",
+  "fechar_nos_feriados",
+  "entrar_na_espera",
+  "lista_de_espera",
+  "sair_da_espera",
+  "ligar_agenda_externa",
+  "listar_agendas_externas",
+  "desligar_agenda_externa",
+  "ligar_feed_da_agenda",
+  "listar_feeds_da_agenda",
+  "desligar_feed_da_agenda"
+ ],
+ "agente": {
+  "contrato": "1",
+  "modo": "declarado",
+  "competencias": [
+   "datas faladas («sexta às 2», «dia 5») viram data e hora no fuso do negócio",
+   "a agenda do dia, da semana e do mês, com o que outros apps ocupam",
+   "horários livres por serviço e cadeira, e por que um horário está ocupado",
+   "pedidos de horário esperando decisão, a lista de espera e o que mudou na agenda",
+   "marcar, remarcar, cancelar e anotar compromisso (propõe; o dono confirma)"
+  ],
+  "ferramentas": [
+   "interpretar_data",
+   "agenda_da_semana",
+   "listar_agenda_do_dia",
+   "resumo_do_mes",
+   "resumo_dos_doze_meses",
+   "consultar_disponibilidade",
+   "listar_servicos",
+   "listar_recursos",
+   "listar_disponibilidade",
+   "listar_compromissos",
+   "pedidos_de_horario",
+   "o_que_mudou"
+  ],
+  "orcamento": {
+   "chamadas": 3,
+   "tokens": 12000,
+   "segundos": 20
+  },
+  "instrucoes": "Você cuida da agenda de hora marcada de quem instalou a Agenda: atendimentos (cliente e serviço), compromissos do próprio dono e o que outros apps ocupam.\nDatas: toda data dita em palavras («sexta às 2», «amanhã», «dia 5», «20/10») passa por interpretar_data(expressao=...) ANTES de qualquer outra ferramenta. Nunca conte dias de cabeça. Com ambigua: true, devolva precisa_esclarecer com as opcoes que vieram (dia da semana, data e hora); nunca escolha pela pessoa. no_passado: true numa marcação também se pergunta. erro nao_entendi ou horario_inexistente: pergunte a data de novo.\nConsultas:\n- Um dia: listar_agenda_do_dia(dia=AAAA-MM-DD). A semana: agenda_da_semana(dia=...). O mês: resumo_do_mes(mes=AAAA-MM). O ano: resumo_dos_doze_meses(a_partir_de=...).\n- Vaga: consultar_disponibilidade(dia, servico_nome). Com mais de um recurso (listar_recursos), uma chamada por recurso, ou só o que a pessoa pediu.\n- Pedidos esperando: pedidos_de_horario. O que mudou: o_que_mudou(janela_minutos=N). Expediente: listar_disponibilidade. Compromissos num período: listar_compromissos(de, ate). Serviços: listar_servicos.\nResponda só com horários, nomes e contagens que vieram das ferramentas, sempre com o dia da semana e a data. Nada marcado é resposta, não erro.\nEvento de outro app (eventos_de_apps: o app e o título) é do app de origem: mostre, mas não proponha mudar nem cancelar; diga que isso se faz no app de onde ele veio.\nMudar a agenda é AÇÃO: devolva acao_proposta e nunca diga que fez; nunca mova um evento por conta própria. Marcar atendimento: criar_agendamento(cliente_nome, servico_nome, quando). Remarcar: remarcar_agendamento(agendamento_id, novo_quando). Cancelar: cancelar_agendamento(agendamento_id). Compromisso do dono (dentista, reunião): anotar_compromisso(quando, duracao_minutos, motivo); tirar: remover_compromisso(compromisso_id). «Me lembra», «anota aí», lembrete que NÃO fecha horário: anotar_compromisso(..., ocupa=false) — é anotação, fica na agenda e não tira vaga; «estou ocupado», «tenho dentista» ocupa (ocupa=true). Dia inteiro (feriado, viagem, «sexta não atendo»): dia_inteiro=true com quando=AAAA-MM-DD, sem duração. Aceitar ou recusar pedido: decidir_pedido_de_horario. O quando é o campo quando de interpretar_data. O resumo da acao_proposta diz dia da semana, data, hora e o fuso («terça, 06/10, 14:00, America/Sao_Paulo»).\nRecorrência («toda terça às 14h por 8 semanas», «todo dia 10»): anotar_compromisso com quando = a PRIMEIRA ocorrência, repete = semanal ou mensal, e vezes = N ou ate = AAAA-MM-DD (dias_da_semana = [2, 4] para «terça e quinta»; a_cada = 2 para «quinzenal»). É UMA acao_proposta para a série; mover ou tirar uma ocorrência não mexe nas outras. Tirar um compromisso que repete (serie_id preenchido): remover_compromisso(compromisso_id, alcance) com so_esta, proximas ou todas — pergunte o alcance se a pessoa não disse.\nFeriados nacionais: fechar_nos_feriados(ligar=true) fecha o negócio em todos (compromisso de dia inteiro «Feriado · nome»); ligar=false reabre; excecoes=[AAAA-MM-DD] mantém aberto num feriado específico. É ação: proponha e espere a confirmação.\nConflito (conflito: true): o horário está ocupado. Diga o que ocupa (listar_agenda_do_dia) e ofereça as alternativas que vieram, ou as de consultar_disponibilidade.\nLista de espera: ao recusar a quem pede, ofereça entrar_na_espera(cliente_nome, servico_nome, dia ou quando); nada fica marcado e, se abrir, a agenda avisa (60 min para pedir). A fila: lista_de_espera; desistir: sair_da_espera. horario_liberado em o_que_mudou é recado para aquele cliente, válido até prazo_ate.\nVocabulário: atendimento = horário de um cliente para um serviço; compromisso = evento do próprio dono, sem cliente; anotação = lembrete do dono que não ocupa horário; pedido = horário que alguém pediu e o dono ainda não aceitou; espera = quem aguarda um horário que não havia; recurso = cadeira, sala ou profissional; expediente = os horários de trabalho da semana.",
+  "exemplos": [
+   {
+    "pedido": "o que eu tenho amanhã?",
+    "espera": "respondido"
+   },
+   {
+    "pedido": "como está a minha semana?",
+    "espera": "respondido"
+   },
+   {
+    "pedido": "marca um horário na sexta às 2",
+    "espera": "precisa_esclarecer"
+   },
+   {
+    "pedido": "anota que eu tenho dentista amanhã às 15h, por uma hora",
+    "espera": "acao_proposta"
+   },
+   {
+    "pedido": "transfere 100 reais pro João",
+    "espera": "indisponivel"
+   }
+  ]
+ },
+ "superficies": [
+  {
+   "nome": "agenda",
+   "titulo": "Agenda",
+   "hint": "dia, semana, mês e lista no mesmo calendário",
+   "fonte": {
+    "resumo": {
+     "operacao": "resumo_do_mes",
+     "pedido": {
+      "mes": "{rota.mes}"
+     }
+    },
+    "lista": {
+     "operacao": "resumo_do_mes",
+     "pedido": {
+      "mes": "{rota.mes}"
+     },
+     "caminho": "agenda_do_mes"
+    }
+   },
+   "cartao": {
+    "type": "AdaptiveCard",
+    "version": "1.5",
+    "body": [
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Sua agenda",
+        "size": "large",
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "Compromissos, atendimentos e horários livres num só lugar.",
+        "size": "small",
+        "isSubtle": true,
+        "wrap": true
+       },
+       {
+        "type": "okmigoCalendario",
+        "vista": "mes",
+        "vistas": [
+         "dia",
+         "semana",
+         "mes",
+         "agenda"
+        ],
+        "de": "{cal_m1_de}",
+        "ate": "{cal_m3_de}",
+        "horaInicial": 7,
+        "horaFinal": 21,
+        "recursos": [
+         {
+          "_repetir_lista": "{nome}",
+          "_de": "recursos"
+         }
+        ],
+        "eventos": [
+         {
+          "_repetir_lista": {
+           "inicio": "{inicio}",
+           "fim": "{fim}",
+           "titulo": "{titulo}",
+           "detalhe": "{detalhe}",
+           "id": "{id}",
+           "tipo": "{tipo}",
+           "recurso": "{recurso}",
+           "serie_id": "{serie_id}"
+          }
+         }
+        ],
+        "aoTocarODia": {
+         "mostrar": "form",
+         "preencher": {
+          "dia_do_form": "data",
+          "hora_do_form": "hora"
+         }
+        },
+        "acoesDoEvento": [
+         {
+          "gesto": "arrastar",
+          "para": "atendimento",
+          "enviar": "remarcar_agendamento",
+          "campos": {
+           "agendamento_id": "id",
+           "novo_quando": "novo_inicio"
+          }
+         },
+         {
+          "gesto": "arrastar",
+          "para": "compromisso",
+          "enviar": "definir_compromisso_do_dia",
+          "campos": {
+           "compromisso_id": "id",
+           "dia": "nova_data",
+           "hora": "nova_hora",
+           "duracao_minutos": "duracao_minutos",
+           "motivo": "titulo"
+          }
+         },
+         {
+          "titulo": "Editar",
+          "para": "compromisso",
+          "mostrar": "form",
+          "preencher": {
+           "dia_do_form": "data",
+           "hora_do_form": "hora",
+           "duracao_do_form": "duracao_minutos",
+           "motivo_do_form": "titulo",
+           "id_do_form": "id"
+          }
+         },
+         {
+          "titulo": "Apagar",
+          "para": "compromisso",
+          "enviar": "remover_compromisso",
+          "campos": {
+           "compromisso_id": "id"
+          }
+         },
+         {
+          "titulo": "Cancelar atendimento",
+          "para": "atendimento",
+          "enviar": "cancelar_agendamento",
+          "campos": {
+           "agendamento_id": "id"
+          }
+         },
+         {
+          "titulo": "Decidir",
+          "para": "pedido",
+          "mostrar": "form_pedido",
+          "preencher": {
+           "pedido_id_do_form": "id"
+          }
+         }
+        ],
+        "aoNavegarPeriodo": {
+         "rota": "periodo_da_agenda",
+         "parametro": "mes",
+         "parametros": {}
+        }
+       },
+       {
+        "type": "Container",
+        "id": "form",
+        "isVisible": false,
+        "okmigoSobreposto": true,
+        "items": [
+         {
+          "type": "TextBlock",
+          "text": "Compromisso",
+          "size": "small",
+          "weight": "bolder"
+         },
+         {
+          "type": "Input.Text",
+          "id": "dia_do_form",
+          "isVisible": false,
+          "value": "",
+          "campo": "dia"
+         },
+         {
+          "type": "Input.ChoiceSet",
+          "id": "hora_do_form",
+          "style": "filtered",
+          "label": "Hora",
+          "value": "09:00",
+          "isRequired": true,
+          "campo": "hora",
+          "choices": [
+           {
+            "title": "00:00",
+            "value": "00:00"
+           },
+           {
+            "title": "00:30",
+            "value": "00:30"
+           },
+           {
+            "title": "01:00",
+            "value": "01:00"
+           },
+           {
+            "title": "01:30",
+            "value": "01:30"
+           },
+           {
+            "title": "02:00",
+            "value": "02:00"
+           },
+           {
+            "title": "02:30",
+            "value": "02:30"
+           },
+           {
+            "title": "03:00",
+            "value": "03:00"
+           },
+           {
+            "title": "03:30",
+            "value": "03:30"
+           },
+           {
+            "title": "04:00",
+            "value": "04:00"
+           },
+           {
+            "title": "04:30",
+            "value": "04:30"
+           },
+           {
+            "title": "05:00",
+            "value": "05:00"
+           },
+           {
+            "title": "05:30",
+            "value": "05:30"
+           },
+           {
+            "title": "06:00",
+            "value": "06:00"
+           },
+           {
+            "title": "06:30",
+            "value": "06:30"
+           },
+           {
+            "title": "07:00",
+            "value": "07:00"
+           },
+           {
+            "title": "07:30",
+            "value": "07:30"
+           },
+           {
+            "title": "08:00",
+            "value": "08:00"
+           },
+           {
+            "title": "08:30",
+            "value": "08:30"
+           },
+           {
+            "title": "09:00",
+            "value": "09:00"
+           },
+           {
+            "title": "09:30",
+            "value": "09:30"
+           },
+           {
+            "title": "10:00",
+            "value": "10:00"
+           },
+           {
+            "title": "10:30",
+            "value": "10:30"
+           },
+           {
+            "title": "11:00",
+            "value": "11:00"
+           },
+           {
+            "title": "11:30",
+            "value": "11:30"
+           },
+           {
+            "title": "12:00",
+            "value": "12:00"
+           },
+           {
+            "title": "12:30",
+            "value": "12:30"
+           },
+           {
+            "title": "13:00",
+            "value": "13:00"
+           },
+           {
+            "title": "13:30",
+            "value": "13:30"
+           },
+           {
+            "title": "14:00",
+            "value": "14:00"
+           },
+           {
+            "title": "14:30",
+            "value": "14:30"
+           },
+           {
+            "title": "15:00",
+            "value": "15:00"
+           },
+           {
+            "title": "15:30",
+            "value": "15:30"
+           },
+           {
+            "title": "16:00",
+            "value": "16:00"
+           },
+           {
+            "title": "16:30",
+            "value": "16:30"
+           },
+           {
+            "title": "17:00",
+            "value": "17:00"
+           },
+           {
+            "title": "17:30",
+            "value": "17:30"
+           },
+           {
+            "title": "18:00",
+            "value": "18:00"
+           },
+           {
+            "title": "18:30",
+            "value": "18:30"
+           },
+           {
+            "title": "19:00",
+            "value": "19:00"
+           },
+           {
+            "title": "19:30",
+            "value": "19:30"
+           },
+           {
+            "title": "20:00",
+            "value": "20:00"
+           },
+           {
+            "title": "20:30",
+            "value": "20:30"
+           },
+           {
+            "title": "21:00",
+            "value": "21:00"
+           },
+           {
+            "title": "21:30",
+            "value": "21:30"
+           },
+           {
+            "title": "22:00",
+            "value": "22:00"
+           },
+           {
+            "title": "22:30",
+            "value": "22:30"
+           },
+           {
+            "title": "23:00",
+            "value": "23:00"
+           },
+           {
+            "title": "23:30",
+            "value": "23:30"
+           }
+          ]
+         },
+         {
+          "type": "Input.Number",
+          "id": "duracao_do_form",
+          "label": "Duração (minutos)",
+          "value": "60",
+          "isRequired": true,
+          "min": 1,
+          "campo": "duracao_minutos"
+         },
+         {
+          "type": "Input.Text",
+          "id": "motivo_do_form",
+          "label": "O que é",
+          "placeholder": "dentista, reunião, aniversário...",
+          "isRequired": true,
+          "campo": "motivo"
+         },
+         {
+          "type": "Input.Text",
+          "id": "aviso_do_form",
+          "label": "Avisar quantos minutos antes",
+          "placeholder": "30 · vazio mantém · 'nao' desliga",
+          "campo": "avisar_em_minutos"
+         },
+         {
+          "type": "Input.Text",
+          "id": "compromisso_id_do_form",
+          "isVisible": false,
+          "value": "",
+          "campo": "compromisso_id"
+         },
+         {
+          "type": "ActionSet",
+          "actions": [
+           {
+            "type": "Action.Submit",
+            "title": "Salvar",
+            "data": {
+             "operacao": "definir_compromisso_do_dia"
+            }
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "type": "Container",
+        "id": "form_pedido",
+        "isVisible": false,
+        "okmigoSobreposto": true,
+        "items": [
+         {
+          "type": "TextBlock",
+          "text": "Pedido de horário",
+          "size": "small",
+          "weight": "bolder"
+         },
+         {
+          "type": "TextBlock",
+          "size": "small",
+          "isSubtle": true,
+          "wrap": true,
+          "text": "Aprovar é o que marca; recusar libera o horário."
+         },
+         {
+          "type": "Input.Text",
+          "id": "pedido_id_do_form",
+          "isVisible": false,
+          "value": "",
+          "campo": "pedido_id"
+         },
+         {
+          "type": "Input.ChoiceSet",
+          "id": "decisao_do_form",
+          "campo": "aprovar",
+          "label": "Decisão",
+          "value": "true",
+          "style": "compact",
+          "choices": [
+           {
+            "title": "Aprovar",
+            "value": "true"
+           },
+           {
+            "title": "Recusar",
+            "value": "false"
+           }
+          ]
+         },
+         {
+          "type": "ActionSet",
+          "actions": [
+           {
+            "type": "Action.Submit",
+            "title": "Confirmar decisão",
+            "data": {
+             "operacao": "decidir_pedido_de_horario"
+            }
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "okmigoTema": "jornada-ativa",
+    "okmigoNavegacao": "inferior"
+   }
+  }
+ ]
+}

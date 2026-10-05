@@ -5,6 +5,7 @@ crivo deixa passar, o que ele comeu, e como a tela fica pelada.
     python -m okmigo_cartao molde.json --dados dados.json --escrituras salvar,apagar
     python -m okmigo_cartao cartao.json --html saida.html --dominio exemplo.com
     python -m okmigo_cartao okmigo/manifesto.json --superficie extrato --dados dados.json
+    python -m okmigo_cartao matriz okmigo/manifesto.json --formato json --saida matriz.json
 
 Com o MANIFESTO inteiro, `--superficie` escolhe o cartão e as `operacoes`
 declaradas viram as escrituras/leituras que o crivo confere — que é o teste
@@ -37,6 +38,10 @@ def main(argv: list[str] | None = None) -> int:
         from .preview import main_preview
 
         return main_preview(argumentos[1:])
+    if argumentos and argumentos[0] == "matriz":
+        from .matriz import main_matriz
+
+        return main_matriz(argumentos[1:])
 
     p = argparse.ArgumentParser(prog="okmigo-cartao", description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)

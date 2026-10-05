@@ -1,0 +1,632 @@
+{
+ "slug": "dogiromoney-pagador",
+ "endpoint": "http://SEU-HOST:8000/mcp/",
+ "forma": "do_operador",
+ "descricao": "As suas cobranças na organização que as emitiu: quanto, por quê, desde quando — e como contestar.",
+ "versao": "0.28.0",
+ "superficies": [
+  {
+   "nome": "cobrancas",
+   "titulo": "Minhas cobranças",
+   "hint": "o que você deve e desde quando",
+   "fonte": {
+    "resumo": {
+     "operacao": "minhas_cobrancas"
+    }
+   },
+   "cartao": {
+    "type": "AdaptiveCard",
+    "version": "1.5",
+    "body": [
+     {
+      "type": "TextBlock",
+      "text": "Minhas cobranças",
+      "wrap": true,
+      "spacing": "none",
+      "size": "extraLarge",
+      "weight": "bolder"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Em aberto",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "TextBlock",
+        "text": "{total_texto}",
+        "wrap": true,
+        "size": "extraLarge",
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "{a_quem_texto}",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       }
+      ],
+      "style": "emphasis"
+     },
+     {
+      "_repetir_lista": {
+       "type": "Container",
+       "items": [
+        {
+         "type": "TextBlock",
+         "text": "{descricao}",
+         "wrap": true,
+         "weight": "bolder"
+        },
+        {
+         "type": "TextBlock",
+         "text": "{estado_texto} · falta {saldo_texto}",
+         "wrap": true,
+         "size": "small"
+        },
+        {
+         "type": "TextBlock",
+         "text": "{o_que_significa}",
+         "wrap": true,
+         "size": "small",
+         "isSubtle": true
+        }
+       ],
+       "style": "default"
+      },
+      "_de": "cobrancas"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "{suporte}",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       }
+      ],
+      "style": "default"
+     },
+     {
+      "_repetir_lista": {
+       "type": "Container",
+       "items": [
+        {
+         "type": "TextBlock",
+         "text": "Ver outro",
+         "wrap": true,
+         "weight": "bolder"
+        },
+        {
+         "type": "Input.ChoiceSet",
+         "id": "pagador_livro",
+         "choices": [
+          {
+           "_repetir_lista": {
+            "title": "{nome}",
+            "value": "{id}"
+           },
+           "_de": "organizacoes"
+          }
+         ],
+         "label": "De quem",
+         "campo": "organizacao_id",
+         "isRequired": true
+        },
+        {
+         "type": "ActionSet",
+         "actions": [
+          {
+           "type": "Action.Submit",
+           "title": "Ver estas",
+           "data": {
+            "operacao": "usar_livro"
+           }
+          }
+         ]
+        }
+       ],
+       "style": "default"
+      },
+      "_de": "seletor"
+     },
+     {
+      "_repetir_lista": {
+       "type": "Container",
+       "items": [
+        {
+         "type": "TextBlock",
+         "text": "De onde veio?",
+         "wrap": true,
+         "weight": "bolder"
+        },
+        {
+         "type": "Input.ChoiceSet",
+         "id": "pagador_origem",
+         "choices": [
+          {
+           "_repetir_lista": {
+            "title": "{titulo}",
+            "value": "{id}"
+           },
+           "_de": "obrigacoes"
+          }
+         ],
+         "label": "Cobrança",
+         "campo": "obrigacao_id",
+         "isRequired": true
+        },
+        {
+         "type": "Input.Text",
+         "id": "pagador_livro_o",
+         "campo": "organizacao_id",
+         "value": "{livro_id}",
+         "isVisible": false,
+         "okmigoSomenteLeitura": true
+        },
+        {
+         "type": "ActionSet",
+         "actions": [
+          {
+           "type": "Action.Execute",
+           "title": "Ver a origem",
+           "data": {
+            "operacao": "origem_do_valor"
+           }
+          }
+         ]
+        }
+       ],
+       "style": "default"
+      },
+      "_de": "form_origem"
+     },
+     {
+      "_repetir_lista": {
+       "type": "Container",
+       "items": [
+        {
+         "type": "TextBlock",
+         "text": "{titulo}",
+         "wrap": true,
+         "weight": "bolder"
+        },
+        {
+         "_repetir_lista": {
+          "type": "TextBlock",
+          "text": "{texto}",
+          "wrap": true,
+          "size": "small",
+          "isSubtle": true
+         },
+         "_de": "explicacao"
+        },
+        {
+         "_repetir_lista": {
+          "type": "TextBlock",
+          "text": "· {texto}",
+          "wrap": true,
+          "size": "small"
+         },
+         "_de": "cronograma"
+        }
+       ],
+       "style": "default"
+      },
+      "_de": "acordos"
+     },
+     {
+      "_repetir_lista": {
+       "type": "Container",
+       "items": [
+        {
+         "type": "TextBlock",
+         "text": "Aceitar um acordo",
+         "wrap": true,
+         "weight": "bolder"
+        },
+        {
+         "type": "TextBlock",
+         "text": "Ao aceitar, a cobrança antiga é substituída pelas parcelas do acordo. Se o acordo quebrar, a cobrança antiga volta.",
+         "wrap": true,
+         "size": "small",
+         "isSubtle": true
+        },
+        {
+         "type": "Input.ChoiceSet",
+         "id": "pag_acordo",
+         "choices": [
+          {
+           "_repetir_lista": {
+            "title": "{titulo}",
+            "value": "{id}"
+           },
+           "_de": "itens"
+          }
+         ],
+         "label": "Acordo",
+         "campo": "acordo_id",
+         "isRequired": true
+        },
+        {
+         "type": "Input.Text",
+         "id": "pag_acordo_livro",
+         "campo": "organizacao_id",
+         "value": "{livro_id}",
+         "isVisible": false,
+         "okmigoSomenteLeitura": true
+        },
+        {
+         "type": "ActionSet",
+         "actions": [
+          {
+           "type": "Action.Submit",
+           "title": "Aceito este acordo",
+           "data": {
+            "operacao": "aceitar_acordo"
+           },
+           "style": "positive",
+           "okmigoConfirmacao": {
+            "titulo": "Aceitar o acordo?",
+            "mensagem": "As parcelas do acordo passam a ser cobradas.",
+            "confirmar": "Aceito",
+            "cancelar": "Voltar"
+           }
+          }
+         ]
+        }
+       ],
+       "style": "default"
+      },
+      "_de": "form_aceitar_acordo"
+     },
+     {
+      "_repetir_lista": {
+       "type": "Container",
+       "items": [
+        {
+         "type": "TextBlock",
+         "text": "{texto}",
+         "wrap": true,
+         "weight": "bolder"
+        },
+        {
+         "type": "TextBlock",
+         "text": "{recibo}",
+         "wrap": true,
+         "size": "small",
+         "isSubtle": true
+        }
+       ],
+       "style": "default"
+      },
+      "_de": "pagamentos"
+     },
+     {
+      "_repetir_lista": {
+       "type": "Container",
+       "items": [
+        {
+         "type": "TextBlock",
+         "text": "{titulo}",
+         "wrap": true,
+         "weight": "bolder"
+        },
+        {
+         "type": "TextBlock",
+         "text": "{modalidade}",
+         "wrap": true,
+         "size": "small",
+         "isSubtle": true
+        },
+        {
+         "type": "okmigoCopiar",
+         "rotulo": "Copiar o código",
+         "valor": "{codigo}"
+        }
+       ],
+       "style": "default"
+      },
+      "_de": "segunda_via"
+     },
+     {
+      "_repetir_lista": {
+       "type": "Container",
+       "items": [
+        {
+         "type": "TextBlock",
+         "text": "Avisos de cobrança",
+         "wrap": true,
+         "weight": "bolder"
+        },
+        {
+         "type": "TextBlock",
+         "text": "{avisos_texto}",
+         "wrap": true,
+         "size": "small",
+         "isSubtle": true
+        },
+        {
+         "type": "Input.ChoiceSet",
+         "id": "pag_avisos",
+         "choices": [
+          {
+           "title": "Sim",
+           "value": "sim"
+          },
+          {
+           "title": "Não",
+           "value": "nao"
+          }
+         ],
+         "label": "Receber avisos",
+         "campo": "ligados",
+         "isRequired": true
+        },
+        {
+         "type": "Input.Text",
+         "id": "pag_hora_ini",
+         "label": "A partir das (hora)",
+         "campo": "hora_inicio",
+         "isRequired": false,
+         "isMultiline": false,
+         "value": "{hora_inicio}"
+        },
+        {
+         "type": "Input.Text",
+         "id": "pag_hora_fim",
+         "label": "Até as (hora)",
+         "campo": "hora_fim",
+         "isRequired": false,
+         "isMultiline": false,
+         "value": "{hora_fim}"
+        },
+        {
+         "type": "Input.Text",
+         "id": "pag_avisos_livro",
+         "campo": "organizacao_id",
+         "value": "{livro_id}",
+         "isVisible": false,
+         "okmigoSomenteLeitura": true
+        },
+        {
+         "type": "ActionSet",
+         "actions": [
+          {
+           "type": "Action.Submit",
+           "title": "Salvar",
+           "data": {
+            "operacao": "preferir_avisos"
+           }
+          }
+         ]
+        }
+       ],
+       "style": "default"
+      },
+      "_de": "form_avisos"
+     },
+     {
+      "_repetir_lista": {
+       "type": "Container",
+       "items": [
+        {
+         "type": "TextBlock",
+         "text": "Vou pagar até…",
+         "wrap": true,
+         "weight": "bolder"
+        },
+        {
+         "type": "TextBlock",
+         "text": "Os avisos daquela cobrança param até a data.",
+         "wrap": true,
+         "size": "small",
+         "isSubtle": true
+        },
+        {
+         "type": "Input.ChoiceSet",
+         "id": "pag_prometer",
+         "choices": [
+          {
+           "_repetir_lista": {
+            "title": "{titulo}",
+            "value": "{id}"
+           },
+           "_de": "cobrancas"
+          }
+         ],
+         "label": "Cobrança",
+         "campo": "obrigacao_id",
+         "isRequired": true
+        },
+        {
+         "type": "Input.Text",
+         "id": "pag_prometer_ate",
+         "campo": "ate",
+         "label": "Pago até",
+         "placeholder": "dd/mm/aaaa",
+         "value": "",
+         "isRequired": true,
+         "okmigoFormato": "data"
+        },
+        {
+         "type": "Input.Text",
+         "id": "pag_prometer_livro",
+         "campo": "organizacao_id",
+         "value": "{livro_id}",
+         "isVisible": false,
+         "okmigoSomenteLeitura": true
+        },
+        {
+         "type": "ActionSet",
+         "actions": [
+          {
+           "type": "Action.Submit",
+           "title": "Combinado",
+           "data": {
+            "operacao": "prometer_pagamento"
+           }
+          }
+         ]
+        }
+       ],
+       "style": "default"
+      },
+      "_de": "form_prometer"
+     },
+     {
+      "_repetir_lista": {
+       "type": "Container",
+       "items": [
+        {
+         "type": "TextBlock",
+         "text": "{titulo}",
+         "wrap": true,
+         "weight": "bolder"
+        },
+        {
+         "type": "TextBlock",
+         "text": "{resumo}",
+         "wrap": true,
+         "size": "small"
+        },
+        {
+         "type": "TextBlock",
+         "text": "{retificacao}",
+         "wrap": true,
+         "size": "small",
+         "isSubtle": true
+        },
+        {
+         "_repetir_lista": {
+          "type": "Container",
+          "items": [
+           {
+            "type": "TextBlock",
+            "text": "{texto}",
+            "wrap": true,
+            "size": "small",
+            "weight": "bolder"
+           },
+           {
+            "_repetir_lista": {
+             "type": "TextBlock",
+             "text": "· {texto}",
+             "wrap": true,
+             "size": "small"
+            },
+            "_de": "contas"
+           }
+          ],
+          "style": "default"
+         },
+         "_de": "linhas"
+        },
+        {
+         "type": "TextBlock",
+         "text": "A receber em atraso, por faixa (sem nomes):",
+         "wrap": true,
+         "size": "small",
+         "isSubtle": true
+        },
+        {
+         "_repetir_lista": {
+          "type": "TextBlock",
+          "text": "· {texto}",
+          "wrap": true,
+          "size": "small"
+         },
+         "_de": "inadimplencia"
+        },
+        {
+         "_repetir_lista": {
+          "type": "TextBlock",
+          "text": "⚠ {texto}",
+          "wrap": true,
+          "size": "small"
+         },
+         "_de": "avisos"
+        },
+        {
+         "_repetir_lista": {
+          "type": "TextBlock",
+          "text": "documento: {texto}",
+          "wrap": true,
+          "size": "small"
+         },
+         "_de": "documentos"
+        },
+        {
+         "type": "TextBlock",
+         "text": "{notas}",
+         "wrap": true,
+         "size": "small",
+         "isSubtle": true
+        }
+       ],
+       "style": "default"
+      },
+      "_de": "prestacao_publicada"
+     },
+     {
+      "type": "Container",
+      "items": [
+       {
+        "type": "TextBlock",
+        "text": "Recebi um código",
+        "wrap": true,
+        "weight": "bolder"
+       },
+       {
+        "type": "TextBlock",
+        "text": "Quem cuida das contas (o síndico, a escola, a administradora) manda o código.",
+        "wrap": true,
+        "size": "small",
+        "isSubtle": true
+       },
+       {
+        "type": "Input.Text",
+        "id": "pagador_codigo",
+        "label": "Código",
+        "campo": "codigo",
+        "isRequired": true,
+        "isMultiline": false
+       },
+       {
+        "type": "ActionSet",
+        "actions": [
+         {
+          "type": "Action.Submit",
+          "title": "Ver as minhas cobranças",
+          "data": {
+           "operacao": "aceitar_convite"
+          },
+          "style": "positive"
+         }
+        ]
+       }
+      ],
+      "style": "emphasis"
+     }
+    ],
+    "okmigoTema": "financeiro-violeta",
+    "okmigoNavegacao": "inferior"
+   },
+   "rotulo": "Cobranças",
+   "icone": "lista"
+  }
+ ],
+ "conversa": [
+  "minhas_cobrancas"
+ ],
+ "para_tipo": "amigo",
+ "descricao_humana": "O que você deve, a quem e desde quando.",
+ "nome_visivel": "Minhas cobranças · beta"
+}
