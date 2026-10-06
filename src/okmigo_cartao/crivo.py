@@ -283,6 +283,23 @@ def _txt(v: Any, papel: str = "texto") -> str:
     return " ".join(str(v or "").split())[: _MAX[papel]]
 
 
+def _valor_do_campo(v: Any) -> str:
+    """O `value` de um campo, como TEXTO que o cliente põe na caixa.
+
+    ⛔ OMINFRA-1016 (QA de 05/10, Android e iOS): o simulador dos
+    Investimentos abria com «10000.0», «500.0» e «24.0» — o SDK serializa o
+    `valor` como `float` e `str(10000.0)` escreve o «.0». Número inteiro sai
+    sem casa; o fracionário sai com PONTO (`13.65`), porque o campo devolve o
+    que está na caixa como número e é assim que os dois clientes o leem.
+    Booleano e texto seguem o caminho de sempre."""
+    if isinstance(v, (int, float)) and not isinstance(v, bool):
+        n = _finito(float(v))
+        if n is None:
+            return ""
+        return str(int(n)) if n.is_integer() else repr(n)
+    return _txt(v)
+
+
 def _data_de_dia_inteiro(v: Any) -> str:
     """`AAAA-MM-DD` de um dia que existe, ou `""`.
 
@@ -1317,7 +1334,7 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
             "campo": _txt(no.get("campo"), "titulo")[:60] or campo_id,
             "rotulo": _txt(no.get("label"), "titulo"),
             # `value` é o que já está gravado — o formulário de CORREÇÃO.
-            "valor": _txt(no.get("value")),
+            "valor": _valor_do_campo(no.get("value")),
             "dica": _txt(no.get("placeholder"), "titulo"),
             "somente_leitura": bool(no.get("okmigoSomenteLeitura")),
             # NÚMERO É UM TIPO: «62.900» digitado num campo de texto vira 62,9
