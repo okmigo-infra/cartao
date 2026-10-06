@@ -582,6 +582,24 @@ class VocabularioTest(unittest.TestCase):
             (tela["corpo"][1]["linhas"], tela["corpo"][1]["max"]), (4, 400)
         )
 
+    def test_o_valor_numerico_do_campo_nao_ganha_ponto_zero(self):
+        """OMINFRA-1016: o simulador abria com «10000.0», «500.0», «24.0» —
+        o SDK manda `float` e `str(10000.0)` escreve o «.0»."""
+        def valor(v):
+            tela, _ = validar(cartao({"type": "Input.Number", "id": "n", "value": v}))
+            return tela["corpo"][0]["valor"]
+        self.assertEqual(valor(10000.0), "10000")
+        self.assertEqual(valor(500), "500")
+        self.assertEqual(valor(24.0), "24")
+        # fracionário fica com PONTO: é o que os dois clientes leem de volta
+        self.assertEqual(valor(13.65), "13.65")
+        self.assertEqual(valor(0.1), "0.1")
+        # o texto, o booleano e o que não é finito seguem como antes
+        self.assertEqual(valor("10000.0"), "10000.0")
+        self.assertEqual(valor(True), "True")
+        self.assertEqual(valor(float("nan")), "")
+        self.assertEqual(valor(None), "")
+
     def test_input_sem_id_some(self):
         tela, erro = validar(
             cartao({"type": "Input.Text"}, {"type": "TextBlock", "text": "x"})
