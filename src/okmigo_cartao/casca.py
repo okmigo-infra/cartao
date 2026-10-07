@@ -26,7 +26,7 @@ from typing import Any
 
 # A MESMA régua do crivo para a data de um evento de dia inteiro — importada,
 # e não copiada, para o relatório nunca discordar do que o crivo faz.
-from .crivo import _MAX_RECURSO, _data_de_dia_inteiro, _nome_de_recurso
+from .crivo import EVENTOS_PARA, _MAX_RECURSO, _data_de_dia_inteiro, _nome_de_recurso
 
 # ── A expansão do molde ─────────────────────────────────────────────────────
 
@@ -244,6 +244,7 @@ def _contar_entrada(no: Any, contagem: dict[str, int], avisos: list[str], caminh
         if tipo == "okmigoCalendario":
             _avisar_eventos(no.get("eventos"), avisos, caminho)
             _avisar_recursos(no.get("recursos"), avisos, caminho)
+            _avisar_acoes_do_evento(no.get("acoesDoEvento"), avisos, caminho)
         if tipo == "Container" and no.get("selectAction", {}).get("type") not in (
             None,
             "Action.ToggleVisibility",
@@ -295,6 +296,22 @@ def _avisar_eventos(eventos: Any, avisos: list[str], caminho: str) -> None:
                           "— some: dia inteiro não leva hora, e o dia tem de existir")
         elif e.get("fim") and str(e["fim"]).strip() < str(e["inicio"]).strip():
             avisos.append(f"{onde}: `fim` antes do `inicio` — cai para um dia só")
+
+
+def _avisar_acoes_do_evento(acoes: Any, avisos: list[str], caminho: str) -> None:
+    """A ação do evento cujo `para` o crivo não conhece some sem rastro — ela
+    não é nó. ⛔ OMINFRA-971: foi assim que a «Decidir» do pedido sumiu por
+    dias. Aqui ela ganha a frase, pelo índice."""
+    if not isinstance(acoes, list):
+        return
+    for i, a in enumerate(acoes):
+        if not isinstance(a, dict):
+            continue
+        para = a.get("para")
+        if para not in EVENTOS_PARA:
+            avisos.append(
+                f"{caminho}.acoesDoEvento[{i}]: `para` = {para!r} não é tipo de evento "
+                f"conhecido ({', '.join(sorted(EVENTOS_PARA))}) — a ação some")
 
 
 def _avisar_recursos(recursos: Any, avisos: list[str], caminho: str) -> None:
