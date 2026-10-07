@@ -1223,3 +1223,46 @@ class RecursoNoEventoTest(unittest.TestCase):
         self.assertTrue(any("recursos[2]" in l and "repetido" in l for l in linhas), linhas)
         self.assertTrue(any("recursos[3]" in l and "vazio" in l for l in linhas), linhas)
         self.assertFalse(any("eventos[0]" in l or "eventos[2]" in l for l in linhas), linhas)
+
+
+class AcoesDoPedidoTest(unittest.TestCase):
+    """OMINFRA-971: a ação para o evento `pedido` (a «Decidir» do calendar#115)
+    e para `anotacao` atravessa o crivo; `para` desconhecido segue caindo, e
+    agora o relatório diz qual e por quê."""
+
+    def _bruto(self, *acoes):
+        return cartao({
+            "type": "okmigoCalendario", "vista": "semana", "de": "2026-10-12",
+            "eventos": [{"inicio": "2026-10-13T10:00", "titulo": "Corte", "id": "p1", "tipo": "pedido"}],
+            "acoesDoEvento": list(acoes),
+        })
+
+    DECIDIR = {"para": "pedido", "titulo": "Decidir", "mostrar": "form_pedido",
+               "preencher": {"pedido_id": "id"}}
+
+    def test_a_acao_do_pedido_atravessa(self):
+        tela, erro = validar(self._bruto(self.DECIDIR))
+        self.assertIsNone(erro)
+        cal = tela["corpo"][0]
+        self.assertEqual(cal["eventos"][0]["tipo"], "pedido")
+        [acao] = cal["acoes_do_evento"]
+        self.assertEqual((acao["para"], acao["titulo"], acao["mostrar"]),
+                         ("pedido", "Decidir", "form_pedido"))
+
+    def test_a_acao_da_anotacao_atravessa(self):
+        tela, erro = validar(self._bruto({**self.DECIDIR, "para": "anotacao", "titulo": "Editar"}))
+        self.assertIsNone(erro)
+        self.assertEqual([a["para"] for a in tela["corpo"][0]["acoes_do_evento"]], ["anotacao"])
+
+    def test_tipo_desconhecido_cai_e_o_relatorio_diz_por_que(self):
+        from okmigo_cartao import relatorio
+
+        bruto = self._bruto(self.DECIDIR, {**self.DECIDIR, "para": "feriado", "titulo": "Ver"})
+        tela, erro = validar(bruto)
+        self.assertIsNone(erro)
+        self.assertEqual([a["para"] for a in tela["corpo"][0]["acoes_do_evento"]], ["pedido"])
+        linhas = relatorio(bruto, tela, erro)
+        self.assertTrue(any("acoesDoEvento[1]" in l and "'feriado'" in l and "some" in l
+                            for l in linhas), linhas)
+        # a que passou não é acusada
+        self.assertFalse(any("acoesDoEvento[0]" in l for l in linhas), linhas)

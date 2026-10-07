@@ -113,8 +113,12 @@ DADOS_DO_EVENTO = {
 }
 _DADOS_SO_DE_ARRASTO = {"novo_inicio", "nova_data", "nova_hora"}
 #: A que evento uma ação se aplica. Fechada porque as operações são outras:
-#: uma ação sem `para` apareceria nos dois tipos e chamaria a errada.
-EVENTOS_PARA = {"atendimento", "compromisso"}
+#: uma ação sem `para` apareceria em todos os tipos e chamaria a errada.
+#: ⭐ OMINFRA-971: `pedido` (o horário PEDIDO que a dona decide —
+#: `decidir_pedido_de_horario`, calendar#115) e `anotacao` (OMINFRA-938). Até
+#: a 0.26.0 a ação «Decidir» que o calendar declara era descartada em
+#: silêncio, e decidir um pedido só existia pela conversa.
+EVENTOS_PARA = {"atendimento", "compromisso", "pedido", "anotacao"}
 #: A forma do `inicio` e do `fim` de um evento de DIA INTEIRO (OMINFRA-937):
 #: só `AAAA-MM-DD`. Sem hora e sem fuso de propósito — um feriado não tem
 #: hora, e carimbá-lo às 00:00 de um fuso o faria cair na véspera em outro.
