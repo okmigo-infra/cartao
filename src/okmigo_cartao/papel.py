@@ -222,6 +222,16 @@ def avisos_do_cadastro(manifesto: Mapping[str, Any]) -> list[str]:
         return [f"papel inválido: {erro}"]
     avisos: list[str] = []
     conversa = manifesto.get("conversa")
+    if not isinstance(conversa, list):
+        # ⛔ OMINFRA-1055: sem a lista `conversa` (tudo é conversa), a cobertura
+        # era PULADA e o cadastro fraco passava calado. Vale a lista de
+        # `operacoes` que a ponte entrega ao okmigo; sem nenhuma, avisa.
+        ops = manifesto.get("operacoes")
+        if isinstance(ops, list):
+            conversa = [str(o.get("nome")) for o in ops if isinstance(o, Mapping) and o.get("nome")
+                        and o.get("conversa", True) is not False]
+        else:
+            avisos.append("sem a lista conversa (nem operacoes): a cobertura dos exemplos não foi conferida")
     if isinstance(conversa, list):
         cobertas = {e.operacao for e in papel.exemplos if e.operacao}
         fora = sorted(cobertas - set(conversa))

@@ -87,3 +87,20 @@ def test_o_aplicativo_do_sdk_compila_o_papel():
     from okmigo_cartao.sdk import Aplicativo
     import inspect
     assert "papel" in inspect.signature(Aplicativo).parameters
+
+
+def test_sem_conversa_usa_as_operacoes_da_ponte():
+    """⛔ OMINFRA-1055: sem `conversa`, a cobertura era pulada em silêncio."""
+    m = _manifesto()
+    del m["conversa"]
+    m["operacoes"] = [{"nome": "obrigacoes"}, {"nome": "nova_obrigacao"}, {"nome": "conciliar"},
+                      {"nome": "so_da_tela", "conversa": False}]
+    avisos = avisos_do_cadastro(m)
+    assert any("sem exemplo: conciliar" in a for a in avisos)
+    assert not any("so_da_tela" in a for a in avisos)
+
+
+def test_sem_conversa_nem_operacoes_avisa_em_vez_de_calar():
+    m = _manifesto()
+    del m["conversa"]
+    assert any("não foi conferida" in a for a in avisos_do_cadastro(m))
