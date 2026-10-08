@@ -17,6 +17,7 @@ from typing import Any, Protocol, Self
 from urllib.parse import urlsplit
 
 from .agente import AgenteDeDominio, AgenteInvalido
+from .papel import Papel
 
 Json = dict[str, Any]
 _NOME = re.compile(
@@ -1531,6 +1532,9 @@ class Aplicativo:
     #: ⭐ O agente de domínio (contrato 1, ADR 001 do okmigo). Sem ele, o
     #: serviço segue só MCP — é a compatibilidade, não um modo degradado.
     agente: AgenteDeDominio | None = None
+    #: ⭐ OMINFRA-1037: o papel do app — o que ele é dono, com quem se fala e
+    #: como a pessoa pede. É o que o broker de roteamento do okmigo lê.
+    papel: Papel | None = None
     #: ⭐ OMINFRA-806: o que o serviço pede DENTRO de um grupo
     #: (``okmigo_cartao.grupo.CapacidadesDeGrupo``). Declarar não ativa.
     grupo: Any = None
@@ -1672,6 +1676,7 @@ class Aplicativo:
             "marca_horario", "recebe_documento", "so_por_convite",
             "em_breve", "tipo",
             "tenant_sondagem", "credencial_sondagem", "vitrine_url", "agente", "grupo",
+            "papel",
         }
         conflito = reservadas.intersection(self.extras)
         if conflito:
@@ -1734,6 +1739,10 @@ class Aplicativo:
             aplicativo["em_breve"] = True
         if self.agente is not None:
             aplicativo["agente"] = self.agente.compilar()
+        if self.papel is not None:
+            if not isinstance(self.papel, Papel):
+                raise ContratoDoSdkInvalido("papel é um Papel")
+            aplicativo["papel"] = self.papel.compilar()
         if self.grupo is not None:
             from .grupo import CapacidadesDeGrupo
             if not isinstance(self.grupo, CapacidadesDeGrupo):
