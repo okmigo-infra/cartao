@@ -104,3 +104,39 @@ def test_sem_conversa_nem_operacoes_avisa_em_vez_de_calar():
     m = _manifesto()
     del m["conversa"]
     assert any("não foi conferida" in a for a in avisos_do_cadastro(m))
+
+
+# ── 0.29.0 · OMINFRA-1064: o que o app CEDE a quem marca horário ─────────────
+
+AGENDA_DE_NEGOCIO = Papel(
+    descricao="A agenda padrão de todos.",
+    dono_de=("os compromissos do dono", "os atendimentos marcados direto na Agenda"),
+    exemplos=(Ex("tenho dentista quinta às 15h", "anotar_compromisso"),
+              Ex("quem vem hoje?", "listar_agenda_do_dia"),
+              Ex("marca a Juliana pra escova sábado às 10", "criar_agendamento")),
+    cede_a_quem_marca_horario=("criar_agendamento",),
+)
+
+
+def test_cede_compila_e_volta_igual():
+    bloco = AGENDA_DE_NEGOCIO.compilar()
+    assert bloco["cede_a_quem_marca_horario"] == ["criar_agendamento"]
+    assert Papel.de_json(bloco).compilar() == bloco
+    assert "cede_a_quem_marca_horario" not in GESTAO.compilar(), "vazio não aparece no bloco"
+
+
+@pytest.mark.parametrize("cede,erro", [
+    (["Criar Agendamento"], "nome de uma operação"),
+    (["criar_agendamento", "criar_agendamento"], "repetida"),
+    ([f"op_{i}" for i in range(41)], "no máximo"),
+])
+def test_cede_passa_pelo_crivo(cede, erro):
+    with pytest.raises(PapelInvalido, match=erro):
+        Papel.de_json({"descricao": "x", "dono_de": ["a"], "cede_a_quem_marca_horario": cede})
+
+
+def test_cede_operacao_fora_da_conversa_avisa():
+    bloco = {**AGENDA_DE_NEGOCIO.compilar(), "cede_a_quem_marca_horario": ["criar_agendamento", "inventada"]}
+    avisos = avisos_do_cadastro({"slug": "agenda", "papel": bloco,
+                                 "conversa": ["anotar_compromisso", "listar_agenda_do_dia", "criar_agendamento"]})
+    assert avisos == ["operação cedida fora da conversa: inventada"]

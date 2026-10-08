@@ -36,6 +36,7 @@ MAX_RELACOES = 12
 MAX_NAO_E_MEU = 12
 MAX_DEFINICOES = 24
 MAX_EXEMPLOS_DE_ROTEAMENTO = 80
+MAX_CEDIDAS = 40
 #: O app que é o padrão de todos — quem marca horário entrega para ele.
 AGENDA = "agenda"
 
@@ -108,7 +109,11 @@ class Papel:
     - ``nao_e_meu``: o que parece dele e não é (e de quem é);
     - ``definicoes``: o vocabulário do app («previsto»: conta que ainda não
       aconteceu);
-    - ``exemplos``: falas reais, cobrindo as operações da conversa.
+    - ``exemplos``: falas reais, cobrindo as operações da conversa;
+    - ``cede_a_quem_marca_horario``: as operações que o app CEDE quando outro
+      app instalado recebe pedidos de horário (0.29.0, OMINFRA-1064). É a
+      Agenda dizendo «com o HoraOk instalado, o atendimento a clientes é dele»:
+      o broker tira essas operações — e os exemplos delas — do que mostra.
     """
 
     descricao: str
@@ -118,6 +123,7 @@ class Papel:
     nao_e_meu: tuple[str, ...] = ()
     definicoes: Mapping[str, str] = field(default_factory=dict)
     exemplos: tuple[ExemploDeRoteamento, ...] = ()
+    cede_a_quem_marca_horario: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         _texto(self.descricao, "papel.descricao", MAX_DESCRICAO)
@@ -149,6 +155,13 @@ class Papel:
             if chave in vistos:
                 raise PapelInvalido(f"exemplo repetido: {e.pedido!r}")
             vistos.add(chave)
+        if len(self.cede_a_quem_marca_horario) > MAX_CEDIDAS:
+            raise PapelInvalido(f"no máximo {MAX_CEDIDAS} operações em cede_a_quem_marca_horario")
+        for op in self.cede_a_quem_marca_horario:
+            if not isinstance(op, str) or not _NOME.fullmatch(op):
+                raise PapelInvalido(f"cede_a_quem_marca_horario: {op!r} não é o nome de uma operação")
+        if len(set(self.cede_a_quem_marca_horario)) != len(self.cede_a_quem_marca_horario):
+            raise PapelInvalido("cede_a_quem_marca_horario tem operação repetida")
 
     def compilar(self) -> dict[str, Any]:
         bloco: dict[str, Any] = {
@@ -165,6 +178,8 @@ class Papel:
             bloco["definicoes"] = {k.strip(): " ".join(v.split()) for k, v in self.definicoes.items()}
         if self.exemplos:
             bloco["exemplos"] = [e.compilar() for e in self.exemplos]
+        if self.cede_a_quem_marca_horario:
+            bloco["cede_a_quem_marca_horario"] = list(self.cede_a_quem_marca_horario)
         return bloco
 
     @classmethod
@@ -172,7 +187,8 @@ class Papel:
         """O bloco CRU, como chega do registro, pelas mesmas regras."""
         if not isinstance(bruto, Mapping):
             raise PapelInvalido("o bloco papel precisa ser um objeto")
-        conhecidas = {"descricao", "dono_de", "recebe_de", "entrega_para", "nao_e_meu", "definicoes", "exemplos"}
+        conhecidas = {"descricao", "dono_de", "recebe_de", "entrega_para", "nao_e_meu", "definicoes", "exemplos",
+                      "cede_a_quem_marca_horario"}
         sobra = set(bruto) - conhecidas
         if sobra:
             raise PapelInvalido("campos desconhecidos no papel: " + ", ".join(sorted(sobra)))
@@ -203,6 +219,7 @@ class Papel:
             nao_e_meu=tuple(lista("nao_e_meu")),
             definicoes=dict(definicoes),
             exemplos=tuple(ExemploDeRoteamento(e.get("pedido", ""), e.get("operacao", "") or "") for e in exemplos),
+            cede_a_quem_marca_horario=tuple(lista("cede_a_quem_marca_horario")),
         )
 
 
@@ -237,6 +254,9 @@ def avisos_do_cadastro(manifesto: Mapping[str, Any]) -> list[str]:
         fora = sorted(cobertas - set(conversa))
         if fora:
             avisos.append("exemplo de operação fora da conversa: " + ", ".join(fora))
+        cedidas_fora = sorted(set(papel.cede_a_quem_marca_horario) - set(conversa))
+        if cedidas_fora:
+            avisos.append("operação cedida fora da conversa: " + ", ".join(cedidas_fora))
         sem = [op for op in conversa if op not in cobertas]
         if sem:
             avisos.append(f"{len(sem)} operação(ões) da conversa sem exemplo: " + ", ".join(sem[:12])

@@ -434,3 +434,23 @@ As regras que ele sustenta:
 `avisos_do_cadastro(manifesto)` lista o que falta. ⚠️ Na 0.28.0 é **aviso**: o
 registro passa. Na versão seguinte, recusa.
 
+### 7.1 · O que o app CEDE a quem marca horário (0.29.0, OMINFRA-1064)
+
+Um app pode ser dono de uma coisa **só enquanto ninguém mais a faz**. A Agenda
+é o caso: num negócio sem outro app de horário, ela marca o atendimento do
+cliente («marca a Juliana pra escova sábado»); com o HoraOk instalado, esse
+pedido é do HoraOk, e a Agenda só mostra o horário que ele entrega. Declarar os
+dois papéis com o mesmo peso fazia o broker oscilar (medido em 08/10: «agenda
+de hoje» ia ao HoraOk 5 a 8 vezes em 10).
+
+```python
+papel=Papel(
+    ...,
+    cede_a_quem_marca_horario=("criar_agendamento", "consultar_disponibilidade", "pedir_horario"),
+)
+```
+
+Quando outro app instalado recebe pedidos de horário (`marca_horario`), o
+broker tira do que mostra as operações cedidas **e os exemplos delas**. A
+operação cedida tem de estar na conversa do app (`avisos_do_cadastro` avisa).
+
