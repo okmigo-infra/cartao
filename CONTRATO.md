@@ -400,3 +400,37 @@ agente=AgenteDeDominio(
 `conversa`. `data_base` é obrigatória porque número sem data é lido como
 número de hoje. Os códigos de `indisponivel` são `dado_ausente`,
 `fonte_indisponivel`, `limite`, `fora_do_dominio` e `falha_interna`.
+
+## 7 · O papel do app (0.28.0, OMINFRA-1037)
+
+O okmigo escolhe o app que atende um pedido por um **broker de roteamento** que
+lê o que cada app instalado declara de si. O bloco `papel` é essa declaração:
+
+```python
+papel=Papel(
+    descricao="O ERP financeiro da organização: contas a pagar e a receber, cobrança e conciliação.",
+    dono_de=("contas a pagar e a receber da empresa", "cobrança", "conciliação"),
+    recebe_de=(Relacao("dinfinance", "o extrato do banco, para conciliar"),),
+    entrega_para=(Relacao("comcontabil", "o pacote contábil do mês"),),
+    nao_e_meu=("saldo e extrato do banco — é do Financeiro",),
+    definicoes={"obrigação": "conta a pagar com vencimento"},
+    exemplos=(ExemploDeRoteamento("quais contas a empresa tem para pagar esta semana?", "obrigacoes"),),
+)
+```
+
+As regras que ele sustenta:
+
+1. **O pedido vai ao DONO da coisa pedida** (`dono_de`), nunca a quem só a
+   recebe ou mostra. Os apps se falam pelo okmigo, com uma fonte por número;
+   `recebe_de` e `entrega_para` dizem isso, e **o par tem de bater** dos dois
+   lados (`pares_que_nao_batem`).
+2. **A Agenda é o padrão de todos** e recebe só o que não pertence a nenhum
+   outro app instalado. Quem marca horário ou publica datas **entrega para a
+   Agenda** e recebe o pedido.
+3. **Exemplos cobrem as operações da conversa**: falas reais, com a operação
+   que pedem. É o que mais move o acerto do broker — medido em 08/10, o erro
+   que sobra é quase sempre cadastro que não diz o que o app faz.
+
+`avisos_do_cadastro(manifesto)` lista o que falta. ⚠️ Na 0.28.0 é **aviso**: o
+registro passa. Na versão seguinte, recusa.
+

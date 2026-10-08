@@ -41,6 +41,14 @@ from .crivo import (
     validar,
 )
 from . import grupo  # ⭐ OMINFRA-806: ações e conteúdo com escopo de grupo
+from .papel import (  # ⭐ OMINFRA-1037: o papel do app, para o broker de roteamento
+    ExemploDeRoteamento,
+    Papel,
+    PapelInvalido,
+    Relacao,
+    avisos_do_cadastro,
+    pares_que_nao_batem,
+)
 from .sdk import (
     Acao,
     Acoes,
@@ -216,6 +224,12 @@ from .componentes_de_navegacao import (
 )
 
 __all__ = [
+    "ExemploDeRoteamento",
+    "Papel",
+    "PapelInvalido",
+    "Relacao",
+    "avisos_do_cadastro",
+    "pares_que_nao_batem",
     "grupo",
     "AgenteDeDominio",
     "AgenteInvalido",
