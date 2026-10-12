@@ -227,6 +227,19 @@ expande o molde do mesmo jeito que a ponte do produto expande (`{campo}`,
 `_repetir_lista`, `_quando`, `_de`). Rode com dados que pareçam os seus, ou o
 «passou» é falso.
 
+⛔⛔ **`Acao.consultar` exige que a operação devolva a ficha PRONTA.** O
+`/superficies/consultar` do okmigo não expande molde com dado — a abertura de
+uma superfície expande; a consulta, não. A operação tem de devolver
+`{"cartao": <cartão pronto>}`; quem devolve só os dados vira **HTTP 502** no
+toque («não consegui consultar (502)»), com a suíte do serviço inteira verde,
+porque nenhum teste do serviço atravessa o okmigo. Custou 14 botões no radaria,
+9 no prediomeu e 5 no grupoin, sempre em produção. O jeito: o servidor monta a
+ficha com este SDK e a devolve AO LADO do dado (a conversa usa a mesma operação
+e precisa dos números) — `{**dados, "cartao": casca.expandir(tela.compilar(),
+visao, None)}` — e um teste compara toda `Acao.consultar` do manifesto com as
+operações que devolvem ficha, passando cada ficha pelo `validar`. Para só mudar
+de tela, sem ler nada, o gesto é `Acao.navegar`.
+
 ### A matriz do contrato: o que o manifesto obriga a provar
 
 ```bash

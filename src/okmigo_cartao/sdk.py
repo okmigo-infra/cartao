@@ -586,23 +586,6 @@ class Acao:
         alvos_apos_enviar: tuple[Componente, ...] = (),
         transicao_tipada: bool = True,
     ) -> Self:
-        """Um botão que LÊ e troca o cartão pelo que a operação devolver.
-
-        ⛔⛔ **A operação TEM de devolver `{"cartao": <cartão pronto>}`.** O
-        `/superficies/consultar` do okmigo não expande molde com dado — a
-        abertura de uma superfície expande; a consulta, não. Quem devolve só
-        os dados vira **HTTP 502** no toque («não consegui consultar (502)»),
-        com a suíte do serviço inteira verde, porque nenhum teste do serviço
-        atravessa o okmigo. Custou 14 botões no radaria (OMINFRA-622), 9 no
-        prediomeu (OMINFRA-665) e 5 no grupoin (OMINFRA-1200).
-
-        O jeito: o servidor monta a ficha com este SDK e a devolve AO LADO
-        do dado (a conversa usa a mesma operação e precisa dos números) —
-        `{**dados, "cartao": casca.expandir(tela.compilar(), visao, None)}`.
-        E um gate que compare toda `Acao.consultar` do manifesto com as
-        operações que devolvem ficha, passando a ficha pelo `validar`. Para
-        só mudar de tela, sem ler nada, o gesto é `Acao.navegar`.
-        """
         return cls(
             titulo, operacao, TipoDeAcao.LEITURA, enfase, None,
             confirmacao, dados or {}, modo_secundario,
