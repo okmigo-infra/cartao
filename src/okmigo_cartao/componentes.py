@@ -307,6 +307,31 @@ class Copiar:
 
 
 @dataclass(frozen=True, slots=True)
+class ConviteDoGrupo:
+    """O convite para o GRUPO do okmigo que nasceu de uma coisa deste serviço.
+
+    ⭐ OMINFRA-1237: a turma do GrupoIn é um grupo do okmigo, e o professor não
+    achava onde chamar os alunos — o convite só existia DENTRO do grupo. Aqui o
+    serviço nomeia a coisa dele (`ref`, o mesmo `ref` de `okmigo_grupos_nascem`)
+    e o PRODUTO faz o resto: confere se quem vê a tela pode convidar naquele
+    grupo, gera o link e o mostra para copiar. ⛔ O serviço nunca vê o link
+    nem o grupo — não há campo para isso, e o crivo descarta qualquer um.
+    """
+
+    rotulo: str
+    ref: str
+
+    def __post_init__(self) -> None:
+        _obrigatorio(self.rotulo, "rotulo do convite do grupo")
+        _obrigatorio(self.ref, "ref do convite do grupo")
+        if len(self.ref) > 80:
+            raise ContratoDoSdkInvalido("ref do convite do grupo passa de 80 caracteres")
+
+    def compilar(self) -> Json:
+        return {"type": "okmigoConviteDoGrupo", "rotulo": self.rotulo, "ref": self.ref}
+
+
+@dataclass(frozen=True, slots=True)
 class Cronometro:
     rotulo: str
     segundos: int | str

@@ -141,6 +141,7 @@ _ENTRA_SAI: dict[str, set[str]] = {
     "okmigoArquivo": {"arquivo"},
     "okmigoDocumento": {"documento"},
     "okmigoCopiar": {"copiar"},
+    "okmigoConviteDoGrupo": {"convite_do_grupo"},
     "okmigoAutorizar": {"autorizar"},
     "okmigoCronometro": {"cronometro"},
     "okmigoProgresso": {"progresso"},
@@ -185,6 +186,7 @@ _POR_QUE_SOME = {
     "okmigoArquivo": "sem `id`",
     "okmigoDocumento": "sem `ler.operacao`, ou sem título/nome",
     "okmigoCopiar": "sem valor ou sem rótulo",
+    "okmigoConviteDoGrupo": "sem `ref` (ou acima de 80) ou sem rótulo",
     "okmigoAutorizar": "url fora das travas (https, sem credencial, sem porta/IP, não é domínio do produto), sem rótulo/motivo, ou já havia um no cartão",
     "okmigoCronometro": "sem rótulo, ou segundos fora de 1…3600",
     "okmigoProgresso": "`de` não numérico, ≤ 0 ou > 10000, ou `feito` não numérico",
@@ -536,6 +538,9 @@ def _no(n: dict, s: list[str]) -> None:
                  f"<code>{_e(n['ler']['operacao'])}</code>)</small></p>")
     elif tipo == "copiar":
         s.append(f'<p{ident}{escondido}><button type="button">{_e(n["rotulo"])}</button> <code>{_e(n["valor"])}</code></p>')
+    elif tipo == "convite_do_grupo":
+        s.append(f'<p{ident}{escondido}><button type="button">{_e(n["rotulo"])}</button> '
+                 f'<small>(o okmigo gera o link do grupo de <code>{_e(n["ref"])}</code> ao tocar)</small></p>')
     elif tipo == "autorizar":
         s.append(f'<p{ident}{escondido}>{_e(n["motivo"])}<br><a href="{_e(n["url"])}" rel="noopener">{_e(n["rotulo"])}</a> '
                  f'<small>→ <strong>{_e(n["onde"])}</strong></small></p>')
