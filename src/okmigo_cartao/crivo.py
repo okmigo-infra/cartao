@@ -1638,6 +1638,18 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
             return None
         return {"tipo": "copiar", **comum, "rotulo": rotulo, "valor": valor}
 
+    # ── okmigoConviteDoGrupo: o convite do grupo que nasceu deste serviço ──
+    # ⭐ OMINFRA-1237. O serviço nomeia a coisa DELE (`ref`); quem gera o link
+    # é o produto, ao toque, e só para quem pode convidar naquele grupo. ⛔ Só
+    # `rotulo` e `ref` passam: um `link`/`url` posto no nó é descartado — o
+    # link nunca vem do serviço, senão um convite falso cabia aqui.
+    if tipo == "okmigoConviteDoGrupo":
+        bruto = _txt(no.get("ref"))
+        rotulo = _txt(no.get("rotulo") or no.get("title"), "titulo")[:40]
+        if not bruto or len(bruto) > 80 or not rotulo:
+            return None
+        return {"tipo": "convite_do_grupo", **comum, "rotulo": rotulo, "ref": bruto}
+
     # ── okmigoCronometro: o tempo que passa DENTRO do cartão ──────────────
     # Contagem REGRESSIVA de um valor declarado; não alcança nada. NÃO começa
     # sozinho — um cronômetro que arranca ao abrir conta o descanso de quem só

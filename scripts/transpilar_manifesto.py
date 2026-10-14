@@ -333,6 +333,8 @@ def _componente(no: dict[str, Any]) -> str:
         )
     if tipo == "okmigoCopiar":
         return _chamada("Copiar", repr(no["rotulo"]), repr(no["valor"]))
+    if tipo == "okmigoConviteDoGrupo":
+        return _chamada("ConviteDoGrupo", repr(no["rotulo"]), repr(no["ref"]))
     if tipo == "okmigoCronometro":
         return _chamada(
             "Cronometro", repr(no["rotulo"]), repr(no["segundos"]),
