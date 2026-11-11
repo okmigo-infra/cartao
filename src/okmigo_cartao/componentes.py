@@ -332,6 +332,31 @@ class ConviteDoGrupo:
 
 
 @dataclass(frozen=True, slots=True)
+class ConversaDoGrupo:
+    """Abre a CONVERSA do grupo do okmigo que nasceu de uma coisa deste serviço.
+
+    ⭐ OMINFRA-1328: os grupos que o GrupoIn faz nascer (turmas e grupos de
+    trabalho) saem da lista de conversas e passam a ser abertos de DENTRO do
+    app. O serviço nomeia a coisa dele (`ref`, o mesmo de `okmigo_grupos_nascem`)
+    e o PRODUTO faz o resto: confere que quem tocou é membro daquele grupo e
+    abre a conversa. ⛔ O serviço nunca vê o grupo — não há campo para isso, e
+    o crivo descarta qualquer um.
+    """
+
+    rotulo: str
+    ref: str
+
+    def __post_init__(self) -> None:
+        _obrigatorio(self.rotulo, "rotulo da conversa do grupo")
+        _obrigatorio(self.ref, "ref da conversa do grupo")
+        if len(self.ref) > 80:
+            raise ContratoDoSdkInvalido("ref da conversa do grupo passa de 80 caracteres")
+
+    def compilar(self) -> Json:
+        return {"type": "okmigoConversaDoGrupo", "rotulo": self.rotulo, "ref": self.ref}
+
+
+@dataclass(frozen=True, slots=True)
 class Cronometro:
     rotulo: str
     segundos: int | str

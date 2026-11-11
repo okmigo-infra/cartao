@@ -142,6 +142,7 @@ _ENTRA_SAI: dict[str, set[str]] = {
     "okmigoDocumento": {"documento"},
     "okmigoCopiar": {"copiar"},
     "okmigoConviteDoGrupo": {"convite_do_grupo"},
+    "okmigoConversaDoGrupo": {"conversa_do_grupo"},
     "okmigoAutorizar": {"autorizar"},
     "okmigoCronometro": {"cronometro"},
     "okmigoProgresso": {"progresso"},
@@ -187,6 +188,7 @@ _POR_QUE_SOME = {
     "okmigoDocumento": "sem `ler.operacao`, ou sem título/nome",
     "okmigoCopiar": "sem valor ou sem rótulo",
     "okmigoConviteDoGrupo": "sem `ref` (ou acima de 80) ou sem rótulo",
+    "okmigoConversaDoGrupo": "sem `ref` (ou acima de 80) ou sem rótulo",
     "okmigoAutorizar": "url fora das travas (https, sem credencial, sem porta/IP, não é domínio do produto), sem rótulo/motivo, ou já havia um no cartão",
     "okmigoCronometro": "sem rótulo, ou segundos fora de 1…3600",
     "okmigoProgresso": "`de` não numérico, ≤ 0 ou > 10000, ou `feito` não numérico",
@@ -541,6 +543,9 @@ def _no(n: dict, s: list[str]) -> None:
     elif tipo == "convite_do_grupo":
         s.append(f'<p{ident}{escondido}><button type="button">{_e(n["rotulo"])}</button> '
                  f'<small>(o okmigo gera o link do grupo de <code>{_e(n["ref"])}</code> ao tocar)</small></p>')
+    elif tipo == "conversa_do_grupo":
+        s.append(f'<p{ident}{escondido}><button type="button">{_e(n["rotulo"])}</button> '
+                 f'<small>(o okmigo abre a conversa do grupo de <code>{_e(n["ref"])}</code> ao tocar)</small></p>')
     elif tipo == "autorizar":
         s.append(f'<p{ident}{escondido}>{_e(n["motivo"])}<br><a href="{_e(n["url"])}" rel="noopener">{_e(n["rotulo"])}</a> '
                  f'<small>→ <strong>{_e(n["onde"])}</strong></small></p>')
