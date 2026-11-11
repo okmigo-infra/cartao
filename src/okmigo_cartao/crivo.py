@@ -1650,6 +1650,18 @@ def _reconstruir(no: Any, contador: list[int]) -> dict | None:
             return None
         return {"tipo": "convite_do_grupo", **comum, "rotulo": rotulo, "ref": bruto}
 
+    # ── okmigoConversaDoGrupo: abrir a conversa do grupo deste serviço ────
+    # ⭐ OMINFRA-1328. O mesmo trio do convite: o serviço nomeia a coisa DELE
+    # (`ref`) e o produto, ao toque, confere que quem tocou é membro e abre a
+    # conversa. ⛔ Só `rotulo` e `ref` passam: um `grupo`/`id`/`url` posto no nó
+    # é descartado — o serviço não aponta para grupo nenhum do okmigo.
+    if tipo == "okmigoConversaDoGrupo":
+        bruto = _txt(no.get("ref"))
+        rotulo = _txt(no.get("rotulo") or no.get("title"), "titulo")[:40]
+        if not bruto or len(bruto) > 80 or not rotulo:
+            return None
+        return {"tipo": "conversa_do_grupo", **comum, "rotulo": rotulo, "ref": bruto}
+
     # ── okmigoCronometro: o tempo que passa DENTRO do cartão ──────────────
     # Contagem REGRESSIVA de um valor declarado; não alcança nada. NÃO começa
     # sozinho — um cronômetro que arranca ao abrir conta o descanso de quem só
