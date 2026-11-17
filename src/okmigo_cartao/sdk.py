@@ -1295,6 +1295,10 @@ class Superficie:
     representacao: TelaResumida | None = None
     visivel: bool | None = None
     rotulo_superficie: str | None = None
+    #: ⭐ 0.32.0 (OMINFRA-1341): esta tela aparece no Painel do Gerenciar do
+    #: negócio, como o cartão do app («Dos seus apps»). Uma por app basta; o
+    #: okmigo mostra o título e o hint, e abre a tela ao toque.
+    painel: bool = False
 
     def __post_init__(self) -> None:
         _nome(self.nome, "nome da superficie")
@@ -1323,6 +1327,8 @@ class Superficie:
             superficie["isVisible"] = self.visivel
         if self.rotulo_superficie is not None:
             superficie["rotulo_superficie"] = self.rotulo_superficie
+        if self.painel:
+            superficie["painel"] = True
         return superficie
 
 
