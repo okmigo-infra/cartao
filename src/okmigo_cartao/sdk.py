@@ -1669,6 +1669,11 @@ class Aplicativo:
                 self.agente.conferir_conversa(self.conversa)
             except AgenteInvalido as erro:
                 raise ContratoDoSdkInvalido(str(erro)) from erro
+            if self.agente.cobre and self.para_tipo == "amigo":
+                # ⛔ ADR 005 §4.2: o setor é conta de negócio; um app da conta
+                # pessoal nunca instala nele, então não cobre competência.
+                raise ContratoDoSdkInvalido(
+                    "cobre é de app para negócio; para_tipo amigo não instala em setor")
         reservadas = {
             "slug", "endpoint", "forma", "para_tipo", "descricao",
             "descricao_humana", "nome_visivel", "versao", "conversa",

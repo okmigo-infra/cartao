@@ -378,6 +378,16 @@ agente=AgenteDeDominio(
   - orçamento acima do teto (4 chamadas, 20 mil tokens, 30 s);
   - contrato de MAJOR desconhecida;
   - e, no JSON cru (`AgenteDeDominio.de_json`), qualquer campo desconhecido.
+- ⭐ **`cobre`** (0.33.0, ADR 005 do okmigo): os ids do catálogo de setores
+  que o agente resolve com dado, como `cobre=("financeiro.conciliacao",)`.
+  É o que faz o setor que marca a competência instalar o serviço;
+  `competencias` segue sendo a frase que o amigo lê. Tudo ou nada: declare só
+  o que as ferramentas respondem. O SDK recusa id fora da forma
+  `area.competencia`, repetido, mais de 20, `cobre` sem ferramenta ou fora do
+  modo declarado, e `cobre` em app `para_tipo="amigo"` (o setor é negócio).
+  ⛔ O catálogo é do consumidor: o id que não existe lá é recusado **no
+  registro do okmigo**, não aqui. Ordem de subida: este pacote, o okmigo no
+  ar, e só então o app re-registra.
 - ⛔ **As instruções não são lugar de regra de negócio.** Elas descrevem
   vocabulário e uso das ferramentas. A regra mora na operação MCP, onde é
   testável. O teto existe para isso.

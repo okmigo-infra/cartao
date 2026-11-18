@@ -41,6 +41,9 @@ MAX_INSTRUCOES = 4000
 MAX_COMPETENCIAS = 6
 MAX_FERRAMENTAS = 12
 MAX_EXEMPLOS = 12
+#: ⭐ ADR 005 do okmigo: quantas competências do catálogo de setores um agente
+#: pode dizer que cobre. O catálogo é do consumidor; aqui só a forma.
+MAX_COBRE = 20
 
 #: O orçamento é teto por pedido, conferido pelo runtime e não pelo modelo.
 #: Os padrões são os da ADR 001 §6.3; os máximos existem para um manifesto não
@@ -58,6 +61,8 @@ CODIGOS_INDISPONIVEL = frozenset(
 )
 
 _NOME = re.compile(r"[a-z][a-z0-9_]{0,63}")
+#: O id de uma competência do catálogo de setores do okmigo (migração 241).
+_COMPETENCIA = re.compile(r"[a-z_]+\.[a-z0-9_]+")
 
 
 class AgenteInvalido(ValueError):
@@ -140,6 +145,12 @@ class AgenteDeDominio:
     contrato: str = "1"
     #: Só do modo ``remoto``: a operação MCP que recebe a entrada do contrato.
     operacao: str | None = None
+    #: ⭐ ADR 005 do okmigo: os ids do catálogo de setores que este agente
+    #: RESOLVE com dado (``financeiro.conciliacao``). É o que faz o setor que
+    #: marca a competência instalar o serviço. ``competencias`` continua sendo a
+    #: frase para o amigo; ``cobre`` é o id para o setor. Tudo ou nada: só
+    #: declare o que o agente responde com as ferramentas dele.
+    cobre: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if self.contrato not in CONTRATOS:
@@ -160,6 +171,18 @@ class AgenteDeDominio:
             _identificador(f, "ferramenta")
         if len(self.exemplos) > MAX_EXEMPLOS:
             raise AgenteInvalido(f"no máximo {MAX_EXEMPLOS} exemplos")
+        if len(self.cobre) > MAX_COBRE:
+            raise AgenteInvalido(f"no máximo {MAX_COBRE} competências em cobre")
+        if len(set(self.cobre)) != len(self.cobre):
+            raise AgenteInvalido("competências repetidas em cobre")
+        for c in self.cobre:
+            if not isinstance(c, str) or not _COMPETENCIA.fullmatch(c):
+                raise AgenteInvalido(
+                    f"cobre precisa de ids do catálogo (financeiro.conciliacao), recebi {c!r}")
+        if self.cobre and (self.modo != "declarado" or not self.ferramentas):
+            # ⛔ Cobrir sem ferramenta é prometer resposta que só sairia de
+            # cabeça — a invenção da ADR 001 §1.2.
+            raise AgenteInvalido("cobre só existe no agente declarado com ferramentas")
 
         if self.modo == "declarado":
             # ⛔ O agente declarado sem ferramenta só pode responder de cabeça,
@@ -206,6 +229,8 @@ class AgenteDeDominio:
             bloco["exemplos"] = [e.compilar() for e in self.exemplos]
         if self.operacao is not None:
             bloco["operacao"] = self.operacao
+        if self.cobre:
+            bloco["cobre"] = list(self.cobre)
         return bloco
 
     @classmethod
@@ -218,7 +243,7 @@ class AgenteDeDominio:
         if not isinstance(bruto, Mapping):
             raise AgenteInvalido("o bloco agente precisa ser um objeto")
         conhecidas = {"contrato", "modo", "competencias", "ferramentas", "instrucoes",
-                      "exemplos", "orcamento", "operacao"}
+                      "exemplos", "orcamento", "operacao", "cobre"}
         sobra = set(bruto) - conhecidas
         if sobra:
             # ⛔ Campo desconhecido não é ignorado: ignorar é o crivo comendo em
@@ -230,7 +255,7 @@ class AgenteDeDominio:
         exemplos = bruto.get("exemplos") or []
         if not isinstance(exemplos, list) or not all(isinstance(e, Mapping) for e in exemplos):
             raise AgenteInvalido("exemplos precisa ser uma lista de objetos")
-        for campo in ("competencias", "ferramentas"):
+        for campo in ("competencias", "ferramentas", "cobre"):
             if not isinstance(bruto.get(campo, []), list):
                 raise AgenteInvalido(f"{campo} precisa ser uma lista")
         return cls(
@@ -242,6 +267,7 @@ class AgenteDeDominio:
             exemplos=tuple(Exemplo(e.get("pedido", ""), e.get("espera", "")) for e in exemplos),
             orcamento=Orcamento(**dict(orc)),
             operacao=bruto.get("operacao"),
+            cobre=tuple(bruto.get("cobre") or ()),
         )
 
 
