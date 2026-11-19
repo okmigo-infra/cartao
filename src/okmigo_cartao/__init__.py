@@ -18,6 +18,7 @@ from .agente import (
     Exemplo,
     Orcamento,
     RespostaDeAgenteInvalida,
+    validar_prontidao,
     validar_resposta,
 )
 from .crivo import (
@@ -238,6 +239,7 @@ __all__ = [
     "Exemplo",
     "Orcamento",
     "RespostaDeAgenteInvalida",
+    "validar_prontidao",
     "validar_resposta",
     "ALINHAMENTOS",
     "ALTURAS_CAIXA",
