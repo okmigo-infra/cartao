@@ -151,6 +151,12 @@ class AgenteDeDominio:
     #: frase para o amigo; ``cobre`` é o id para o setor. Tudo ou nada: só
     #: declare o que o agente responde com as ferramentas dele.
     cobre: tuple[str, ...] = ()
+    #: ⭐ OMINFRA-1364: a operação MCP de LEITURA, sem parâmetros, que diz se o
+    #: serviço já anda para AQUELE tenant (o Financeiro sem banco conectado
+    #: está instalado, mas não responde nada). O consumidor a chama por tenant
+    #: e desenha «falta conectar» em vez de «feito por». A resposta passa por
+    #: ``validar_prontidao``. Só existe junto de ``cobre``.
+    prontidao: str | None = None
 
     def __post_init__(self) -> None:
         if self.contrato not in CONTRATOS:
@@ -183,6 +189,12 @@ class AgenteDeDominio:
             # ⛔ Cobrir sem ferramenta é prometer resposta que só sairia de
             # cabeça — a invenção da ADR 001 §1.2.
             raise AgenteInvalido("cobre só existe no agente declarado com ferramentas")
+        if self.prontidao is not None:
+            _identificador(self.prontidao, "prontidão")
+            if not self.cobre:
+                # A prontidão responde «a competência coberta já anda?» — sem
+                # cobre não há competência para ela qualificar.
+                raise AgenteInvalido("prontidao só existe junto de cobre")
 
         if self.modo == "declarado":
             # ⛔ O agente declarado sem ferramenta só pode responder de cabeça,
@@ -231,6 +243,8 @@ class AgenteDeDominio:
             bloco["operacao"] = self.operacao
         if self.cobre:
             bloco["cobre"] = list(self.cobre)
+        if self.prontidao is not None:
+            bloco["prontidao"] = self.prontidao
         return bloco
 
     @classmethod
@@ -243,7 +257,7 @@ class AgenteDeDominio:
         if not isinstance(bruto, Mapping):
             raise AgenteInvalido("o bloco agente precisa ser um objeto")
         conhecidas = {"contrato", "modo", "competencias", "ferramentas", "instrucoes",
-                      "exemplos", "orcamento", "operacao", "cobre"}
+                      "exemplos", "orcamento", "operacao", "cobre", "prontidao"}
         sobra = set(bruto) - conhecidas
         if sobra:
             # ⛔ Campo desconhecido não é ignorado: ignorar é o crivo comendo em
@@ -268,10 +282,42 @@ class AgenteDeDominio:
             orcamento=Orcamento(**dict(orc)),
             operacao=bruto.get("operacao"),
             cobre=tuple(bruto.get("cobre") or ()),
+            prontidao=bruto.get("prontidao"),
         )
 
 
 # ── as respostas ───────────────────────────────────────────────────────────
+
+
+MAX_FALTA = 120
+
+
+def validar_prontidao(bruto: Any) -> dict[str, Any]:
+    """A resposta da operação de ``prontidao``, conferida.
+
+    ``{"pronto": bool, "falta": "conectar um banco", "superficie": "bancos"}``
+    — ``falta`` (o que a pessoa precisa fazer, curto) e ``superficie`` (a tela
+    do serviço onde se faz) só valem com ``pronto`` falso, e ``falta`` é
+    obrigatória nesse caso: «não está pronto» sem dizer o quê não dá gesto.
+    """
+    if not isinstance(bruto, Mapping):
+        raise RespostaDeAgenteInvalida("a prontidão precisa ser um objeto")
+    pronto = bruto.get("pronto")
+    if not isinstance(pronto, bool):
+        raise RespostaDeAgenteInvalida("prontidao.pronto ausente ou de tipo errado")
+    if pronto:
+        return {"pronto": True}
+    falta = bruto.get("falta")
+    if not isinstance(falta, str) or not falta.strip():
+        raise RespostaDeAgenteInvalida("prontidao.falta é obrigatória quando pronto é falso")
+    saida: dict[str, Any] = {"pronto": False, "falta": falta.strip()[:MAX_FALTA]}
+    superficie = bruto.get("superficie")
+    if superficie is not None:
+        try:
+            saida["superficie"] = _identificador(superficie, "superfície da prontidão")
+        except AgenteInvalido as exc:
+            raise RespostaDeAgenteInvalida(str(exc)) from None
+    return saida
 
 
 def _exigir(resposta: Mapping[str, Any], campo: str, tipo: type, *, vazio: bool = False) -> Any:

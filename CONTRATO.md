@@ -388,6 +388,16 @@ agente=AgenteDeDominio(
   ⛔ O catálogo é do consumidor: o id que não existe lá é recusado **no
   registro do okmigo**, não aqui. Ordem de subida: este pacote, o okmigo no
   ar, e só então o app re-registra.
+- ⭐ **`prontidao`** (0.34.0, OMINFRA-1364): o nome de uma operação MCP de
+  LEITURA, sem parâmetros, que diz se o serviço já anda para aquele tenant —
+  o Financeiro instalado sem banco conectado não responde nada. O okmigo a
+  chama por tenant e o Gerenciar mostra «falta conectar» em vez de «feito
+  por». A resposta é `{"pronto": true}` ou `{"pronto": false, "falta":
+  "conectar um banco", "superficie": "bancos"}`, conferida por
+  `validar_prontidao`: `falta` é obrigatória quando não está pronto (até 120
+  caracteres) e `superficie` é a tela do serviço onde se resolve. Só existe
+  junto de `cobre`. ⚠️ Falha, demora ou resposta fora da forma NÃO viram
+  «falta conectar»: o okmigo mostra o que mostrava antes, «feito por».
 - ⛔ **As instruções não são lugar de regra de negócio.** Elas descrevem
   vocabulário e uso das ferramentas. A regra mora na operação MCP, onde é
   testável. O teto existe para isso.
